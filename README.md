@@ -56,12 +56,12 @@ Elements marked `(*)` are incomplete.
     + Standard Operations on this generic type (`units2.ops`)
     + Calculus on functions using this generic type (`units2.calc`)
 + `IFnUnit` type based on `javax.measure` (JSR 275)
-+ Standard Unit Libraries for:
-    + `(*)` Information and Probability Theory (`units2.prob`)
-	  + Astroparticle Physics (`units2.astro`)
+    + Standard Unit Libraries for:
+        + `(*)` Information and Probability Theory (`units2.prob`)
+        + Astroparticle Physics (`units2.astro`)
 + Debugging:
-    - `(*)` Comprehensive Warning/Error messages
-    - `(*)` Exhaustive Testing
+    + `(*)` Comprehensive Warning/Error messages
+    + `(*)` Exhaustive Testing
 + Comprehensive Documentation:
     + Inline Comments / Marginalia
     + Tutorial
