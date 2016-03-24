@@ -1,0 +1,81 @@
+<h1 id="units2">units2</h1>
+<p>A Clojure library for quantities with units.</p>
+<h2 id="rationale">Rationale</h2>
+<p>Clojure does not have built-in support for numerical quantities in a system of units. Most (all?) previous solutions to this problem use add-on domain specific languages instead of improving the core language in a lispy way.</p>
+<h3 id="pre-existing-clojure-java-solutions">Pre-existing Clojure (Java) solutions:</h3>
+<h4 id="frinj">Frinj</h4>
+<ul>
+<li>flexible units, currencies</li>
+<li>interprets dimensions</li>
+<li>DSL rather than idiomatic clojure... and the DSL is UGLY!</li>
+</ul>
+<h4 id="meajure">Meajure</h4>
+<ul>
+<li>Arithmetic and basic math</li>
+<li>No notion of <code>dimension</code>: <code>units</code> are really just keyword tags with exponents, can't convert between them easily</li>
+<li>Reader-macro-based DSL rather than idiomatic Clojure...</li>
+</ul>
+<h4 id="minderbinder">Minderbinder</h4>
+<ul>
+<li>defunits-of is really clean</li>
+<li>Again, it's a DSL</li>
+</ul>
+<h4 id="units-clojars">units (clojars)</h4>
+<ul>
+<li>Very lispy</li>
+<li>Idiomatically mixes units into arithmetic as multiplying factors. This blurs the important conceptual distinction between numerical values and units. This is bad.</li>
+</ul>
+<h4 id="jscience-java">JScience (JAVA)</h4>
+<ul>
+<li>flexible units, currencies</li>
+<li>Units have dimensions</li>
+<li>API is part of the Java Standard Library</li>
+<li>Not Clojure</li>
+</ul>
+<h3 id="this-solution">This solution</h3>
+<p>Provide protocols for things that are units and for things that have units (&quot;dimensionful quantities&quot;), and a reference implementation that augments Clojure rather than confines units to a DSL.</p>
+<ul>
+<li>The reference implementation of units partakes in <code>clojure.lang.IFn</code></li>
+<li>The reference implementation of dimensionful quantities comes with unit-aware version of <code>+</code>,<code>-</code>,<code>*</code>,<code>/</code>, etc.</li>
+</ul>
+<h2 id="status-roadmap">Status / Roadmap</h2>
+<p>Elements marked <code>(*)</code> are incomplete.</p>
+<h3 id="version-1.0-minimal-functionality-and-some-syntactic-sugar">Version 1.0 (minimal functionality and some syntactic sugar)</h3>
+<ul>
+<li>Minimal (unstandardised) Implementation</li>
+<li>Standard Operations (+ - pos? max etc.)</li>
+<li>Integration and Differentiation (of univariate functions)</li>
+<li>Minimal testing</li>
+<li>Helpful Documentation</li>
+</ul>
+<h3 id="version-2.0-fully-tested-some-experimental-features">Version 2.0 (fully tested, some experimental features)</h3>
+<ul>
+<li>Protocols standardise the behaviour across implmentations</li>
+<li>Generic <code>amount</code> type
+<ul>
+<li>Standard Operations on this generic type (<code>units2.ops</code>)</li>
+<li>Calculus on functions using this generic type (<code>units2.calc</code>)</li>
+</ul></li>
+<li><code>IFnUnit</code> type based on <code>javax.measure</code> (JSR 275)</li>
+<li>Standard Unit Libraries for:
+<ul>
+<li><code>(*)</code> Information and Probability Theory (<code>units2.prob</code>)</li>
+<li>Astroparticle Physics (<code>units2.astro</code>)</li>
+</ul></li>
+<li>Debugging:
+<ul>
+<li><code>(*)</code> Comprehensive Warning/Error messages</li>
+<li><code>(*)</code> Exhaustive Testing</li>
+</ul></li>
+<li>Comprehensive Documentation:
+<ul>
+<li>Inline Comments / Marginalia</li>
+<li>Tutorial</li>
+</ul></li>
+<li><code>(*)</code> Preliminary interop with <code>core.typed</code> (check for correct dimensions at compile time)</li>
+</ul>
+<h3 id="version-3.0">Version 3.0</h3>
+<ul>
+<li><code>(*)</code> Interop with <code>core.typed</code></li>
+<li><code>(*)</code> More cool stuff</li>
+</ul>
