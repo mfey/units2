@@ -99,6 +99,6 @@ It's easy to create your own IFnUnits: they can be created with `AsUnit` or with
 
 TODO: Say something about this.
 
-# Closing Thoughts / Roadmap
+# Closing Thoughts
 
-bla bla bla
+Some effort was put into writing readable, well-commented code. Please read the Marginalia (html) output in `docs/`!

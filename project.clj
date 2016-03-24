@@ -7,5 +7,5 @@
                  [clj-science/jscience "4.3.1"]
                  [org.apache.commons/commons-math3 "3.5"]
                  [incanter "1.5.6"]]
-  :plugins [[lein-marginalia "0.8.0"]]
+  :plugins [[lein-marginalia "0.9.0"]]
 )

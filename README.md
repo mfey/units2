@@ -71,3 +71,7 @@ Elements marked `(*)` are incomplete.
 ### Version 3.0
 + `(*)` Interop with `core.typed`
 + `(*)` More cool stuff
+
+## More to Read
+
+There's a "tutorial.md" file to help get started with the library. Also, some effort was put into writing readable, well-commented code, so please read the Marginalia (html) output in `docs/`!
