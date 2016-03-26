@@ -81,19 +81,29 @@ The `expt` function (following the name of `pow` in Scheme) is a `pow` for amoun
 
 ## Pitfalls
 
-Some standard operations (like `pos?`) become less meaningful. TODO: discuss this further.
+Some standard operations (like `pos?`) become less meaningful. For example, the Celcius and Farenheit scales are offset so that some temperatures are positive and negative depending on which unit you're quoting them in. Similarly, `round`ing a temperature to the nearest integer is ambiguous when there's a 5/9 rescaling factor on top of the offset.
+
+TODO: discuss this further.
 
 # Advanced Features
-
-Now that we've seen how to work within the reference library, let's focus on how to extend it.
 
 ## Calculus
 
 We can do calculus with amounts by leveraging existing implementations of derivatives and integrals of functions (such as Incanter or Apache Commons). The functions in `units2.calc` handle univariate calculus for any combination of regular/dimensionful quantities in the domain/range of the function.
 
+TODO: examples
+
 ## Defining Custom Units
 
-It's easy to create your own IFnUnits: they can be created with `AsUnit` or with `->IFnUnit`; they can also be bound to symbols with the `defunit` macro. TODO: expand on this.
+`units2.astro` doesn't contain many commonly-used units, let alone every unit you might encounter when working with Clojure. Fortunately, it's easy to create your own IFnUnits.
+
+Sticking to the `units2.core` protocols, you can `rescale` existing units, equivalently you can turn any `amount` you've computed into a unit with `AsUnit`: IFnUnits are also `Multiplicative`, so you can combine existing units with `times` and `divide`.
+
+If it's a commonly used unit, then it might be a member of the `SI` or `NonSI` classes of `javax.measure.unit`. In that case, you can simply import these and call
+
+    (->IFnUnit SI/WATT)
+
+With all of the above, it should be easy to put together namespaces of units you'll need, or even create new units on-the-fly in a `let` scope. For work at the REPL, units can also be bound to symbols with the `defunit` macro, so that the printed representation of a unit matches the symbol it's bound to.
 
 ## Extending the protocols
 
