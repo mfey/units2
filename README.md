@@ -4,23 +4,33 @@ A Clojure library for quantities with units.
 
 ## Rationale
 
-Clojure does not have built-in support for numerical quantities in a system of units. Most (all?) previous solutions to this problem use add-on domain specific languages instead of improving the core language in a lispy way.
+Clojure does not have built-in support for numerical quantities in a system of units. Most (all?) previous solutions to this problem construct ad-hoc domain specific languages, instead of transforming the entire language into a DSL (which is what Lisp languages are supposed to do). This library brings Clojure into the world of unit-aware computing (https://xkcd.com/1643/).
+
+### This solution
+
+We provide protocols for things that are units and for things that have units ("amounts", "dimensionful quantities", ...), and a reference implementation of these protocols that augments Clojure in a functional, lispy way.
+
+In addition to these protocols,
++ The reference implementation of units partakes in `clojure.lang.IFn`
+    + A sample bunch of IFnUnits units are provided, as well as tools to quickly create your own IFnUnits from the `SI/` and `NonSI/` units in `javax.measure.unit`
++ The reference implementation of dimensionful quantities comes with unit-aware version of `+`,`-`,`*`,`/`, etc.
+    + These augmented `+-*/` are accessible both using namespace-qualified symbols (idiomatic clojure) and within the scope of a context-creating macro (idiomatic in any lisp)
 
 ### Pre-existing Clojure (Java) solutions:
 
 #### Frinj
-+ flexible units, currencies
++ flexible units and currencies
 + interprets dimensions
-- DSL rather than idiomatic clojure... and the DSL is UGLY!
+- DSL rather than idiomatic clojure
 
 #### Meajure
 + Arithmetic and basic math
-- No notion of `dimension`: `units` are really just keyword tags with exponents, can't convert between them easily
+- No notion of dimension: units are really just keyword tags with exponents, can't convert between them easily
 - Reader-macro-based DSL rather than idiomatic Clojure...
 
 #### Minderbinder
 + defunits-of is really clean
-- Again, it's a DSL
+- It's a DSL
 
 #### units (clojars)
 + Very lispy
@@ -29,17 +39,10 @@ Clojure does not have built-in support for numerical quantities in a system of u
 #### JScience (JAVA)
 + flexible units, currencies
 + Units have dimensions
-+ API is part of the Java Standard Library
++ Part of the Java(x) Standard Library
 - Not Clojure
 
-### This solution
-
-Provide protocols for things that are units and for things that have units ("dimensionful quantities"), and a reference implementation that augments Clojure rather than confines units to a DSL.
-
-+ The reference implementation of units partakes in `clojure.lang.IFn`
-+ The reference implementation of dimensionful quantities comes with unit-aware version of `+`,`-`,`*`,`/`, etc.
-
-## Status / Roadmap
+## Status / Roadmap / TODO list
 
 Elements marked `(*)` are incomplete.
 
@@ -68,7 +71,7 @@ Elements marked `(*)` are incomplete.
 + `(*)` Preliminary interop with `core.typed` (check for correct dimensions at compile time)
 
 
-### Version 3.0
+### Version 3.0 (all experimental features)
 + `(*)` Interop with `core.typed`
 + `(*)` More cool stuff
 
