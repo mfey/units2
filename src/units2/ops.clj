@@ -266,8 +266,8 @@
         '[expt units2.ops/expt
           exp units2.ops/exp
           pow units2.ops/pow
-          log units2.ops/ln
-          log10 units2.ops/log
+          log units2.ops/log
+          log10 units2.ops/log10
         ]
       'clojure.core/let))
 

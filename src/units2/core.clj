@@ -35,7 +35,30 @@
          [this that the-other]) ;Seinfeld reference
   (divide [this] [this that] [this that the-other])
   (inverse [this] "syntactic sugar for arity-1 (divide ...)")
+  (power [this N] "syntactic sugar for all of the above")
 )
+
+(defn unit-from-powers
+"Returns a composite unit from a map of `Multiplicative` units and (integer) powers, or a partitionable seq.
+
+    `(this {kg 1 m -3})` -> a unit for density
+  "
+[pfs]
+	(let [pairs (cond
+               (map? pfs)
+                  ; todo: check nonempty
+                  (map list (keys pfs) (vals pfs))
+               (seq? pfs)
+                  ; todo: other checks
+                  (cond
+                    (empty? pfs)       (throw (Exception. "Empty list not implemented yet"))
+                    (odd? (count pfs)) (throw (Exception. "Odd argnum error"))
+                    true               (partition 2 pfs))
+               true (throw (Exception. "prime factors as a map or an alist")))
+        ; todo: some checks that we are indeed working with units and integers.
+	      mapped (map (fn [[a b]] (power a b)) pairs)]; generate ((power unit exponent) ... (power unit exponent))
+           (reduce (fn [x y] (times x y)) mapped)))
+
 
 
 

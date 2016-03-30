@@ -68,7 +68,7 @@
 ;; ## Spectral Irradiance (spectral flux density)
 
 
-(defunit-with-SI-prefixes Jansky (AsUnit (->amount 1E-26 (->IFnUnit (.divide SI/WATT (.times (.times SI/METER SI/METER) SI/HERTZ))))))
+(defunit-with-SI-prefixes Jansky (rescale (unit-from-powers {(->IFnUnit SI/WATT) 1  m -2 (->IFnUnit SI/HERTZ) -1}) 1E-26))
 
 ;; From this point onwards, units are dimension-free. However, angles aren't redshifts or probabilities! We should try to guarantee we're not allowing silly conversions.
 

@@ -52,7 +52,8 @@
    (divide [this] (inverse this))
    (divide [this that] (new IFnUnit (.divide  javax-unit (to-javax IFnUnit that))))
    (divide [this that the-other] (new IFnUnit (.divide  javax-unit (.times (to-javax IFnUnit that) (to-javax IFnUnit the-other)))))
-)
+   (power [this N] (new IFnUnit (.pow javax-unit N)))
+  )
 
 (defmacro defunit
 "`def` a symbol to hold a unit, and change that unit's `UnitFormat` to that symbol (for prettier printing)."

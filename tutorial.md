@@ -61,7 +61,7 @@ Constantly working out of the `ops` namespace can be a bit tedious, especially f
       (< (m 2) (min (cm 180) (m 0.18)))
     )
 
-These are joined together into the super-macro `(with-unit- [keywords] body)`, which expands into (possibly nested) calls to these other macros based on the keywords.
+These are joined together into the super-macro `(with-unit- [keywords] body)`, which expands into (possibly nested) calls to these other macros based on the keywords. These context-macros are the recommended way to do math with units.
 
 
 ## Exponentiation
@@ -78,6 +78,8 @@ They still accept arity-one definitions over regular numbers to behave nicely in
 The `expt` function (following the name of `pow` in Scheme) is a `pow` for amounts with units.
 
     (expt (m 1) 3) ; --> volume
+
+The reason for splitting exponentiation into `pow` and `expt` is [bla bla bla...].
 
 ## Pitfalls
 
@@ -97,9 +99,11 @@ TODO: examples
 
 `units2.astro` doesn't contain many commonly-used units, let alone every unit you might encounter when working with Clojure. Fortunately, it's easy to create your own IFnUnits.
 
-Sticking to the `units2.core` protocols, you can `rescale` existing units, equivalently you can turn any `amount` you've computed into a unit with `AsUnit`: IFnUnits are also `Multiplicative`, so you can combine existing units with `times` and `divide`.
+Sticking to the `units2.core` protocols, you can `rescale` existing units, equivalently you can turn any `amount` you've computed into a unit with `AsUnit`: IFnUnits are also `Multiplicative`, so you can combine existing units with `times` and `divide`. However, the recommended way to combine `Multiplicative` units is to use the `unit-from-powers` function:
 
-If it's a commonly used unit, then it might be a member of the `SI` or `NonSI` classes of `javax.measure.unit`. In that case, you can simply import these and call
+    (unit-from-powers {kg 1 m 2 sec -2}) ; Joule
+
+If the unit you want to define is a commonly used unit, then it might be a member of the `SI` or `NonSI` classes of `javax.measure.unit`. In that case, you can simply import these and call
 
     (->IFnUnit SI/WATT)
 

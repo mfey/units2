@@ -2910,7 +2910,7 @@ net.brehaut.ClojureTools = (function (SH) {
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defunit Lsol (AsUnit (-&gt;amount 3.846E26 (-&gt;IFnUnit SI/WATT))))</pre></td></tr><tr><td class="docs"><h2>Spectral Irradiance (spectral flux density)</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes Jansky (AsUnit (-&gt;amount 1E-26 (-&gt;IFnUnit (.divide SI/WATT (.times (.times SI/METER SI/METER) SI/HERTZ))))))</pre></td></tr><tr><td class="docs"><p>From this point onwards, units are dimension-free. However, angles aren't redshifts or probabilities! We should try to guarantee we're not allowing silly conversions.</p>
+</td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes Jansky (rescale (unit-from-powers {(-&gt;IFnUnit SI/WATT) 1  m -2 (-&gt;IFnUnit SI/HERTZ) -1}) 1E-26))</pre></td></tr><tr><td class="docs"><p>From this point onwards, units are dimension-free. However, angles aren't redshifts or probabilities! We should try to guarantee we're not allowing silly conversions.</p>
 </td><td class="codes"></td></tr><tr><td class="docs"><h2>(Solid) Angles</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defunit rad (-&gt;IFnUnit SI/RADIAN))
@@ -3056,7 +3056,27 @@ net.brehaut.ClojureTools = (function (SH) {
   (times [this] [this that]
          [this that the-other]) ;Seinfeld reference
   (divide [this] [this that] [this that the-other])
-  (inverse [this] &quot;syntactic sugar for arity-1 (divide ...)&quot;))</pre></td></tr><tr><td class="docs"><p>A generic type for an amount with a unit, that doesn't care about the implementation of <code>unit</code> or of <code>value</code> (as long as these are consistent).</p>
+  (inverse [this] &quot;syntactic sugar for arity-1 (divide ...)&quot;)
+  (power [this N] &quot;syntactic sugar for all of the above&quot;))</pre></td></tr><tr><td class="docs"><p>Returns a composite unit from a map of <code>Multiplicative</code> units and (integer) powers, or a partitionable seq.</p>
+
+<pre><code>`(this {kg 1 m -3})` -&gt; a unit for density
+</code></pre>
+</td><td class="codes"><pre class="brush: clojure">(defn unit-from-powers
+[pfs]
+	(let [pairs (cond
+               (map? pfs)
+                  ; todo: check nonempty
+                  (map list (keys pfs) (vals pfs))
+               (seq? pfs)
+                  ; todo: other checks
+                  (cond
+                    (empty? pfs)       (throw (Exception. &quot;Empty list not implemented yet&quot;))
+                    (odd? (count pfs)) (throw (Exception. &quot;Odd argnum error&quot;))
+                    true               (partition 2 pfs))
+               true (throw (Exception. &quot;prime factors as a map or an alist&quot;)))
+        ; todo: some checks that we are indeed working with units and integers.
+	      mapped (map (fn [[a b]] (power a b)) pairs)]; generate ((power unit exponent) ... (power unit exponent))
+           (reduce (fn [x y] (times x y)) mapped)))</pre></td></tr><tr><td class="docs"><p>A generic type for an amount with a unit, that doesn't care about the implementation of <code>unit</code> or of <code>value</code> (as long as these are consistent).</p>
 </td><td class="codes"><pre class="brush: clojure">(deftype amount [value unit]
   Dimensionful
   (getUnit [this] unit)
@@ -3112,7 +3132,8 @@ and protocol dispatch (nice, fast) rather than java interop and reflection (ugly
    (times [this that the-other] (new IFnUnit (.times javax-unit (.times (to-javax IFnUnit that) (to-javax IFnUnit the-other)))))
    (divide [this] (inverse this))
    (divide [this that] (new IFnUnit (.divide  javax-unit (to-javax IFnUnit that))))
-   (divide [this that the-other] (new IFnUnit (.divide  javax-unit (.times (to-javax IFnUnit that) (to-javax IFnUnit the-other))))))</pre></td></tr><tr><td class="docs"><p><code>def</code> a symbol to hold a unit, and change that unit's <code>UnitFormat</code> to that symbol (for prettier printing).</p>
+   (divide [this that the-other] (new IFnUnit (.divide  javax-unit (.times (to-javax IFnUnit that) (to-javax IFnUnit the-other)))))
+   (power [this N] (new IFnUnit (.pow javax-unit N))))</pre></td></tr><tr><td class="docs"><p><code>def</code> a symbol to hold a unit, and change that unit's <code>UnitFormat</code> to that symbol (for prettier printing).</p>
 </td><td class="codes"><pre class="brush: clojure">(defmacro defunit
 [name value]
     `(do
@@ -3375,8 +3396,8 @@ so we define them over ratios of amounts: exp(a/b), log(a/b), etc.</p>
         '[expt units2.ops/expt
           exp units2.ops/exp
           pow units2.ops/pow
-          log units2.ops/ln
-          log10 units2.ops/log
+          log units2.ops/log
+          log10 units2.ops/log10
         ]
       'clojure.core/let))</pre></td></tr><tr><td class="docs"><h2>Magnitudes</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
