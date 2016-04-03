@@ -6,15 +6,18 @@ A Clojure library for quantities with units.
 
 Clojure does not have built-in support for numerical quantities in a system of units. Most (all?) previous solutions to this problem construct ad-hoc domain specific languages, instead of transforming the entire language into a DSL (which is what Lisp languages are supposed to do). This library brings Clojure into the world of unit-aware computing (https://xkcd.com/1643/).
 
+This library also distinguishes itself by respecting the distinction between the algebra on quantities with units and the algebra on units themselves. This is an important prerequisite for dimensional analysis.
+
 ### This solution
 
 We provide protocols for things that are units and for things that have units ("amounts", "dimensionful quantities", ...), and a reference implementation of these protocols that augments Clojure in a functional, lispy way.
 
 In addition to these protocols,
 + The reference implementation of units partakes in `clojure.lang.IFn`
-    + A sample bunch of IFnUnits units are provided, as well as tools to quickly create your own IFnUnits from the `SI/` and `NonSI/` units in `javax.measure.unit`
+    + A sample bunch of IFnUnits units are provided, as well as tools to quickly create your own IFnUnits
 + The reference implementation of dimensionful quantities comes with unit-aware version of `+`,`-`,`*`,`/`, etc.
     + These augmented `+-*/` are accessible both using namespace-qualified symbols (idiomatic clojure) and within the scope of a context-creating macro (idiomatic in any lisp)
+    + `+-*/` also conform to the rules dimensional analysis
 
 ### Pre-existing Clojure (Java) solutions:
 
@@ -68,11 +71,12 @@ Elements marked `(*)` are incomplete.
 + Comprehensive Documentation:
     + Inline Comments / Marginalia
     + Tutorial
-+ `(*)` Preliminary interop with `core.typed` (check for correct dimensions at compile time)
-
++ `(*)` Preliminary interop with `core.typed`
 
 ### Version 3.0 (all experimental features)
-+ `(*)` Interop with `core.typed`
++ `(*)` Interop with `core.typed` (check for correct dimensions at compile time)
++ `(*)` Extended Dimensional Analysis (e.g. relativity [L]=[T], etc.)
+    + Local scope macro!!!
 + `(*)` More cool stuff
 
 ## More to Read

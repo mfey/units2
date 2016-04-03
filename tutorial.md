@@ -113,6 +113,12 @@ With all of the above, it should be easy to put together namespaces of units you
 
 TODO: Say something about this.
 
+## units2.typed
+
+bla bla bla
+
+We want to do dimensional analysis to check our source code at compile-time.
+
 # Closing Thoughts
 
 Some effort was put into writing readable, well-commented code. Please read the Marginalia (html) output in `docs/`!

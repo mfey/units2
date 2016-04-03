@@ -2866,7 +2866,7 @@ net.brehaut.ClojureTools = (function (SH) {
   };
 })(SyntaxHighlighter);
 </script><title>units2 -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name"><a href="http://example.com/FIXME">units2</a></h1><h2 class="project-version">2.3</h2><br /><p>A Clojure library for quantities with units.</p>
-</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.8.0</td></tr><tr><td class="dep-name">clj-science/jscience</td><td class="dotted"><hr /></td><td class="dep-version">4.3.1</td></tr><tr><td class="dep-name">org.apache.commons/commons-math3</td><td class="dotted"><hr /></td><td class="dep-version">3.5</td></tr><tr><td class="dep-name">incanter</td><td class="dotted"><hr /></td><td class="dep-version">1.5.6</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#units2.astro">units2.astro</a></li><li><a href="#units2.calc">units2.calc</a></li><li><a href="#units2.core">units2.core</a></li><li><a href="#units2.IFnUnit">units2.IFnUnit</a></li><li><a href="#units2.ops">units2.ops</a></li><li><a href="#units2.prob">units2.prob</a></li><li><a href="#units2.trig">units2.trig</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#units2.astro" name="units2.astro"><h1 class="project-name">units2.astro</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.8.0</td></tr><tr><td class="dep-name">clj-science/jscience</td><td class="dotted"><hr /></td><td class="dep-version">4.3.1</td></tr><tr><td class="dep-name">org.apache.commons/commons-math3</td><td class="dotted"><hr /></td><td class="dep-version">3.5</td></tr><tr><td class="dep-name">incanter</td><td class="dotted"><hr /></td><td class="dep-version">1.5.6</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#units2.astro">units2.astro</a></li><li><a href="#units2.calc">units2.calc</a></li><li><a href="#units2.core">units2.core</a></li><li><a href="#units2.IFnUnit">units2.IFnUnit</a></li><li><a href="#units2.ops">units2.ops</a></li><li><a href="#units2.prob">units2.prob</a></li><li><a href="#units2.trig">units2.trig</a></li><li><a href="#units2.typed">units2.typed</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#units2.astro" name="units2.astro"><h1 class="project-name">units2.astro</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns units2.astro
   (:require [units2.core :refer :all]
             [units2.IFnUnit :refer :all])
@@ -2876,49 +2876,43 @@ net.brehaut.ClojureTools = (function (SH) {
 </td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes pc (-&gt;IFnUnit NonSI/PARSEC))
 (defunit-with-SI-prefixes m (-&gt;IFnUnit SI/METER))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defunit AU (-&gt;IFnUnit NonSI/ASTRONOMICAL_UNIT))</pre></td></tr><tr><td class="docs"><h2>Time [T]</h2>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>Seconds are not shortened to s as in the SI because ns is the Clojure namspace macro. The astrophsyical sec is arcsec.</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Seconds are not shortened to <code>s</code> as in the SI because <code>ns</code> is the Clojure namspace macro. The astrophsyical sec is <code>arcsec</code>.</p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes sec (-&gt;IFnUnit SI/SECOND))
 (defunit-with-SI-prefixes yr (-&gt;IFnUnit NonSI/YEAR_SIDEREAL))</pre></td></tr><tr><td class="docs"><h2>Mass [M]</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes g (-&gt;IFnUnit SI/GRAM))
-(defunit Msol (AsUnit (kg 1.98855E30)))</pre></td></tr><tr><td class="docs"><p>The mass of the sun can alternatively be expressed in terms of JScience Constants and NonSI Units:</p>
-
-<pre><code>
-(defunit Msol ;; old code, beware!
- (.divide
-   (.times
-     (unit-from-amount
-       (.divide
-         (.pow Constants/two_π 2)
-         Constants/G))
-     (.pow NonSI/ASTRONOMICAL_UNIT 3))
-   (.pow yr 2)))
-</code></pre>
-</td><td class="codes"></td></tr><tr><td class="docs"><h2>Charge [Q]</h2>
+(defunit Msol (AsUnit (kg 1.98855E30)))</pre></td></tr><tr><td class="docs"><h2>Charge [Q]</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defunit coulomb (-&gt;IFnUnit SI/COULOMB))
 (defunit positroncharge (AsUnit (coulomb 1.6022e-19)))</pre></td></tr><tr><td class="docs"><h2>Temperature [K]</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes K (-&gt;IFnUnit SI/KELVIN))</pre></td></tr><tr><td class="docs"><h2>Velocity [L/T]</h2>
-</td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit lightspeed (AsUnit ((divide m sec) 2.9979246e8)))</pre></td></tr><tr><td class="docs"><h2>Energy</h2>
-</td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes eV (-&gt;IFnUnit NonSI/ELECTRON_VOLT))
-(defunit-with-SI-prefixes J (-&gt;IFnUnit SI/JOULE))
-(defunit erg (-&gt;IFnUnit NonSI/ERG))</pre></td></tr><tr><td class="docs"><h2>Luminosity (radiant flux)</h2>
-</td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit Lsol (AsUnit (-&gt;amount 3.846E26 (-&gt;IFnUnit SI/WATT))))</pre></td></tr><tr><td class="docs"><h2>Spectral Irradiance (spectral flux density)</h2>
-</td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes Jansky (rescale (unit-from-powers {(-&gt;IFnUnit SI/WATT) 1  m -2 (-&gt;IFnUnit SI/HERTZ) -1}) 1E-26))</pre></td></tr><tr><td class="docs"><p>From this point onwards, units are dimension-free. However, angles aren't redshifts or probabilities! We should try to guarantee we're not allowing silly conversions.</p>
-</td><td class="codes"></td></tr><tr><td class="docs"><h2>(Solid) Angles</h2>
+</td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes K (-&gt;IFnUnit SI/KELVIN))</pre></td></tr><tr><td class="docs"><h2>(Solid) Angles</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defunit rad (-&gt;IFnUnit SI/RADIAN))
 (defunit deg (-&gt;IFnUnit NonSI/DEGREE_ANGLE))
 (defunit arcsec (-&gt;IFnUnit NonSI/SECOND_ANGLE))
 (defunit as (-&gt;IFnUnit NonSI/SECOND_ANGLE))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defunit sr (-&gt;IFnUnit SI/STERADIAN))
-(defunit sky (rescale sr (* 4 Math/PI)))</pre></td></tr><tr><td class="docs"><h2>Redshifts can be given as z or as 1+z, both are useful in cosmology.</h2>
+(defunit sky (rescale sr (* 4 Math/PI)))</pre></td></tr><tr><td class="docs"><h2>Velocity [L/T]</h2>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defunit lightspeed (rescale (divide m sec) 2.9979246e8))</pre></td></tr><tr><td class="docs"><h2>Energy</h2>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes eV (-&gt;IFnUnit NonSI/ELECTRON_VOLT))
+(defunit-with-SI-prefixes J (-&gt;IFnUnit SI/JOULE))
+(defunit erg (-&gt;IFnUnit NonSI/ERG))</pre></td></tr><tr><td class="docs"><h2>Luminosity (radiant flux)</h2>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defunit Lsol (AsUnit (-&gt;amount 3.846E26 (-&gt;IFnUnit SI/WATT))))</pre></td></tr><tr><td class="docs"><p>The next few units use cm and seconds because they are instrumentalists' units.</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><h2>Flux</h2>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defunit Flux (unit-from-powers {cm -2 sec -1}))
+(defunit Intensity (unit-from-powers {cm -2 sec -1 sr -1}))</pre></td></tr><tr><td class="docs"><h2>Spectral Flux</h2>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defunit SpectralFlux (unit-from-powers {cm -2 sec -1 GeV -1}))
+(defunit SpectralIntensity (unit-from-powers {cm -2 sec -1 sr -1 GeV -1}))</pre></td></tr><tr><td class="docs"><h2>Spectral Irradiance (spectral flux density)</h2>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes Jansky (rescale (unit-from-powers {(-&gt;IFnUnit SI/WATT) 1  m -2 (-&gt;IFnUnit SI/HERTZ) -1}) 1E-26))</pre></td></tr><tr><td class="docs"><p>From this point onwards, units are dimension-free. However, angles aren't redshifts or probabilities! We should try to guarantee we're not allowing silly conversions.</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><h2>Redshifts can be given as z or as 1+z, both are useful in cosmology.</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defunit zee (-&gt;IFnUnit (.alternate (.divide SI/METER SI/METER) &quot;zee&quot;)))
 (defunit onepluszee (-&gt;IFnUnit (.plus ^Unit (implementation-hook zee) -1)))</pre></td></tr><tr><td class="docs"><h2>No units</h2>
@@ -3480,7 +3474,13 @@ so we define them over ratios of amounts: exp(a/b), log(a/b), etc.</p>
   `(def ~trig (wrap-out rad #(~javatrig %))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(radians-out asin Math/asin)
 (radians-out acos Math/acos)
-(radians-out atan Math/atan)</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/gdeer81/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_units2.astro">units2.astro</li><li class="floating-toc-li" id="floating-toc_units2.calc">units2.calc</li><li class="floating-toc-li" id="floating-toc_units2.core">units2.core</li><li class="floating-toc-li" id="floating-toc_units2.IFnUnit">units2.IFnUnit</li><li class="floating-toc-li" id="floating-toc_units2.ops">units2.ops</li><li class="floating-toc-li" id="floating-toc_units2.prob">units2.prob</li><li class="floating-toc-li" id="floating-toc_units2.trig">units2.trig</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
+(radians-out atan Math/atan)</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#units2.typed" name="units2.typed"><h1 class="project-name">units2.typed</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Dimensional Analysis at compiletime</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(ns units2.typed
+  (:require [units2.core :refer :all]
+            [units2.ops :as ops]
+            ;core.typed, etc ...))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(set! *warn-on-reflection* true)</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/gdeer81/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_units2.astro">units2.astro</li><li class="floating-toc-li" id="floating-toc_units2.calc">units2.calc</li><li class="floating-toc-li" id="floating-toc_units2.core">units2.core</li><li class="floating-toc-li" id="floating-toc_units2.IFnUnit">units2.IFnUnit</li><li class="floating-toc-li" id="floating-toc_units2.ops">units2.ops</li><li class="floating-toc-li" id="floating-toc_units2.prob">units2.prob</li><li class="floating-toc-li" id="floating-toc_units2.trig">units2.trig</li><li class="floating-toc-li" id="floating-toc_units2.typed">units2.typed</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
 SyntaxHighlighter.all();
 
 // hackity hack
