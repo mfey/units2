@@ -19,9 +19,11 @@
       true (throw (Exception. "error in to-javax!"))))
 
 (deftype IFnUnit [^Unit javax-unit]
+  Hackable
+  (implementation-hook [this] javax-unit)
+
   Unitlike
   (getDimension [this] (.getDimension ^Unit javax-unit))
-  (implementation-hook [this] javax-unit)
   (compatible? [this that]
     (.isCompatible javax-unit (to-javax IFnUnit that)))
   (getConverter [this that]

@@ -3038,7 +3038,8 @@ net.brehaut.ClojureTools = (function (SH) {
   (getDimension [this] &quot;get the dimension of&quot;)
   (compatible? [this that] &quot;Do two units have the same dimension? If so, they are `compatible?'&quot;)
   (getConverter [this that] &quot;Returns a function that describes the unit transformation, as it acts on values... mostly for internal use.&quot;)
-  (rescale [this number] &quot;Returns a unit linearly rescaled by the given factor&quot;) ;; Not 100% necessary, but nice to have
+  (rescale [this number] &quot;Returns a unit linearly rescaled by the given factor&quot;) ;; Not 100% necessary, but nice to have)</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defprotocol Hackable
   (implementation-hook [this] &quot;this may be useful for implementors, but should NOT be used in applications.&quot;) ;; this should be hidden from users... right?)</pre></td></tr><tr><td class="docs"><p>Defines the behavior for a function that can be wrapped/unwrapped around other functions. In the context of units, it is useful for mixing gauge-invariant (user) and gauge-dependent (library) code.
   This utility is provided for one-to-one functions.</p>
 </td><td class="codes"><pre class="brush: clojure">(defprotocol Wrappable
@@ -3097,9 +3098,10 @@ and protocol dispatch (nice, fast) rather than java interop and reflection (ugly
       (instance? Unit obj) obj
       true (throw (Exception. &quot;error in to-javax!&quot;))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(deftype IFnUnit [^Unit javax-unit]
+  Hackable
+  (implementation-hook [this] javax-unit)
   Unitlike
   (getDimension [this] (.getDimension ^Unit javax-unit))
-  (implementation-hook [this] javax-unit)
   (compatible? [this that]
     (.isCompatible javax-unit (to-javax IFnUnit that)))
   (getConverter [this that]

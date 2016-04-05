@@ -18,6 +18,9 @@
   (compatible? [this that] "Do two units have the same dimension? If so, they are `compatible?'")
   (getConverter [this that] "Returns a function that describes the unit transformation, as it acts on values... mostly for internal use.")
   (rescale [this number] "Returns a unit linearly rescaled by the given factor") ;; Not 100% necessary, but nice to have
+)
+
+(defprotocol Hackable
   (implementation-hook [this] "this may be useful for implementors, but should NOT be used in applications.") ;; this should be hidden from users... right?
   )
 
