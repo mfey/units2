@@ -2866,7 +2866,7 @@ net.brehaut.ClojureTools = (function (SH) {
   };
 })(SyntaxHighlighter);
 </script><title>units2 -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name"><a href="http://example.com/FIXME">units2</a></h1><h2 class="project-version">2.3</h2><br /><p>A Clojure library for quantities with units.</p>
-</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.8.0</td></tr><tr><td class="dep-name">clj-science/jscience</td><td class="dotted"><hr /></td><td class="dep-version">4.3.1</td></tr><tr><td class="dep-name">org.apache.commons/commons-math3</td><td class="dotted"><hr /></td><td class="dep-version">3.5</td></tr><tr><td class="dep-name">incanter</td><td class="dotted"><hr /></td><td class="dep-version">1.5.6</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#units2.astro">units2.astro</a></li><li><a href="#units2.calc">units2.calc</a></li><li><a href="#units2.core">units2.core</a></li><li><a href="#units2.IFnUnit">units2.IFnUnit</a></li><li><a href="#units2.ops">units2.ops</a></li><li><a href="#units2.prob">units2.prob</a></li><li><a href="#units2.trig">units2.trig</a></li><li><a href="#units2.typed">units2.typed</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#units2.astro" name="units2.astro"><h1 class="project-name">units2.astro</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.8.0</td></tr><tr><td class="dep-name">clj-science/jscience</td><td class="dotted"><hr /></td><td class="dep-version">4.3.1</td></tr><tr><td class="dep-name">org.apache.commons/commons-math3</td><td class="dotted"><hr /></td><td class="dep-version">3.5</td></tr><tr><td class="dep-name">incanter</td><td class="dotted"><hr /></td><td class="dep-version">1.5.6</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#units2.astro">units2.astro</a></li><li><a href="#units2.calc">units2.calc</a></li><li><a href="#units2.core">units2.core</a></li><li><a href="#units2.IFnUnit">units2.IFnUnit</a></li><li><a href="#units2.ops">units2.ops</a></li><li><a href="#units2.prob">units2.prob</a></li><li><a href="#units2.spice">units2.spice</a></li><li><a href="#units2.trig">units2.trig</a></li><li><a href="#units2.typed">units2.typed</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#units2.astro" name="units2.astro"><h1 class="project-name">units2.astro</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns units2.astro
   (:require [units2.core :refer :all]
             [units2.IFnUnit :refer :all])
@@ -3454,7 +3454,69 @@ so we define them over ratios of amounts: exp(a/b), log(a/b), etc.</p>
 </td><td class="codes"></td></tr><tr><td class="docs"><h2>Odds ratio (ratio of odds)</h2>
 </td><td class="codes"></td></tr><tr><td class="docs"><h2>No units</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit dimensionless (divide bit bit))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#units2.trig" name="units2.trig"><h1 class="project-name">units2.trig</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Trigonometry</p>
+</td><td class="codes"><pre class="brush: clojure">(defunit dimensionless (divide bit bit))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#units2.spice" name="units2.spice"><h1 class="project-name">units2.spice</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h1>Molecular Gastronomy in Clojure</h1>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(ns units2.spice
+  (:require [units2.core :refer :all]
+            [units2.ops :as ops]
+            [units2.IFnUnit :refer :all])
+  (:import (javax.measure.unit Unit SI)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes g (-&gt;IFnUnit SI/GRAM))</pre></td></tr><tr><td class="docs"><p>The spiciness of food is determined (amongst other things) by the amount of capsaisinoids they contain.
+capsaisinoid concentrations can be determined to parts per million with liquid chromatography</p>
+</td><td class="codes"><pre class="brush: clojure">(defunit ppm (divide mug g))</pre></td></tr><tr><td class="docs"><p>The Scoville is a historical unit for spice of roughly 15 or 16 ppm pure capsaisin</p>
+</td><td class="codes"><pre class="brush: clojure">(def history (/ 15))
+(defunit-with-SI-prefixes scoville (rescale ppm history))</pre></td></tr><tr><td class="docs"><p>consistency check: pure capsaicin is 15,000,000 Scoville</p>
+</td><td class="codes"><pre class="brush: clojure">(def pure-capsaicin (ppm 1e6))
+(Mscoville pure-capsaicin)</pre></td></tr><tr><td class="docs"><h2>time to cook!</h2>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>all of these values from Wikipedia</p>
+</td><td class="codes"><pre class="brush: clojure">(def pepper {
+  :pepperoncino   (scoville 500)
+  :jalapeno       (kscoville 10)
+  :habanero       (Mscoville 0.2)
+})</pre></td></tr><tr><td class="docs"><p>all of these values reasonable, but unchecked</p>
+</td><td class="codes"><pre class="brush: clojure">(def meat {
+  :chicken        (scoville 0)
+  :lamb           (scoville 0)
+  :oldspiceman    (Mscoville 9.001) ; from the commercials
+})</pre></td></tr><tr><td class="docs"><p>very lightly spiced because the same spoon was used for the curry.</p>
+</td><td class="codes"><pre class="brush: clojure">(def rice (scoville 10))</pre></td></tr><tr><td class="docs"><p>let's see how much spicier habaneros are than jalapenos</p>
+</td><td class="codes"><pre class="brush: clojure">(ops/divide-into-double (:habanero pepper) (:jalapeno pepper))</pre></td></tr><tr><td class="docs"><p>it's easy to check that the Old Spice Man's pungency is over 9000 (in the appropriate units):</p>
+</td><td class="codes"><pre class="brush: clojure">(ops/&gt; (:oldspiceman meat) (kscoville 9000))</pre></td></tr><tr><td class="docs"><h2>now, let's *actually* cook!</h2>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>concentrations (c) are intensive quantities... we need to say how much weight (w) of each ingredient we're adding...</p>
+</td><td class="codes"><pre class="brush: clojure">(defn add-ingredients [[c1 w1] [c2 w2]]
+  (ops/with-unit-arithmetic ; besides this macro, it's regular Clojure code.
+    (let [w (+ w1 w2)]
+      [(/ (+ (* c1 w1) (* c2 w2)) w) w])))</pre></td></tr><tr><td class="docs"><p>which is spiciest?</p>
+</td><td class="codes"><pre class="brush: clojure">(let [recipe1 (add-ingredients [(:jalapeno pepper) (g 5)] [(:chicken meat) (kg 0.5)])
+      recipe2 (add-ingredients [(:lamb meat) (g 50)] [rice (kg 1)])
+     ]
+  (map #(getValue % scoville) [(first recipe1) (first recipe2)])
+)</pre></td></tr><tr><td class="docs"><p>a bit of everything... imagine managing units by hand!!!</p>
+</td><td class="codes"><pre class="brush: clojure">(reduce add-ingredients [
+  [(:pepperoncino pepper) (g 150)]
+  [(:habanero pepper) (g 10)]
+  [rice (g 600)]
+  [(:chicken meat) (g 240)]
+  [(:lamb meat) (kg 0.3)]
+])</pre></td></tr><tr><td class="docs"><h2>Too hot!!!</h2>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>we need to counteract all the heat with dairy products.
+Let's model this with negative quantities in scoville units...</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>some unknown value (not representative of reality)</p>
+</td><td class="codes"><pre class="brush: clojure">(def milk (kscoville (- (rand))))</pre></td></tr><tr><td class="docs"><p>there's no sensible interpretation as negative capsaisinoid concentration, so we'll have to do some work to
+determine these amounts empirically: keep mouthwashing with milk until it's not spicy.</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def process (iterate (fn [x] (add-ingredients [milk (g 100)] x)) [(:jalapeno pepper) (g 1.4)]))
+(def success (first (filter #(neg? (getValue (first %) scoville)) process)))</pre></td></tr><tr><td class="docs"><p>we can use this and the concentration-weight relation to estimate the soothingness of milk:</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def estimated-milk
+  (let [cmix (first success)
+        wmix (second success)
+        cj   (:jalapeno pepper)
+        wj   (g 1)
+       ]
+  (ops/with-unit-arithmetic
+    (/ (- (* cmix wmix) (* cj wj)) (- wmix wj)))))</pre></td></tr><tr><td class="docs"><p>how far from the true value is our empirical estimation?</p>
+</td><td class="codes"><pre class="brush: clojure">(Math/abs (ops/divide-into-double (ops/- estimated-milk milk) milk))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#units2.trig" name="units2.trig"><h1 class="project-name">units2.trig</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Trigonometry</p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns units2.trig
   (:require [units2.core :refer :all]
@@ -3482,7 +3544,7 @@ so we define them over ratios of amounts: exp(a/b), log(a/b), etc.</p>
   (:require [units2.core :refer :all]
             [units2.ops :as ops]
             ;core.typed, etc ...))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(set! *warn-on-reflection* true)</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/gdeer81/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_units2.astro">units2.astro</li><li class="floating-toc-li" id="floating-toc_units2.calc">units2.calc</li><li class="floating-toc-li" id="floating-toc_units2.core">units2.core</li><li class="floating-toc-li" id="floating-toc_units2.IFnUnit">units2.IFnUnit</li><li class="floating-toc-li" id="floating-toc_units2.ops">units2.ops</li><li class="floating-toc-li" id="floating-toc_units2.prob">units2.prob</li><li class="floating-toc-li" id="floating-toc_units2.trig">units2.trig</li><li class="floating-toc-li" id="floating-toc_units2.typed">units2.typed</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
+</td><td class="codes"><pre class="brush: clojure">(set! *warn-on-reflection* true)</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/gdeer81/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_units2.astro">units2.astro</li><li class="floating-toc-li" id="floating-toc_units2.calc">units2.calc</li><li class="floating-toc-li" id="floating-toc_units2.core">units2.core</li><li class="floating-toc-li" id="floating-toc_units2.IFnUnit">units2.IFnUnit</li><li class="floating-toc-li" id="floating-toc_units2.ops">units2.ops</li><li class="floating-toc-li" id="floating-toc_units2.prob">units2.prob</li><li class="floating-toc-li" id="floating-toc_units2.spice">units2.spice</li><li class="floating-toc-li" id="floating-toc_units2.trig">units2.trig</li><li class="floating-toc-li" id="floating-toc_units2.typed">units2.typed</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
 SyntaxHighlighter.all();
 
 // hackity hack

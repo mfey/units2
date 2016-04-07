@@ -71,6 +71,7 @@ Elements marked `(*)` are incomplete.
 + Comprehensive Documentation:
     + Inline Comments / Marginalia
     + Tutorial
+    + Example code (`spice.clj`)
 + `(*)` Preliminary interop with `core.typed`
 
 ### Version 3.0 (all experimental features)
@@ -81,4 +82,4 @@ Elements marked `(*)` are incomplete.
 
 ## More to Read
 
-There's a "tutorial.md" file to help get started with the library. Also, some effort was put into writing readable, well-commented code, so please read the Marginalia (html) output in `docs/`!
+There's a "tutorial.md" file to help get started with the library and some example code in "spice.clj". Also, some effort was put into writing readable, well-commented code, so please read the Marginalia (html) output in `docs/`!
