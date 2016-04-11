@@ -50,7 +50,16 @@
      )
   (testing "/"
     (is (try (ops//) (catch clojure.lang.ArityException e true)))
-    )
+    ;; never divide by zero!!!
+    (is (try (ops// 1 0) (catch java.lang.ArithmeticException e true)))
+    (is (try (ops// (sec 1) 0) (catch java.lang.ArithmeticException e true)))
+    (is (try (ops// 1 (m 0)) (catch java.lang.ArithmeticException e true)))
+    (is (try (ops// (sec 1) (m 0)) (catch java.lang.ArithmeticException e true)))
+  )
+  (testing "div-into-double"
+    (is (number? (ops/divide-into-double (m 1) (m 1))))
+    ;(is (ops/divide-into-double (m 1) (m 0)))
+    (is (== (/ 3 9) (ops/divide-into-double (m 3) (m 9)))))
   ;(testing "rem")
   ;(testing "quot")
   (testing "arithmetic-macro"
@@ -61,34 +70,35 @@
 )
 
 (deftest exponentiation
-   (testing "exp"
-      (is (= Math/E (ops/exp 1)))
-      (is (= 1.0 (ops/exp 0))))
-   (testing "logarithms"
-     (is (= 0.0 (ops/log 1) (ops/log10 1)))
-     (is (= 1.0 (ops/log10 10)))
-     (is (= 3.0 (ops/log10 (km 1) (m 1))))
-   )
+  (testing "exp"
+    (is (= Math/E (ops/exp 1)))
+    (is (= 1.0 (ops/exp 0))))
+  (testing "logarithms"
+    (is (= 0.0 (ops/log 1) (ops/log10 1)))
+    (is (= 1.0 (ops/log10 10)))
+    (is (= 3.0 (ops/log10 (km 1) (m 1)))))
   (testing "expt"
-     (is (ops/== (ops/expt (m 2) 3) ((power m 3) 8)))
-  )
-   (testing "exponentiation-macro"
+    (is (ops/== (ops/expt (m 2) 3) ((power m 3) 8))))
+  (testing "pow"
+    (is (= 1.0 (ops/pow (m 1) (m 4) 0)))
+    (is (= 1.0 (ops/pow (m 1) (m 1) 1) (ops/pow (m 1) (m 1) 6)))
+    (is (= 4.0 (ops/pow (m 1) (cm 50) 2))))
+  (testing "exponentiation-macro"
     (ops/with-unit-expts
       (is (= 0.0 (log 1) (log10 1)))
-     (is (= 1.0 (log10 10)))
-     (is (= 3.0 (log10 (km 1) (m 1))))
-      )
+      (is (= 1.0 (log10 10)))
+      (is (= 3.0 (log10 (km 1) (m 1))))
+      ;etc
     )
+  )
 )
 
 (deftest magnitudes
   (testing "round"
-    (is (= 4 (ops/round (m 8.1) (m 2))))
-  )
+    (is (= 4 (ops/round (m 8.1) (m 2)))))
   (testing "magnitude-macro"
     (is (= 4   (ops/with-unit-magnitudes (round (m 8.1) (m 2)))))
-    (is (= 4.0 (ops/with-unit-magnitudes (floor (m 8.1) (m 2)))))
-    )
+    (is (= 4.0 (ops/with-unit-magnitudes (floor (m 8.1) (m 2))))))
 )
 
 ;(deftest everything-together)

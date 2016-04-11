@@ -82,12 +82,12 @@
 ;; Let's model this with negative quantities in scoville units...
 
 ;; some unknown value (not representative of reality)
-(def milk (kscoville (- (rand))))
+(def milk (scoville (- (rand))))
 
 ;; there's no sensible interpretation as negative capsaisinoid concentration, so we'll have to do some work to
 ;; determine these amounts empirically: keep mouthwashing with milk until it's not spicy.
 
-(def process (iterate (fn [x] (add-ingredients [milk (g 100)] x)) [(:jalapeno pepper) (g 1.4)]))
+(def process (iterate (fn [x] (add-ingredients [milk (g 100)] x)) [(:jalapeno pepper) (g 4)]))
 (def success (first (filter #(neg? (getValue (first %) scoville)) process)))
 
 ;; we can use this and the concentration-weight relation to estimate the soothingness of milk:
@@ -96,7 +96,7 @@
   (let [cmix (first success)
         wmix (second success)
         cj   (:jalapeno pepper)
-        wj   (g 1)
+        wj   (g 4)
        ]
   (ops/with-unit-arithmetic
     (/ (- (* cmix wmix) (* cj wj)) (- wmix wj)))))
