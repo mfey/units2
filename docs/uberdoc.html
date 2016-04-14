@@ -2882,36 +2882,39 @@ net.brehaut.ClojureTools = (function (SH) {
 (defunit-with-SI-prefixes yr (-&gt;IFnUnit NonSI/YEAR_SIDEREAL))</pre></td></tr><tr><td class="docs"><h2>Mass [M]</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes g (-&gt;IFnUnit SI/GRAM))
-(defunit Msol (AsUnit (kg 1.98855E30)))</pre></td></tr><tr><td class="docs"><h2>Charge [Q]</h2>
+(defunit Msol (AsUnit (kg 1.98855E30))) ;; Solar Mass</pre></td></tr><tr><td class="docs"><p>Solar Mass</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><h2>Charge [Q]</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defunit coulomb (-&gt;IFnUnit SI/COULOMB))
-(defunit positroncharge (AsUnit (coulomb 1.6022e-19)))</pre></td></tr><tr><td class="docs"><h2>Temperature [K]</h2>
+(defunit positroncharge (AsUnit (coulomb 1.6022e-19))) ;; fundamental unit of charge in Quantum Electrodynamics.</pre></td></tr><tr><td class="docs"><p>fundamental unit of charge in Quantum Electrodynamics.</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><h2>Temperature [K]</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes K (-&gt;IFnUnit SI/KELVIN))</pre></td></tr><tr><td class="docs"><h2>(Solid) Angles</h2>
+</td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes K (-&gt;IFnUnit SI/KELVIN))
+(defunit celsius (-&gt;IFnUnit SI/CELSIUS))
+(defunit fahrenheit (-&gt;IFnUnit NonSI/FAHRENHEIT)) ;; for pedagogical purposes only.</pre></td></tr><tr><td class="docs"><p>for pedagogical purposes only.</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><h2>(Solid) Angles</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defunit rad (-&gt;IFnUnit SI/RADIAN))
 (defunit deg (-&gt;IFnUnit NonSI/DEGREE_ANGLE))
-(defunit arcsec (-&gt;IFnUnit NonSI/SECOND_ANGLE))
-(defunit as (-&gt;IFnUnit NonSI/SECOND_ANGLE))</pre></td></tr><tr><td class="docs">
+(defunit arcsec (-&gt;IFnUnit NonSI/SECOND_ANGLE))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defunit sr (-&gt;IFnUnit SI/STERADIAN))
-(defunit sky (rescale sr (* 4 Math/PI)))</pre></td></tr><tr><td class="docs"><h2>Velocity [L/T]</h2>
+(defunit sky (-&gt;IFnUnit NonSI/SPHERE))</pre></td></tr><tr><td class="docs"><h2>Velocity [L/T]</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit lightspeed (rescale (divide m sec) 2.9979246e8))</pre></td></tr><tr><td class="docs"><h2>Energy</h2>
+</td><td class="codes"><pre class="brush: clojure">(defunit lightspeed (-&gt;IFnUnit NonSI/C))</pre></td></tr><tr><td class="docs"><h2>Energy [M L^2 / T^2]</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes eV (-&gt;IFnUnit NonSI/ELECTRON_VOLT))
 (defunit-with-SI-prefixes J (-&gt;IFnUnit SI/JOULE))
 (defunit erg (-&gt;IFnUnit NonSI/ERG))</pre></td></tr><tr><td class="docs"><h2>Luminosity (radiant flux)</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit Lsol (AsUnit (-&gt;amount 3.846E26 (-&gt;IFnUnit SI/WATT))))</pre></td></tr><tr><td class="docs"><p>The next few units use cm and seconds because they are instrumentalists' units.</p>
+</td><td class="codes"><pre class="brush: clojure">(defunit Lsol (AsUnit (-&gt;amount 3.846E26 (-&gt;IFnUnit SI/WATT)))) ;; Solar Luminosity</pre></td></tr><tr><td class="docs"><p>Solar Luminosity</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>The next few units use cm and seconds because they are instrumentalists' units.</p>
 </td><td class="codes"></td></tr><tr><td class="docs"><h2>Flux</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defunit Flux (unit-from-powers {cm -2 sec -1}))
 (defunit Intensity (unit-from-powers {cm -2 sec -1 sr -1}))</pre></td></tr><tr><td class="docs"><h2>Spectral Flux</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defunit SpectralFlux (unit-from-powers {cm -2 sec -1 GeV -1}))
-(defunit SpectralIntensity (unit-from-powers {cm -2 sec -1 sr -1 GeV -1}))</pre></td></tr><tr><td class="docs"><h2>Spectral Irradiance (spectral flux density)</h2>
-</td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes Jansky (rescale (unit-from-powers {(-&gt;IFnUnit SI/WATT) 1  m -2 (-&gt;IFnUnit SI/HERTZ) -1}) 1E-26))</pre></td></tr><tr><td class="docs"><p>From this point onwards, units are dimension-free. However, angles aren't redshifts or probabilities! We should try to guarantee we're not allowing silly conversions.</p>
+(defunit SpectralIntensity (unit-from-powers {cm -2 sec -1 sr -1 GeV -1}))</pre></td></tr><tr><td class="docs"><p>From this point onwards, units are dimension-free. However, angles aren't redshifts or probabilities! We should try to guarantee we're not allowing silly conversions.</p>
 </td><td class="codes"></td></tr><tr><td class="docs"><h2>Redshifts can be given as z or as 1+z, both are useful in cosmology.</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defunit zee (-&gt;IFnUnit (.alternate (.divide SI/METER SI/METER) &quot;zee&quot;)))
@@ -3196,6 +3199,9 @@ and protocol dispatch (nice, fast) rather than java interop and reflection (ugly
   (:require [units2.core :refer :all]))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(set! *warn-on-reflection* true)</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def ^:dynamic *unit-warnings-are-errors* true)</pre></td></tr><tr><td class="docs"><p>users who know what they are doing can set this to false at their own risk.</p>
+</td><td class="codes"><pre class="brush: clojure">(def ^:dynamic *unit-warnings-are-printed* true)</pre></td></tr><tr><td class="docs"><p>users who REALLY know what they are doing can prevent warnings from being printed.
+this is ONLY provided to prevent the printing I/O from slowing down well-tested,
+speed-critical computations, and should NOT be used lightly.</p>
 </td><td class="codes"></td></tr><tr><td class="docs"><h2>Utilities</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defmacro threecond [[a b] both one neither]
@@ -3206,7 +3212,8 @@ and protocol dispatch (nice, fast) rather than java interop and reflection (ugly
 </td><td class="codes"><pre class="brush: clojure">(defn- warn [msg]
   (if *unit-warnings-are-errors*
     (throw (Exception. (str msg)))
-    (println (clojure.string/join (concat &quot;WARNING: &quot; msg)))))</pre></td></tr><tr><td class="docs"><h2>Comparisons</h2>
+    (if *unit-warnings-are-printed*
+     (println (clojure.string/join (concat &quot;WARNING: &quot; msg))))))</pre></td></tr><tr><td class="docs"><h2>Comparisons</h2>
 
 <p>Defining <code>==</code> , <code>&gt;=</code>, or <code>&lt;</code> is easy; but <code>zero?</code>, <code>pos?</code>, and <code>neg?</code> can return different answers depending on the input units
 (to see why, consider the Farenheit and Celius temperature scales)</p>
@@ -3251,7 +3258,7 @@ and protocol dispatch (nice, fast) rather than java interop and reflection (ugly
     (apply clojure.core/max args)))</pre></td></tr><tr><td class="docs"><p>Locally rebind <code>&gt;</code>, <code>&gt;=</code>, <code>&lt;</code>, <code>zero?</code>, <code>pos?</code>, ... to unit-aware equivalents.</p>
 </td><td class="codes"><pre class="brush: clojure">(defmacro with-unit-comparisons
   [&amp; body]
-  (conj body '[== units2.ops/==
+  (clojure.core/conj body '[== units2.ops/==
          &gt;  units2.ops/&gt;
          &lt;  units2.ops/&lt;
          &gt;= units2.ops/&gt;=
@@ -3263,7 +3270,19 @@ and protocol dispatch (nice, fast) rather than java interop and reflection (ugly
          max units2.ops/max
         ]
      'clojure.core/let))</pre></td></tr><tr><td class="docs"><p>Other <code>with-unit-...</code> macros will share the same <code>(conj body '[bindings] 'let)</code> hack.
-I'm only 99% sure it's correct, and need to do more testing.</p>
+I'm only 99.5% sure it's correct, and need to do more testing.
+Once I'm 100% sure, I'll use a macro to refactor these macros:</p>
+
+<pre><code>
+(defmacro defhack [macroname docstring bindings]
+  `(defmacro ~namcroname ~docstring [& body]
+  (clojure.core/conj body '~bindings
+     'clojure.core/let))) ;; maybe ????
+</code></pre>
+
+<p>but until testing is done I'll avoid macro-inception for the sake of sanity.</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>14/03/16: Thanks to the <code>Amsterdam Clojurians</code> for noticing that <code>conj</code> should be <code>clojure.core/conj</code> in these macros,
+with the comment "If you're willing to do that, you should be prepared for users willing to define their own <code>conj</code>."</p>
 </td><td class="codes"></td></tr><tr><td class="docs"><h2>Arithmetic</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn +
@@ -3343,7 +3362,7 @@ I'm only 99% sure it's correct, and need to do more testing.</p>
 </td><td class="codes"><pre class="brush: clojure">(defmacro with-unit-arithmetic
   [&amp; body]
   ; TODO: run tests and bugproof this!!!
-  (conj body
+  (clojure.core/conj body
         '[+ units2.ops/+
          - units2.ops/-
          * units2.ops/*
@@ -3388,7 +3407,7 @@ so we define them over ratios of amounts: exp(a/b), log(a/b), etc.</p>
    (Math/pow (divide-into-double a b) c)))</pre></td></tr><tr><td class="docs"><p>Locally rebinds exponentiation functions to unit-aware equivalents.</p>
 </td><td class="codes"><pre class="brush: clojure">(defmacro with-unit-expts
   [&amp; body]
-  (conj body
+  (clojure.core/conj body
         '[expt units2.ops/expt
           exp units2.ops/exp
           pow units2.ops/pow
@@ -3414,7 +3433,7 @@ so we define them over ratios of amounts: exp(a/b), log(a/b), etc.</p>
 (defmgn round Math/round)</pre></td></tr><tr><td class="docs"><p>Locally rebinds magnitude functions to unit-aware equivalents.</p>
 </td><td class="codes"><pre class="brush: clojure">(defmacro with-unit-magnitudes
   [&amp; body]
-  (conj body
+  (clojure.core/conj body
         '[abs units2.ops/abs
           floor units2.ops/floor
           ceil units2.ops/ceil
@@ -3502,17 +3521,17 @@ capsaisinoid concentrations can be determined to parts per million with liquid c
 </td><td class="codes"></td></tr><tr><td class="docs"><p>we need to counteract all the heat with dairy products.
 Let's model this with negative quantities in scoville units...</p>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>some unknown value (not representative of reality)</p>
-</td><td class="codes"><pre class="brush: clojure">(def milk (kscoville (- (rand))))</pre></td></tr><tr><td class="docs"><p>there's no sensible interpretation as negative capsaisinoid concentration, so we'll have to do some work to
+</td><td class="codes"><pre class="brush: clojure">(def milk (scoville (- (rand))))</pre></td></tr><tr><td class="docs"><p>there's no sensible interpretation as negative capsaisinoid concentration, so we'll have to do some work to
 determine these amounts empirically: keep mouthwashing with milk until it's not spicy.</p>
 </td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(def process (iterate (fn [x] (add-ingredients [milk (g 100)] x)) [(:jalapeno pepper) (g 1.4)]))
+</td><td class="codes"><pre class="brush: clojure">(def process (iterate (fn [x] (add-ingredients [milk (g 100)] x)) [(:jalapeno pepper) (g 4)]))
 (def success (first (filter #(neg? (getValue (first %) scoville)) process)))</pre></td></tr><tr><td class="docs"><p>we can use this and the concentration-weight relation to estimate the soothingness of milk:</p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def estimated-milk
   (let [cmix (first success)
         wmix (second success)
         cj   (:jalapeno pepper)
-        wj   (g 1)
+        wj   (g 4)
        ]
   (ops/with-unit-arithmetic
     (/ (- (* cmix wmix) (* cj wj)) (- wmix wj)))))</pre></td></tr><tr><td class="docs"><p>how far from the true value is our empirical estimation?</p>

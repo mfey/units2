@@ -25,16 +25,18 @@
 
 
 (defunit-with-SI-prefixes g (->IFnUnit SI/GRAM))
-(defunit Msol (AsUnit (kg 1.98855E30)))
+(defunit Msol (AsUnit (kg 1.98855E30))) ;; Solar Mass
 
 ;; ## Charge [Q]
 
 (defunit coulomb (->IFnUnit SI/COULOMB))
-(defunit positroncharge (AsUnit (coulomb 1.6022e-19)))
+(defunit positroncharge (AsUnit (coulomb 1.6022e-19))) ;; fundamental unit of charge in Quantum Electrodynamics.
 
 ;; ## Temperature [K]
 
 (defunit-with-SI-prefixes K (->IFnUnit SI/KELVIN))
+(defunit celsius (->IFnUnit SI/CELSIUS))
+(defunit fahrenheit (->IFnUnit NonSI/FAHRENHEIT)) ;; for pedagogical purposes only.
 
 ;; ## (Solid) Angles
 
@@ -42,27 +44,27 @@
 (defunit rad (->IFnUnit SI/RADIAN))
 (defunit deg (->IFnUnit NonSI/DEGREE_ANGLE))
 (defunit arcsec (->IFnUnit NonSI/SECOND_ANGLE))
-(defunit as (->IFnUnit NonSI/SECOND_ANGLE))
 
 (defunit sr (->IFnUnit SI/STERADIAN))
-(defunit sky (rescale sr (* 4 Math/PI)))
+(defunit sky (->IFnUnit NonSI/SPHERE))
 
 
 ;; ## Velocity [L/T]
 
-(defunit lightspeed (rescale (divide m sec) 2.9979246e8))
+(defunit lightspeed (->IFnUnit NonSI/C))
 
 
-;; ## Energy
+;; ## Energy [M L^2 / T^2]
 
 
 (defunit-with-SI-prefixes eV (->IFnUnit NonSI/ELECTRON_VOLT))
 (defunit-with-SI-prefixes J (->IFnUnit SI/JOULE))
 (defunit erg (->IFnUnit NonSI/ERG))
+
 ;; ## Luminosity (radiant flux)
 
 
-(defunit Lsol (AsUnit (->amount 3.846E26 (->IFnUnit SI/WATT))))
+(defunit Lsol (AsUnit (->amount 3.846E26 (->IFnUnit SI/WATT)))) ;; Solar Luminosity
 
 ;; The next few units use cm and seconds because they are instrumentalists' units.
 
@@ -75,11 +77,6 @@
 
 (defunit SpectralFlux (unit-from-powers {cm -2 sec -1 GeV -1}))
 (defunit SpectralIntensity (unit-from-powers {cm -2 sec -1 sr -1 GeV -1}))
-
-;; ## Spectral Irradiance (spectral flux density)
-
-
-(defunit-with-SI-prefixes Jansky (rescale (unit-from-powers {(->IFnUnit SI/WATT) 1  m -2 (->IFnUnit SI/HERTZ) -1}) 1E-26))
 
 ;; From this point onwards, units are dimension-free. However, angles aren't redshifts or probabilities! We should try to guarantee we're not allowing silly conversions.
 

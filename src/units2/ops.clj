@@ -27,6 +27,10 @@
 
 (def ^:dynamic *unit-warnings-are-errors* true)
 ;; users who know what they are doing can set this to false at their own risk.
+(def ^:dynamic *unit-warnings-are-printed* true)
+;; users who REALLY know what they are doing can prevent warnings from being printed.
+;; this is ONLY provided to prevent the printing I/O from slowing down well-tested,
+;; speed-critical computations, and should NOT be used lightly.
 
 ;; ## Utilities
 
@@ -39,7 +43,8 @@
 (defn- warn [msg]
   (if *unit-warnings-are-errors*
     (throw (Exception. (str msg)))
-    (println (clojure.string/join (concat "WARNING: " msg)))))
+    (if *unit-warnings-are-printed*
+     (println (clojure.string/join (concat "WARNING: " msg))))))
 
 
 ;; ## Comparisons
@@ -96,7 +101,7 @@
 (defmacro with-unit-comparisons
   "Locally rebind `>`, `>=`, `<`, `zero?`, `pos?`, ... to unit-aware equivalents."
   [& body]
-  (conj body '[== units2.ops/==
+  (clojure.core/conj body '[== units2.ops/==
          >  units2.ops/>
          <  units2.ops/<
          >= units2.ops/>=
@@ -110,7 +115,19 @@
      'clojure.core/let))
 
 ;; Other `with-unit-...` macros will share the same `(conj body '[bindings] 'let)` hack.
-;; I'm only 99% sure it's correct, and need to do more testing.
+;; I'm only 99.5% sure it's correct, and need to do more testing.
+;; Once I'm 100% sure, I'll use a macro to refactor these macros:
+;; <pre><code>
+;; (defmacro defhack [macroname docstring bindings]
+;;   `(defmacro ~namcroname ~docstring [& body]
+;;   (clojure.core/conj body '~bindings
+;;      'clojure.core/let))) ;; maybe ????
+;; </code></pre>
+;; but until testing is done I'll avoid macro-inception for the sake of sanity.
+
+;; 14/03/16: Thanks to the `Amsterdam Clojurians` for noticing that `conj` should be `clojure.core/conj` in these macros,
+;; with the comment "If you're willing to do that, you should be prepared for users willing to define their own `conj`."
+
 
 ;; ## Arithmetic
 
@@ -206,7 +223,7 @@
   "Locally rebinds arithmetic operators like `+`, and `/` to unit-aware equivalents."
   [& body]
   ; TODO: run tests and bugproof this!!!
-  (conj body
+  (clojure.core/conj body
         '[+ units2.ops/+
          - units2.ops/-
          * units2.ops/*
@@ -262,7 +279,7 @@
 (defmacro with-unit-expts
 "Locally rebinds exponentiation functions to unit-aware equivalents."
   [& body]
-  (conj body
+  (clojure.core/conj body
         '[expt units2.ops/expt
           exp units2.ops/exp
           pow units2.ops/pow
@@ -293,7 +310,7 @@
 (defmacro with-unit-magnitudes
 "Locally rebinds magnitude functions to unit-aware equivalents."
   [& body]
-  (conj body
+  (clojure.core/conj body
         '[abs units2.ops/abs
           floor units2.ops/floor
           ceil units2.ops/ceil
