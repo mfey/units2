@@ -1,5 +1,6 @@
 (ns units2.IFnUnit
   (:require [units2.core :refer :all])
+  (:require [clojure.core.typed :as t])
   (:import (javax.measure.unit Unit UnitFormat)
            (javax.measure.converter UnitConverter)))
 

@@ -68,6 +68,7 @@ Elements marked `(*)` are incomplete.
 + Debugging:
     + `(*)` Comprehensive Warning/Error messages
     + `(*)` Exhaustive Testing
+    + `(*)` Typed Clojure annotations
 + Comprehensive Documentation:
     + Inline Comments / Marginalia
     + Tutorial

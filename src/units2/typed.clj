@@ -1,10 +1,5 @@
 ;; Dimensional Analysis at compiletime
 
 (ns units2.typed
-  (:require [units2.core :refer :all]
-            [units2.ops :as ops]
-            ;core.typed, etc ...
-            )
+  (:require [clojure.core.typed :as t])
 )
-
-(set! *warn-on-reflection* true)
