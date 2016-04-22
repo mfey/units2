@@ -20,7 +20,6 @@
 (ns units2.ops
   (:refer-clojure :exclude [+ - * / rem quot == > >= < <= zero? pos? neg? min max]) ;redefinitions imminent! This turns off some WARNINGS.
   (:require [units2.core :refer :all])
-  (:require [clojure.core.typed :as t])
 )
 
 

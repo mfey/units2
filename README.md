@@ -51,7 +51,7 @@ Elements marked `(*)` are incomplete.
 
 ### Version 1.0 (minimal functionality and some syntactic sugar)
 + Minimal (unstandardised) Implementation
-+ Standard Operations (+ - pos? max etc.)
++ Standard Operations (`+`, `-`, `pos?`, `max`, etc.)
 + Integration and Differentiation (of univariate functions)
 + Minimal testing
 + Helpful Documentation
@@ -68,12 +68,10 @@ Elements marked `(*)` are incomplete.
 + Debugging:
     + `(*)` Comprehensive Warning/Error messages
     + `(*)` Exhaustive Testing
-    + `(*)` Typed Clojure annotations
 + Comprehensive Documentation:
     + Inline Comments / Marginalia
     + Tutorial
     + Example code (`spice.clj`)
-+ `(*)` Preliminary interop with `core.typed`
 
 ### Version 3.0 (all experimental features)
 + `(*)` Interop with `core.typed` (check for correct dimensions at compile time)

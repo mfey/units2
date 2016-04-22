@@ -1,25 +1,25 @@
 (ns units2.prob
   (:require [units2.core :refer :all]
-            [units2.IFnUnit :refer :all])
-  (:import (javax.measure.unit Unit SI NonSI)
-           ))
+            [units2.IFnUnit :refer :all]))
 
 (set! *warn-on-reflection* true)
 
 ;; ## Information
 
-(defunit bit (->IFnUnit SI/BIT))
-(defunit nat (rescale bit (/ (Math/log 2))))
-
+(defunit nat (makeaseunit "information"))
+(defunit bit (rescale nat (Math/log 2)))
 
 ;; ## Probability
 
-;(defunit percent)
-
-;; ## Odds (ratio of probabilities)
-
-;; ## Odds ratio (ratio of odds)
+(defunit Kolmogorov (makebaseunit "probability"))
+(defunit percent (rescale Kolmogorov 0.01))
 
 ;; ## No units
 
 (defunit dimensionless (divide bit bit))
+
+
+; p-value to number of sigma
+; surprisal to p-value
+
+; (def Jeffreys Scale [list of maps of bayesfactor/information/english])

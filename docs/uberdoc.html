@@ -2865,8 +2865,8 @@ net.brehaut.ClojureTools = (function (SH) {
     build_tree: build_tree
   };
 })(SyntaxHighlighter);
-</script><title>units2 -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name"><a href="http://example.com/FIXME">units2</a></h1><h2 class="project-version">2.3</h2><br /><p>A Clojure library for quantities with units.</p>
-</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.8.0</td></tr><tr><td class="dep-name">clj-science/jscience</td><td class="dotted"><hr /></td><td class="dep-version">4.3.1</td></tr><tr><td class="dep-name">org.apache.commons/commons-math3</td><td class="dotted"><hr /></td><td class="dep-version">3.5</td></tr><tr><td class="dep-name">incanter</td><td class="dotted"><hr /></td><td class="dep-version">1.5.6</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#units2.astro">units2.astro</a></li><li><a href="#units2.calc">units2.calc</a></li><li><a href="#units2.core">units2.core</a></li><li><a href="#units2.IFnUnit">units2.IFnUnit</a></li><li><a href="#units2.ops">units2.ops</a></li><li><a href="#units2.prob">units2.prob</a></li><li><a href="#units2.spice">units2.spice</a></li><li><a href="#units2.trig">units2.trig</a></li><li><a href="#units2.typed">units2.typed</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#units2.astro" name="units2.astro"><h1 class="project-name">units2.astro</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+</script><title>units2 -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name"><a href="https://github.com/mfey/units2">units2</a></h1><h2 class="project-version">2.3</h2><br /><p>A Clojure library for quantities with units.</p>
+</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.8.0</td></tr><tr><td class="dep-name">clj-science/jscience</td><td class="dotted"><hr /></td><td class="dep-version">4.3.1</td></tr><tr><td class="dep-name">org.apache.commons/commons-math3</td><td class="dotted"><hr /></td><td class="dep-version">3.5</td></tr><tr><td class="dep-name">incanter</td><td class="dotted"><hr /></td><td class="dep-version">1.5.6</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#units2.astro">units2.astro</a></li><li><a href="#units2.calc">units2.calc</a></li><li><a href="#units2.core">units2.core</a></li><li><a href="#units2.IFnUnit">units2.IFnUnit</a></li><li><a href="#units2.ops">units2.ops</a></li><li><a href="#units2.prob">units2.prob</a></li><li><a href="#units2.spice">units2.spice</a></li><li><a href="#units2.trig">units2.trig</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#units2.astro" name="units2.astro"><h1 class="project-name">units2.astro</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns units2.astro
   (:require [units2.core :refer :all]
             [units2.IFnUnit :refer :all])
@@ -2917,7 +2917,7 @@ net.brehaut.ClojureTools = (function (SH) {
 (defunit SpectralIntensity (unit-from-powers {cm -2 sec -1 sr -1 GeV -1}))</pre></td></tr><tr><td class="docs"><p>From this point onwards, units are dimension-free. However, angles aren't redshifts or probabilities! We should try to guarantee we're not allowing silly conversions.</p>
 </td><td class="codes"></td></tr><tr><td class="docs"><h2>Redshifts can be given as z or as 1+z, both are useful in cosmology.</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit zee (-&gt;IFnUnit (.alternate (.divide SI/METER SI/METER) &quot;zee&quot;)))
+</td><td class="codes"><pre class="brush: clojure">(defunit zee (makebaseunit &quot;z&quot;))
 (defunit onepluszee (-&gt;IFnUnit (.plus ^Unit (implementation-hook zee) -1)))</pre></td></tr><tr><td class="docs"><h2>No units</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defunit dimensionless (divide pc pc)) ;; define this last, otherwise &quot;dimensionless&quot; will be `sr` or `zee`... :-D</pre></td></tr><tr><td class="docs"><p>define this last, otherwise "dimensionless" will be <code>sr</code> or <code>zee</code>... :-D</p>
@@ -3058,6 +3058,7 @@ net.brehaut.ClojureTools = (function (SH) {
   (power [this N] &quot;syntactic sugar for all of the above&quot;))</pre></td></tr><tr><td class="docs"><p>Returns a composite unit from a map of <code>Multiplicative</code> units and (integer) powers, or a partitionable seq.</p>
 
 <pre><code>`(this {kg 1 m -3})` -&gt; a unit for density
+`(this [cm 2])` -&gt; a small area unit
 </code></pre>
 </td><td class="codes"><pre class="brush: clojure">(defn unit-from-powers
 [pfs]
@@ -3065,16 +3066,17 @@ net.brehaut.ClojureTools = (function (SH) {
                (map? pfs)
                   ; todo: check nonempty
                   (map list (keys pfs) (vals pfs))
-               (seq? pfs)
+               (sequential? pfs)
                   ; todo: other checks
                   (cond
                     (empty? pfs)       (throw (Exception. &quot;Empty list not implemented yet&quot;))
                     (odd? (count pfs)) (throw (Exception. &quot;Odd argnum error&quot;))
                     true               (partition 2 pfs))
-               true (throw (Exception. &quot;prime factors as a map or an alist&quot;)))
+               true (throw (Exception. &quot;args should be specified as a map or an alist&quot;)))
         ; todo: some checks that we are indeed working with units and integers.
 	      mapped (map (fn [[a b]] (power a b)) pairs)]; generate ((power unit exponent) ... (power unit exponent))
            (reduce (fn [x y] (times x y)) mapped)))</pre></td></tr><tr><td class="docs"><p>A generic type for an amount with a unit, that doesn't care about the implementation of <code>unit</code> or of <code>value</code> (as long as these are consistent).</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(deftype amount [value unit]
   Dimensionful
   (getUnit [this] unit)
@@ -3087,7 +3089,7 @@ net.brehaut.ClojureTools = (function (SH) {
 </td><td class="codes"><pre class="brush: clojure">(defn amount? [x] (instance? amount x))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#units2.IFnUnit" name="units2.IFnUnit"><h1 class="project-name">units2.IFnUnit</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns units2.IFnUnit
   (:require [units2.core :refer :all])
-  (:import (javax.measure.unit Unit UnitFormat)
+  (:import (javax.measure.unit BaseUnit Unit UnitFormat)
            (javax.measure.converter UnitConverter)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(set! *warn-on-reflection* true)</pre></td></tr><tr><td class="docs"><p>The reference implementation is based on javax.measure</p>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>We use a wrapper instead of an <code>extend-type</code> in order to allow future changes to
@@ -3095,7 +3097,7 @@ the reference implementation without breaking backwards compatibility.
 Hiding away the javaworld implementation also encourages idiomatic clojure
 and protocol dispatch (nice, fast) rather than java interop and reflection (ugly, slow).</p>
 </td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- to-javax ^Unit [thisclass obj] ; a helper function for a recurring pattern in IFnUnit
+</td><td class="codes"><pre class="brush: clojure">(defn to-javax ^Unit [thisclass obj] ; a helper function for a recurring pattern in IFnUnit
   (cond
       (instance? thisclass obj) (implementation-hook obj)
       (instance? Unit obj) obj
@@ -3106,7 +3108,7 @@ and protocol dispatch (nice, fast) rather than java interop and reflection (ugly
   Unitlike
   (getDimension [this] (.getDimension ^Unit javax-unit))
   (compatible? [this that]
-    (.isCompatible javax-unit (to-javax IFnUnit that)))
+    (.isCompatible javax-unit (to-javax IFnUnit that))) ;; this is a performance bottleneck!?!?
   (getConverter [this that]
     (if (compatible? this that)
       (fn [x] (.convert ^UnitConverter (.getConverterTo javax-unit (to-javax IFnUnit that)) (double x)))
@@ -3117,7 +3119,6 @@ and protocol dispatch (nice, fast) rather than java interop and reflection (ugly
       (new IFnUnit (.times javax-unit (double x)))))
   clojure.lang.IFn
   (applyTo [this [x]] (cond (satisfies? Dimensionful x) (to x this)
-                            ;(satisfies? Unitful x)      (getConverter this x) ; unit conversions without the `amount` overhead.
                             (number? x) (new units2.core.amount x this)))
   (invoke [this x] (apply this [x]))
   ; higher arity invoke/apply should NOT be defined. Use `map' to avoid silly nonsense.
@@ -3174,7 +3175,9 @@ and protocol dispatch (nice, fast) rather than java interop and reflection (ugly
                            E 1e18
                            Z 1e21
                            Y 1e24
-                           ]))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#units2.ops" name="units2.ops"><h1 class="project-name">units2.ops</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Mathy operations on the (generically defined) <code>units2.core.amount</code> type.</p>
+                           ]))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn makebaseunit [^String newdimension]
+  (-&gt;IFnUnit (BaseUnit. newdimension)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#units2.ops" name="units2.ops"><h1 class="project-name">units2.ops</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Mathy operations on the (generically defined) <code>units2.core.amount</code> type.</p>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>This implementation assumes:</p>
 
 <ol>
@@ -3462,16 +3465,14 @@ so we define them over ratios of amounts: exp(a/b), log(a/b), etc.</p>
         (reduce #(list %2 %1) `(do ~@body) envs)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#units2.prob" name="units2.prob"><h1 class="project-name">units2.prob</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns units2.prob
   (:require [units2.core :refer :all]
-            [units2.IFnUnit :refer :all])
-  (:import (javax.measure.unit Unit SI NonSI)))</pre></td></tr><tr><td class="docs">
+            [units2.IFnUnit :refer :all]))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(set! *warn-on-reflection* true)</pre></td></tr><tr><td class="docs"><h2>Information</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit bit (-&gt;IFnUnit SI/BIT))
-(defunit nat (rescale bit (/ (Math/log 2))))</pre></td></tr><tr><td class="docs"><h2>Probability</h2>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>(defunit percent)</p>
-</td><td class="codes"></td></tr><tr><td class="docs"><h2>Odds (ratio of probabilities)</h2>
-</td><td class="codes"></td></tr><tr><td class="docs"><h2>Odds ratio (ratio of odds)</h2>
-</td><td class="codes"></td></tr><tr><td class="docs"><h2>No units</h2>
+</td><td class="codes"><pre class="brush: clojure">(defunit nat (makeaseunit &quot;information&quot;))
+(defunit bit (rescale nat (Math/log 2)))</pre></td></tr><tr><td class="docs"><h2>Probability</h2>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defunit Kolmogorov (makebaseunit &quot;probability&quot;))
+(defunit percent (rescale Kolmogorov 0.01))</pre></td></tr><tr><td class="docs"><h2>No units</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defunit dimensionless (divide bit bit))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#units2.spice" name="units2.spice"><h1 class="project-name">units2.spice</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h1>Molecular Gastronomy in Clojure</h1>
 </td><td class="codes"></td></tr><tr><td class="docs">
@@ -3557,13 +3558,7 @@ determine these amounts empirically: keep mouthwashing with milk until it's not 
   `(def ~trig (wrap-out rad #(~javatrig %))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(radians-out asin Math/asin)
 (radians-out acos Math/acos)
-(radians-out atan Math/atan)</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#units2.typed" name="units2.typed"><h1 class="project-name">units2.typed</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Dimensional Analysis at compiletime</p>
-</td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(ns units2.typed
-  (:require [units2.core :refer :all]
-            [units2.ops :as ops]
-            ;core.typed, etc ...))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(set! *warn-on-reflection* true)</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/gdeer81/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_units2.astro">units2.astro</li><li class="floating-toc-li" id="floating-toc_units2.calc">units2.calc</li><li class="floating-toc-li" id="floating-toc_units2.core">units2.core</li><li class="floating-toc-li" id="floating-toc_units2.IFnUnit">units2.IFnUnit</li><li class="floating-toc-li" id="floating-toc_units2.ops">units2.ops</li><li class="floating-toc-li" id="floating-toc_units2.prob">units2.prob</li><li class="floating-toc-li" id="floating-toc_units2.spice">units2.spice</li><li class="floating-toc-li" id="floating-toc_units2.trig">units2.trig</li><li class="floating-toc-li" id="floating-toc_units2.typed">units2.typed</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
+(radians-out atan Math/atan)</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/gdeer81/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_units2.astro">units2.astro</li><li class="floating-toc-li" id="floating-toc_units2.calc">units2.calc</li><li class="floating-toc-li" id="floating-toc_units2.core">units2.core</li><li class="floating-toc-li" id="floating-toc_units2.IFnUnit">units2.IFnUnit</li><li class="floating-toc-li" id="floating-toc_units2.ops">units2.ops</li><li class="floating-toc-li" id="floating-toc_units2.prob">units2.prob</li><li class="floating-toc-li" id="floating-toc_units2.spice">units2.spice</li><li class="floating-toc-li" id="floating-toc_units2.trig">units2.trig</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
 SyntaxHighlighter.all();
 
 // hackity hack

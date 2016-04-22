@@ -1,7 +1,6 @@
 (ns units2.IFnUnit
   (:require [units2.core :refer :all])
-  (:require [clojure.core.typed :as t])
-  (:import (javax.measure.unit Unit UnitFormat)
+  (:import (javax.measure.unit BaseUnit Unit UnitFormat)
            (javax.measure.converter UnitConverter)))
 
 (set! *warn-on-reflection* true)
@@ -13,7 +12,7 @@
 ;; Hiding away the javaworld implementation also encourages idiomatic clojure
 ;; and protocol dispatch (nice, fast) rather than java interop and reflection (ugly, slow).
 
-(defn- to-javax ^Unit [thisclass obj] ; a helper function for a recurring pattern in IFnUnit
+(defn to-javax ^Unit [thisclass obj] ; a helper function for a recurring pattern in IFnUnit
   (cond
       (instance? thisclass obj) (implementation-hook obj)
       (instance? Unit obj) obj
@@ -26,7 +25,7 @@
   Unitlike
   (getDimension [this] (.getDimension ^Unit javax-unit))
   (compatible? [this that]
-    (.isCompatible javax-unit (to-javax IFnUnit that)))
+    (.isCompatible javax-unit (to-javax IFnUnit that))) ;; this is a performance bottleneck!?!?
   (getConverter [this that]
     (if (compatible? this that)
       (fn [x] (.convert ^UnitConverter (.getConverterTo javax-unit (to-javax IFnUnit that)) (double x)))
@@ -38,7 +37,6 @@
 
   clojure.lang.IFn
   (applyTo [this [x]] (cond (satisfies? Dimensionful x) (to x this)
-                            ;(satisfies? Unitful x)      (getConverter this x) ; unit conversions without the `amount` overhead.
                             (number? x) (new units2.core.amount x this)))
   (invoke [this x] (apply this [x]))
   ; higher arity invoke/apply should NOT be defined. Use `map' to avoid silly nonsense.
@@ -106,3 +104,6 @@
                            Z 1e21
                            Y 1e24
                            ]))))
+
+(defn makebaseunit [^String newdimension]
+  (->IFnUnit (BaseUnit. newdimension)))

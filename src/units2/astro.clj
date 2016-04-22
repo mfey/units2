@@ -40,10 +40,12 @@
 
 ;; ## (Solid) Angles
 
+; TODO: move away from the dimensionless javax implementation in favor of `makebaseunit`.
 
 (defunit rad (->IFnUnit SI/RADIAN))
 (defunit deg (->IFnUnit NonSI/DEGREE_ANGLE))
 (defunit arcsec (->IFnUnit NonSI/SECOND_ANGLE))
+
 
 (defunit sr (->IFnUnit SI/STERADIAN))
 (defunit sky (->IFnUnit NonSI/SPHERE))
@@ -82,8 +84,7 @@
 
 ;; ## Redshifts can be given as z or as 1+z, both are useful in cosmology.
 
-
-(defunit zee (->IFnUnit (.alternate (.divide SI/METER SI/METER) "zee")))
+(defunit zee (makebaseunit "z"))
 (defunit onepluszee (->IFnUnit (.plus ^Unit (implementation-hook zee) -1)))
 
 ;; ## No units

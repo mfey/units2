@@ -13,7 +13,6 @@
   (:require [units2.core :refer :all]
             [units2.ops :as ops]
             [incanter.optimize :as optim])
-  (:require [clojure.core.typed :as t])
   (:import (org.apache.commons.math3.analysis UnivariateFunction)
            (org.apache.commons.math3.analysis.integration RombergIntegrator))
 )
