@@ -17,8 +17,10 @@
   (getDimension [this] "get the dimension of")
   (compatible? [this that] "Do two units have the same dimension? If so, they are `compatible?'")
   (getConverter [this that] "Returns a function that describes the unit transformation, as it acts on values... mostly for internal use.")
-  (rescale [this number] "Returns a unit linearly rescaled by the given factor") ;; Not 100% necessary, but nice to have
-)
+  ;; Not 100% necessary, but nice to have
+  (rescale [this number] "Returns a unit linearly rescaled by the given factor")
+  (offset [this amount] "Returns a unit linearly offset by the given amount")
+  )
 
 (defprotocol Hackable
   (implementation-hook [this] "this may be useful for implementors, but should NOT be used in applications.") ;; this should be hidden from users... right?
@@ -57,10 +59,10 @@
                (sequential? pfs)
                   ; todo: other checks
                   (cond
-                    (empty? pfs)       (throw (Exception. "Empty list not implemented yet"))
-                    (odd? (count pfs)) (throw (Exception. "Odd argnum error"))
+                    (empty? pfs)       (throw (IllegalArgumentException. "Empty list not implemented yet"))
+                    (odd? (count pfs)) (throw (IllegalArgumentException. "Odd argnum error"))
                     true               (partition 2 pfs))
-               true (throw (Exception. "args should be specified as a map or an alist")))
+               true (throw (IllegalArgumentException. "args should be specified as a map or an alist")))
         ; todo: some checks that we are indeed working with units and integers.
 	      mapped (map (fn [[a b]] (power a b)) pairs)]; generate ((power unit exponent) ... (power unit exponent))
            (reduce (fn [x y] (times x y)) mapped)))
@@ -77,11 +79,10 @@
   (AsUnit [this] (rescale unit value))
 
   Object
-  (toString [this] (str value " " unit))
-
-  ;; TODO: improve printed output somehow...
+  (toString [this] (str "(" unit " " value ")"))
 )
 
-
+(defmethod print-method amount [a ^java.io.Writer w]
+  (.write w (str a))) ;; human and (almost) computer readable.
 
 (defn amount? [x] (instance? amount x))

@@ -29,11 +29,13 @@
   (getConverter [this that]
     (if (compatible? this that)
       (fn [x] (.convert ^UnitConverter (.getConverterTo javax-unit (to-javax IFnUnit that)) (double x)))
-      (throw (Exception. "The units are not compatible, no conversion exists."))))
+      (throw (UnsupportedOperationException. (str "The units `" this "' and `" that "' are not compatible, no conversion exists.")))))
   (rescale [this x]
     (if (== 1 (double x))
       this ; identity converter not allowed in javax
       (new IFnUnit (.times javax-unit (double x)))))
+  (offset [this a]
+          (new IFnUnit (.plus javax-unit (double (getValue a this)))))
 
   clojure.lang.IFn
   (applyTo [this [x]] (cond (satisfies? Dimensionful x) (to x this)

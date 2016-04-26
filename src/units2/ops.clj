@@ -42,7 +42,7 @@
 
 (defn- warn [msg]
   (if *unit-warnings-are-errors*
-    (throw (Exception. (str msg)))
+    (throw (UnsupportedOperationException. (str msg)))
     (if *unit-warnings-are-printed*
      (println (clojure.string/join (concat "WARNING: " msg))))))
 
@@ -60,7 +60,7 @@
       (every? #(not (amount? %)) ~args)
         (apply ~cljcmp ~args)
       true
-        (throw (Exception. "It makes no sense to compare values with and without units!"))))))
+        (throw (UnsupportedOperationException. "It makes no sense to compare values with and without units!"))))))
 
 
 (defcmp == clojure.core/==)
@@ -137,7 +137,7 @@
     ([a] a)
     ([a b] (threecond [a b]
              (->amount (clojure.core/+ (getValue a (getUnit a)) (getValue b (getUnit a))) (getUnit a))
-             (throw (Exception. "It's meaningless to add numbers with and without units!"))
+             (throw (UnsupportedOperationException. (str "It's meaningless to add numbers with and without units! (`" a "' and `" b "' provided)")))
              (clojure.core/+ a b)))
     ([a b & rest] (reduce + (conj rest a b))))
 
@@ -147,7 +147,7 @@
     ([a] (if (amount? a) (->amount (clojure.core/- (getValue a (getUnit a))) (getUnit a)) (clojure.core/- a)))
     ([a b]
       (threecond [a b] (->amount (clojure.core/- (getValue a (getUnit a)) (getValue b (getUnit a))) (getUnit a))
-                 (throw (Exception. "It's meaningless to subtract numbers with and without units!"))
+                 (throw (UnsupportedOperationException. (str "It's meaningless to subtract numbers with and without units! (`" a "' and `" b "' provided)")))
                  (clojure.core/- a b)))
     ([a b & rest] (- a (apply + b rest))))
 
@@ -180,9 +180,9 @@
 (defn divide-into-double
   "fractions with same dimensions in the numerator and denominator have a unit-free value; this is basically syntactic sugar for `(getValue a (AsUnit b))`."
   [a b]
-  (if (compatible? (getUnit a) (getUnit b))
-    (getValue a (AsUnit b))
-    (throw (Exception. "not compatible!"))))
+   (if (and (amount? a) (amount? b))
+      (getValue a (AsUnit b))
+      (throw (IllegalArgumentException. (str "divide-into-double requires two amounts with units! (`" a "' and `" b "' provided)")))))
 
 ;;   Modular arithmetic interacts nontrivially with rescalings of units.
 

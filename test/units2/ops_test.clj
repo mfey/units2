@@ -39,9 +39,13 @@
      (is (clojure.core/zero? (ops/+)))
      (is (clojure.core/== (ops/+ 2 2) 4))
      (is (ops/== (ops/+ (m 2) (m 2)) (m 4)))
+     (is (try (ops/+ (m 4) 5) (catch java.lang.UnsupportedOperationException e true)))
+     (is (try (ops/+ 4 (m 5)) (catch java.lang.UnsupportedOperationException e true)))
      )
    (testing "-"
      (is (try (ops/-) (catch clojure.lang.ArityException e true)))
+     (is (try (ops/- (m 4) 5) (catch java.lang.UnsupportedOperationException e true)))
+     (is (try (ops/- 4 (m 5)) (catch java.lang.UnsupportedOperationException e true)))
      )
    (testing "*"
      (is (clojure.core/== 1 (ops/*)))
@@ -57,9 +61,13 @@
     (is (try (ops// (sec 1) (m 0)) (catch java.lang.ArithmeticException e true)))
   )
   (testing "div-into-double"
-    (is (number? (ops/divide-into-double (m 1) (m 1))))
+    (is (number? (ops/divide-into-double (m 1) (m 1)))) ; does it do what's advertised?
     ;(is (ops/divide-into-double (m 1) (m 0)))
-    (is (== (/ 3 9) (ops/divide-into-double (m 3) (m 9)))))
+    (is (== (/ 3 9) (ops/divide-into-double (m 3) (m 9))))
+    (is (try (ops/divide-into-double 4 5) (catch java.lang.IllegalArgumentException e true)))
+    (is (try (ops/divide-into-double (m 4) 5) (catch java.lang.IllegalArgumentException e true)))
+    (is (try (ops/divide-into-double 4 (sec 5)) (catch java.lang.IllegalArgumentException e true)))
+    )
   ;(testing "rem")
   ;(testing "quot")
   (testing "arithmetic-macro"

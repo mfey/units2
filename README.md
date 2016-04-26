@@ -63,10 +63,10 @@ Elements marked `(*)` are incomplete.
     + Calculus on functions using this generic type (`units2.calc`)
 + `IFnUnit` type based on `javax.measure` (JSR 275)
     + Standard Unit Libraries for:
-        + `(*)` Information and Probability Theory (`units2.prob`)
+        + Baking (`units2.bake`)
         + Astroparticle Physics (`units2.astro`)
 + Debugging:
-    + `(*)` Comprehensive Warning/Error messages
+    + Comprehensive Warning/Error messages
     + `(*)` Exhaustive Testing
 + Comprehensive Documentation:
     + Inline Comments / Marginalia
@@ -75,8 +75,6 @@ Elements marked `(*)` are incomplete.
 
 ### Version 3.0 (all experimental features)
 + `(*)` Interop with `core.typed` (check for correct dimensions at compile time)
-+ `(*)` Extended Dimensional Analysis (e.g. relativity [L]=[T], etc.)
-    + Local scope macro!!!
 + `(*)` More cool stuff
 
 ## More to Read

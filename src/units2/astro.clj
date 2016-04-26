@@ -85,7 +85,7 @@
 ;; ## Redshifts can be given as z or as 1+z, both are useful in cosmology.
 
 (defunit zee (makebaseunit "z"))
-(defunit onepluszee (->IFnUnit (.plus ^Unit (implementation-hook zee) -1)))
+(defunit onepluszee (offset zee (zee -1)))
 
 ;; ## No units
 
