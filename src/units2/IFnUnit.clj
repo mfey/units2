@@ -1,7 +1,7 @@
 (ns units2.IFnUnit
   (:require [units2.core :refer :all])
   (:import (javax.measure.unit BaseUnit Unit UnitFormat)
-           (javax.measure.converter UnitConverter)))
+           (javax.measure.converter UnitConverter ConversionException)))
 
 (set! *warn-on-reflection* true)
 
@@ -28,14 +28,29 @@
     (.isCompatible javax-unit (to-javax IFnUnit that))) ;; this is a performance bottleneck!?!?
   (getConverter [this that]
     (if (compatible? this that)
-      (fn [x] (.convert ^UnitConverter (.getConverterTo javax-unit (to-javax IFnUnit that)) (double x)))
+      (fn [x] (try (.convert ^UnitConverter (.getConverterTo javax-unit (to-javax IFnUnit that)) (double x))
+                (catch ConversionException e
+                  ;; let's try to divide the two units and work dimensionlessly...
+                  ;; maybe the offsets/nonlinearities of our two units cancel exactly?
+                  (if (not (compatible? this Unit/ONE)) ;; getValue calls getConverter, without this we might loop until the stack overflows!
+                    (let [dimensionless-rescale (new IFnUnit (.divide javax-unit (to-javax IFnUnit that)))]
+                      (getValue (dimensionless-rescale x) Unit/ONE))
+                    (throw e))))) ;; give up!
+      ;; still fails for e.g. ((divide (rescale celsius 2) m) ((divide celsius m) 1))
       (throw (UnsupportedOperationException. (str "The units `" this "' and `" that "' are not compatible, no conversion exists.")))))
   (rescale [this x]
-    (if (== 1 (double x))
-      this ; identity converter not allowed in javax
-      (new IFnUnit (.times javax-unit (double x)))))
+    (if (amount? x)
+      (throw (IllegalArgumentException. (str "Units can only be rescaled by numbers without units (" x " provided)")))
+      (if (== 1 (double x))
+        this ; identity converter not allowed in javax?
+        (new IFnUnit (.times javax-unit (double x))))))
   (offset [this a]
-          (new IFnUnit (.plus javax-unit (double (getValue a this)))))
+    (if (amount? a)
+      (let [x (double (getValue a this))]
+        (if (zero? x)
+          this
+          (new IFnUnit (.plus javax-unit x))))
+      (throw (IllegalArgumentException. (str "Units can only be offset by amounts with units (" a " provided)")))))
 
   clojure.lang.IFn
   (applyTo [this [x]] (cond (satisfies? Dimensionful x) (to x this)

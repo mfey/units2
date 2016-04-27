@@ -7,8 +7,9 @@
 
 ;; ## Temperature [K]
 
-(defunit celsius (->IFnUnit SI/CELSIUS))
-(defunit fahrenheit (->IFnUnit NonSI/FAHRENHEIT))
+(defunit-with-SI-prefixes K (->IFnUnit SI/KELVIN)) ;; not used for baking
+(defunit celsius (offset K (K 273.15)))
+(defunit fahrenheit (rescale (offset celsius (celsius -17.777)) (/ 5 9)))
 
 ;(defunit approximate-celsius (rescale fahrenheit 2))
 

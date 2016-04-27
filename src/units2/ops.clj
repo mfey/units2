@@ -4,7 +4,7 @@
 ;;
 ;;   1. that the values in `amount`, and any other numbers, are well-behaved under `clojure.core/fns` and `Math/fns`
 ;;   2. that the units in `amount` both `(satisfies? Unitlike)` and `(satisfies? Multiplicative)`.
-;;   3. nothing else
+;;   3. that the units in `amount` are all linear rescalings without any `offset`. There are a few offset checks scattered throughout, but no overall guarantees.
 ;;
 ;; As such, it should be fairly easy to reuse most of this code for other implementations.
 
@@ -22,7 +22,6 @@
   (:require [units2.core :refer :all])
 )
 
-
 (set! *warn-on-reflection* true)
 
 (def ^:dynamic *unit-warnings-are-errors* true)
@@ -32,13 +31,8 @@
 ;; this is ONLY provided to prevent the printing I/O from slowing down well-tested,
 ;; speed-critical computations, and should NOT be used lightly.
 
-;; ## Utilities
 
-(defmacro threecond [[a b] both one neither]
-  `(cond
-    (and (amount? ~a) (amount? ~b))  ~both
-    (or  (amount? ~a) (amount? ~b))  ~one
-    true                             ~neither))
+;; ## Utilities
 
 (defn- warn [msg]
   (if *unit-warnings-are-errors*
@@ -131,58 +125,86 @@
 
 ;; ## Arithmetic
 
+;; dispatch for +,-
+
+(defmacro threecond [[a b] both one neither]
+  `(cond
+    (and (amount? ~a) (amount? ~b))  ~both
+    (or  (amount? ~a) (amount? ~b))  ~one
+    true                             ~neither))
+
+(defmacro lincond [[a b] lin nonlin one neither]
+  `(threecond [~a ~b]
+      (if (linear? (getConverter (getUnit ~a) (getUnit ~b)))
+        ~lin
+        ~nonlin)
+      ~one
+      ~neither))
 
 (defn +
-    ([] 0)
-    ([a] a)
-    ([a b] (threecond [a b]
-             (->amount (clojure.core/+ (getValue a (getUnit a)) (getValue b (getUnit a))) (getUnit a))
-             (throw (UnsupportedOperationException. (str "It's meaningless to add numbers with and without units! (`" a "' and `" b "' provided)")))
-             (clojure.core/+ a b)))
+  ([] 0)
+  ([a] a)
+  ([a b]
+    (lincond [a b]
+      (->amount (clojure.core/+ (getValue a (getUnit a)) (getValue b (getUnit a))) (getUnit a))
+      (throw (UnsupportedOperationException. (str "Nonlinear conversion between `" (getUnit a) "' and `" (getUnit b)"'!")))
+      (throw (UnsupportedOperationException. (str "It's meaningless to add numbers with and without units! (`" a "' and `" b "' provided)")))
+      (clojure.core/+ a b)))
     ([a b & rest] (reduce + (conj rest a b))))
 
 
 (defn -
-    ;; zero arity implicitly an error, let Clojure catch this
-    ([a] (if (amount? a) (->amount (clojure.core/- (getValue a (getUnit a))) (getUnit a)) (clojure.core/- a)))
-    ([a b]
-      (threecond [a b] (->amount (clojure.core/- (getValue a (getUnit a)) (getValue b (getUnit a))) (getUnit a))
-                 (throw (UnsupportedOperationException. (str "It's meaningless to subtract numbers with and without units! (`" a "' and `" b "' provided)")))
+  ;; zero arity implicitly an error, let Clojure catch this
+  ([a] (if (amount? a) (->amount (clojure.core/- (getValue a (getUnit a))) (getUnit a)) (clojure.core/- a)))
+  ([a b]
+    (lincond [a b]
+      (->amount (clojure.core/- (getValue a (getUnit a)) (getValue b (getUnit a))) (getUnit a))
+      (throw (UnsupportedOperationException. (str "Nonlinear conversion between `" (getUnit a) "' and `" (getUnit b)"'!")))
+      (throw (UnsupportedOperationException. (str "It's meaningless to subtract numbers with and without units! (`" a "' and `" b "' provided)")))
                  (clojure.core/- a b)))
     ([a b & rest] (- a (apply + b rest))))
 
+
+;; dispatch for *,/
+
+(defmacro fourcond [[a b] one two three four]
+  `(cond
+    (and (amount? ~a) (amount? ~b))       ~one
+    (and (amount? ~a) (not (amount? ~b))) ~two
+    (and (amount? ~b) (not (amount? ~a))) ~three
+    (not (or (amount? ~a) (amount? ~b)))  ~four))
+
 (defn *
-    ([] 1)
-    ([a] a)
-    ([a b] (if (amount? a)
-               (if (amount? b)
-                 (->amount (clojure.core/* (getValue a (getUnit a)) (getValue b (getUnit b))) (times (getUnit a) (getUnit b)))
-                 (->amount (clojure.core/* (getValue a (getUnit a)) (double b)) (getUnit a)))
-               (if (amount? b)
-                 (->amount (clojure.core/* (getValue b (getUnit b)) (double a)) (getUnit b))
-                 (clojure.core/* a b))))
-    ([a b & rest] (* a (apply * b rest))))
+  ([] 1)
+  ([a] a)
+  ([a b] (fourcond [a b]
+    (->amount (clojure.core/* (getValue a (getUnit a)) (getValue b (getUnit b))) (times (getUnit a) (getUnit b)))
+    (->amount (clojure.core/* (getValue a (getUnit a)) (double b)) (getUnit a))
+    (->amount (clojure.core/* (getValue b (getUnit b)) (double a)) (getUnit b))
+    (clojure.core/* a b)))
+  ([a b & rest] (* a (apply * b rest))))
 
 (defn /
-    ;; zero arity implicitly an error, let Clojure catch this
-    ([a] (if (amount? a)
-           (->amount (clojure.core// (getValue a (getUnit a))) (inverse (getUnit a)))
-           (clojure.core// a)))
-    ([a b] (if (amount? a)
-               (if (amount? b)
-                 (->amount (clojure.core// (getValue a (getUnit a)) (getValue b (getUnit b))) (divide (getUnit a) (getUnit b)))
-                 (->amount (clojure.core// (getValue a (getUnit a)) (double b)) (getUnit a)))
-               (if (amount? b)
-                 (* (/ b) (double a))
-                 (clojure.core// a b))))
-    ([a b & rest] (/ a (apply * b rest))))
+  ;; zero arity implicitly an error, let Clojure catch this
+  ([a] (if (amount? a)
+         (->amount (clojure.core// (getValue a (getUnit a))) (inverse (getUnit a)))
+         (clojure.core// a)))
+  ([a b] (fourcond [a b]
+    (->amount (clojure.core// (getValue a (getUnit a)) (getValue b (getUnit b))) (divide (getUnit a) (getUnit b)))
+    (->amount (clojure.core// (getValue a (getUnit a)) (double b)) (getUnit a))
+    (* (/ b) (double a))
+    (clojure.core// a b)))
+  ([a b & rest] (/ a (apply * b rest))))
 
 (defn divide-into-double
   "fractions with same dimensions in the numerator and denominator have a unit-free value; this is basically syntactic sugar for `(getValue a (AsUnit b))`."
   [a b]
-   (if (and (amount? a) (amount? b))
+   (if (and (amount? a)
+            (amount? b)
+            (compatible? (getUnit a) (getUnit b))
+            (linear? (getConverter (getUnit a) (getUnit b))))
       (getValue a (AsUnit b))
-      (throw (IllegalArgumentException. (str "divide-into-double requires two amounts with units! (`" a "' and `" b "' provided)")))))
+      (throw (IllegalArgumentException. (str "divide-into-double requires two amounts with linearly related units! (`" a "' and `" b "' provided)")))))
 
 ;;   Modular arithmetic interacts nontrivially with rescalings of units.
 

@@ -35,8 +35,8 @@
 ;; ## Temperature [K]
 
 (defunit-with-SI-prefixes K (->IFnUnit SI/KELVIN))
-(defunit celsius (->IFnUnit SI/CELSIUS))
-(defunit fahrenheit (->IFnUnit NonSI/FAHRENHEIT)) ;; for pedagogical purposes only.
+(defunit celsius (offset K (K 273.15)))
+(defunit fahrenheit (rescale (offset celsius (celsius -17.777)) (/ 5 9))) ;; for pedagogical purposes only.
 
 ;; ## (Solid) Angles
 

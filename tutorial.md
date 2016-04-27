@@ -69,7 +69,7 @@ Constantly working out of the `ops` namespace can be a bit tedious, especially f
 
     (op/with-unit-comparisons
       (< (m 2) (min (cm 180) (m 0.18)))
-     ;; false
+    ) ;; false
 
 These are joined together into the super-macro `(with-unit- [keywords] body)`, which expands into (possibly nested) calls to these other macros based on the keywords. These context-macros are the recommended way to do math with units. Indeed, in functionally-written code they essentially abstract away **ALL** of the unit bookkepping:
 
@@ -90,7 +90,7 @@ Exponentials and logarithms can be a bit subtle; but given how often they occur 
 
 Besides `expt` (a new function we'll discuss soon), the usual `java.lang.math` functions are redefined over dimensionless ratios of amounts using the ages-old "`atan2`" convention `atan2(a,b) == atan(a/b)`.
 
-    (== 3.0 (op/log10 (km 1) (m 1))) ; true since 1km = 1000 m (three zeros)
+    (== 12.0 (op/log10 (km 1) (nm 1))) ; true since 1km = 1000000000000 nm (twelve zeros)
 
 They still accept arity-one definitions over regular numbers to behave nicely in `with-unit-expts`; and intrepid users can read the source to learn about `*unit-warnings-are-errors*` and arity-one exponentiation with units.
 
@@ -99,7 +99,7 @@ The `expt` function (following the name of `pow` in Scheme) is a `pow` for amoun
 
     (op/expt (m 1) 3) ; --> volume
 
-## Pitfalls
+## Offset Pitfalls
 
 Some standard operations (like `pos?`) become less meaningful. For example: the Celsius and Fahrenheit scales are offset, so that some temperatures are positive and negative depending on which unit you're quoting them in:
 
@@ -108,13 +108,24 @@ Some standard operations (like `pos?`) become less meaningful. For example: the 
 
 This exception is meant to trigger some thought about the meaning one wants to assign to the boolean returned by `pos?`. Since negative temperatures in the celsius scale are linked to the freezing point of water, either of the following are probably what was meant:
 
-    (op/< (fahrenheit 14) (celsius 0))
+    (op/> (fahrenheit 14) (celsius 0))
     (clojure.core/pos? (getValue (fahrenheit 14) celsius))
 
 Dauntless users can once again access more powerful version of `pos?`, `neg?`, etc., by turning off these warnings:
 
     (binding [units2.ops/*unit-warnings-are-errors* false]
       (op/neg? (celsius (fahrenheit 14)))) ;; true
+
+Operations like `pos?` and `zero?` are not the end of our worries. When all conversions between units are linear rescalings, arithmetic works fine; but when offsets are involved, even basic arithmetic may become ill-defined. There are checks that `+`, `-`, and `divide-into-double` don't give nonsense, e.g.
+
+    (+ (fahrenheit 1) (celsius 1)) ;; --> Helpful Exception
+
+but there are still plenty of ways to combine units and make the underlying `javax.measure` implementation of unit conversions throw a `ConversionException`. Without even using `ops`, one could engineer the following:
+
+    ;; temperature gradients
+    ((divide celsius mm) ((divide celsius m) 1)) ;; successful conversion (linear)
+    ((divide fahrenheit m) ((divide celsius m) 1)) ;; unsuccessful conversion (nonlinear)
+
 
 # Advanced Features
 
@@ -150,8 +161,12 @@ IFnUnits are also `Multiplicative`, so you can combine existing units with `time
 
 If the unit you want to define is a commonly used unit, then it might be a member of the `SI` or `NonSI` classes of `javax.measure.unit`. In that case, you can simply `import` these and call the `deftype`-constructor for `IFnUnit`:
 
-    (new units2.IFnUnit.IFnUnit SI/METER)
-    ;; or (units2.IFnUnit/->IFnUnit SI/WATT)
+    (require '[units2.IFnUnit :refer :all])
+    (import '[javax.measure.unit SI NonSI])
+
+    (->IFnUnit SI/WATT)
+    ;; or (new units2.IFnUnit.IFnUnit SI/METER)
+
 
 in a `let` scope. For work at the REPL, units can also be bound to symbols with the `defunit` macro, so that the printed representation of a unit matches the symbol it's bound to.
 
@@ -165,7 +180,7 @@ When the units you care about have no relation to any existing unit, it's necess
 
     (let [fullnight (op// (hedon 10) (nap 8))
           powernap  (op// (hedon 1)  (nap 0.5))]
-      (op/> fullnight powernap)) ;; which is more restful?
+      (map restfulness [fullnight powernap])) ;; which is more restful?
 
 
 

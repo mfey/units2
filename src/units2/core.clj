@@ -19,7 +19,7 @@
   (getConverter [this that] "Returns a function that describes the unit transformation, as it acts on values... mostly for internal use.")
   ;; Not 100% necessary, but nice to have
   (rescale [this number] "Returns a unit linearly rescaled by the given factor")
-  (offset [this amount] "Returns a unit linearly offset by the given amount")
+  (offset [this amount] "Returns a unit offset by the given amount")
   )
 
 (defprotocol Hackable
@@ -86,3 +86,33 @@
   (.write w (str a))) ;; human and (almost) computer readable.
 
 (defn amount? [x] (instance? amount x))
+
+
+
+;; this is NOT a safe way to check for linearity!
+(defn linear?
+  "An extended Blum-Luby-Rubinfeld [BLR 1990] test
+  (with a relative tolerance, for double precision)
+  taking seven samples of `f` to perform seven tests."
+  [f]
+  (let [x (rand)
+        y (rand)
+        z (rand)
+        fx (f x)
+        fy (f y)
+        fz (f z)
+        fxy (f (+ x y))
+        fyz (f (+ y z))
+        fxz (f (+ x z))
+        fxyz (f (+ x y z))
+        close? (fn [x y] (< -1e-6 (/ (- x y) x) 1e-6))
+        ]
+    (and
+      (close? fxy (+ fx fy))
+      (close? fyz (+ fy fz))
+      (close? fxz (+ fx fz))
+      (close? fxyz (+ fx fyz))
+      (close? fxyz (+ fy fxz))
+      (close? fxyz (+ fz fxy))
+      (close? fxyz (+ fx fy fz))
+     )))

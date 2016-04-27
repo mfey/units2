@@ -41,11 +41,13 @@
      (is (ops/== (ops/+ (m 2) (m 2)) (m 4)))
      (is (try (ops/+ (m 4) 5) (catch java.lang.UnsupportedOperationException e true)))
      (is (try (ops/+ 4 (m 5)) (catch java.lang.UnsupportedOperationException e true)))
+     (is (try (ops/+ (fahrenheit 1) (celsius 1)) (catch java.lang.UnsupportedOperationException e true)))
      )
    (testing "-"
      (is (try (ops/-) (catch clojure.lang.ArityException e true)))
      (is (try (ops/- (m 4) 5) (catch java.lang.UnsupportedOperationException e true)))
      (is (try (ops/- 4 (m 5)) (catch java.lang.UnsupportedOperationException e true)))
+     (is (try (ops/- (fahrenheit 1) (celsius 1)) (catch java.lang.UnsupportedOperationException e true)))
      )
    (testing "*"
      (is (clojure.core/== 1 (ops/*)))
@@ -67,6 +69,8 @@
     (is (try (ops/divide-into-double 4 5) (catch java.lang.IllegalArgumentException e true)))
     (is (try (ops/divide-into-double (m 4) 5) (catch java.lang.IllegalArgumentException e true)))
     (is (try (ops/divide-into-double 4 (sec 5)) (catch java.lang.IllegalArgumentException e true)))
+    (is (== 1.0 (ops/divide-into-double (celsius 6) (celsius 6))))
+    (is (try (ops/divide-into-double (celsius 6) (fahrenheit (celsius 6))) (catch java.lang.IllegalArgumentException e true)))
     )
   ;(testing "rem")
   ;(testing "quot")
