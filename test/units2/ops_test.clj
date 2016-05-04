@@ -45,6 +45,7 @@
      )
    (testing "-"
      (is (try (ops/-) (catch clojure.lang.ArityException e true)))
+     (is (== 3 (ops/- 5 2)))
      (is (try (ops/- (m 4) 5) (catch java.lang.UnsupportedOperationException e true)))
      (is (try (ops/- 4 (m 5)) (catch java.lang.UnsupportedOperationException e true)))
      (is (try (ops/- (fahrenheit 1) (celsius 1)) (catch java.lang.UnsupportedOperationException e true)))

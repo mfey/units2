@@ -9,8 +9,8 @@
 
 (set! *warn-on-reflection* true)
 
-(defunit rad (->IFnUnit SI/RADIAN))
-(defunit deg (->IFnUnit NonSI/DEGREE_ANGLE))
+(defunit rad (makebaseunit "a")) ; a for angle
+(defunit deg (rescale rot (/ Math/PI 180)))
 
 (defmacro radians-in [trig javatrig]
   (let [a (gensym)]
@@ -25,7 +25,7 @@
 (radians-in tan Math/tan)
 
 (defmacro radians-out [trig javatrig]
-  `(def ~trig (wrap-out rad #(~javatrig %))))
+  `(def ~trig (comp rad #(~javatrig %))))
 
 (radians-out asin Math/asin)
 (radians-out acos Math/acos)

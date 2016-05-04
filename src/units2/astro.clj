@@ -40,16 +40,22 @@
 
 ;; ## (Solid) Angles
 
-; TODO: move away from the dimensionless javax implementation in favor of `makebaseunit`.
+(def solidangle "Solid angle of a unit sphere in D dimensions"
+  {1 2
+   2 (* 2 Math/PI)
+   3 (* 4 Math/PI)
+   4 (* 2 Math/PI Math/PI)
+   5 (* (/ 8 3) Math/PI Math/PI)
+   6 (* Math/PI Math/PI Math/PI)})
 
-(defunit rad (->IFnUnit SI/RADIAN))
-(defunit deg (->IFnUnit NonSI/DEGREE_ANGLE))
-(defunit arcsec (->IFnUnit NonSI/SECOND_ANGLE))
+(defunit rad (makebaseunit "a")) ; a for angle
+(defunit rot (rescale rad (solidangle 2))) ;; full rotation/revolution/turn/circle
+(defunit deg (rescale rot (/ 1 360)))
 
+(defunit sr (power rad 2))
+(defunit sky (rescale sr (solidangle 3))) ;; full 2-sphere
 
-(defunit sr (->IFnUnit SI/STERADIAN))
-(defunit sky (->IFnUnit NonSI/SPHERE))
-
+(defunit glome (rescale (power rad 3) (solidangle 4))) ;; full 3-sphere (physically unnecessary but enlightening)
 
 ;; ## Velocity [L/T]
 

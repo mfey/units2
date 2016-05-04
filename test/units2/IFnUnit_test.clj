@@ -14,16 +14,17 @@
 
 (deftest protocoladherence
   (is (satisfies? Unitlike m))
-  ;(is (satisfies? clojure.lang.IFn (->IFnUnit SI/METER)))
+  (is (instance? clojure.lang.IFn m))
   (is (satisfies? Multiplicative m))
-  (is (satisfies? Wrappable m))
 )
 
 (deftest redefinitions
   (testing "rescale"
     (is (= (m (rescale m 1))))
+    (is (= (m (rescale (rescale m 0.5) 2))))
   )
   (testing "offset"
     (is (= (m (offset m (m 0)))))
+    (is (= (m (offset (offset m (m 7)) (m -7)))))
   )
 )

@@ -37,13 +37,12 @@ Sometimes you may want to extract the value of an amount as a regular clojure nu
 
     (getValue (km 6) cm)
 
-That said, the only reason to extract a value from an amount is to interact with pre-existing clojure functions. To promote functional code, unit wrap/unwrap methods over 1-to-1 functions are part of the reference implementation:
+That said, the only reason to extract a value from an amount is to interact with pre-existing clojure functions. To promote functional code, we recommend the following wrap/unwrap idioms:
 
-    (let [sin (unwrap-in rad #(Math/sin %))
-          atan (wrap-out rad #(Math/atan %))
+    (let [atan (comp rad #(Math/atan %))
+          sin  (comp #(Math/sin %) #(getValue % rad))
           angle (deg 90)]
       (atan (sin angle)))
-
 
 # Mathematics with units -- the `ops` library
 
@@ -82,7 +81,8 @@ These are joined together into the super-macro `(with-unit- [keywords] body)`, w
 
     (average (m 7) (m 6) (cm 60)) ;; units work automatically
 
-Of course, you'd reach the same level of abstraction with `[units2.ops :refer :all]`, but explicitly mentioning redefinitions of the core language is probably a good idea.
+Of course, you'd reach the same level of abstraction with `[units2.ops :refer :all]`, but explicitly mentioning redefinitions of the core language operations is probably a good idea.
+
 
 ## Exponentiation
 
@@ -111,12 +111,12 @@ This exception is meant to trigger some thought about the meaning one wants to a
     (op/> (fahrenheit 14) (celsius 0))
     (clojure.core/pos? (getValue (fahrenheit 14) celsius))
 
-Dauntless users can once again access more powerful version of `pos?`, `neg?`, etc., by turning off these warnings:
+Dauntless users can once again access a more advanced version of `pos?`, `neg?`, etc., by turning off these warnings:
 
     (binding [units2.ops/*unit-warnings-are-errors* false]
       (op/neg? (celsius (fahrenheit 14)))) ;; true
 
-Operations like `pos?` and `zero?` are not the end of our worries. When all conversions between units are linear rescalings, arithmetic works fine; but when offsets are involved, even basic arithmetic may become ill-defined. There are checks that `+`, `-`, and `divide-into-double` don't give nonsense, e.g.
+However, operations like `pos?` and `zero?` are not the end of our worries. When all conversions between units are linear rescalings, arithmetic works fine; but when offsets are involved, even basic arithmetic may become ill-defined. There are checks that `+`, `-`, and `divide-into-double` don't give nonsense, e.g.
 
     (+ (fahrenheit 1) (celsius 1)) ;; --> Helpful Exception
 
@@ -143,14 +143,14 @@ We can do calculus with amounts by leveraging existing implementations of deriva
 
 ## Defining Custom IFnUnits
 
-`units2.astro` and `.bake` don't contain many commonly-used units, let alone every unit you might encounter when working with Clojure. Fortunately, it's easy to create your own IFnUnits.
+`units2.astro` and `.bake` don't contain all of the commonly-used units, let alone every unit you might encounter when working with Clojure. Fortunately, it's easy to create your own IFnUnits (either at the top level of a namespace if you need them often, or just within a `let` scope if you don't).
 
 ### core
 
 Sticking to the `units2.core` protocols, you can `rescale` or `offset` existing units, and you can turn any `amount` you've computed into a unit with `AsUnit`.
 
-    (def f1 (rescale (offset celsius (celsius -17.777)) (/ 5 9))) ;; fahrenheit
-    (def f2 (AsUnit (cm 30))) ;; foot
+    (rescale (offset celsius (celsius -17.777)) (/ 5 9)) ;; fahrenheit
+    (let [foot (AsUnit (cm 30))] (foot (m 1))) ;; how many feet in a meter?
 
 IFnUnits are also `Multiplicative`, so you can combine existing units with `times` and `divide`. However, the recommended way to combine `Multiplicative` units is to use the `unit-from-powers` function:
 
@@ -168,7 +168,7 @@ If the unit you want to define is a commonly used unit, then it might be a membe
     ;; or (new units2.IFnUnit.IFnUnit SI/METER)
 
 
-in a `let` scope. For work at the REPL, units can also be bound to symbols with the `defunit` macro, so that the printed representation of a unit matches the symbol it's bound to.
+For work at the REPL, units can also be bound to symbols with the `defunit` macro, so that the printed representation of a unit matches the symbol it's bound to.
 
 ### `makebaseunit`
 
@@ -181,7 +181,6 @@ When the units you care about have no relation to any existing unit, it's necess
     (let [fullnight (op// (hedon 10) (nap 8))
           powernap  (op// (hedon 1)  (nap 0.5))]
       (map restfulness [fullnight powernap])) ;; which is more restful?
-
 
 
 ## Extending the protocols

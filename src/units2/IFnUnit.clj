@@ -73,6 +73,13 @@
    (power [this N] (new IFnUnit (.pow javax-unit N)))
   )
 
+
+(defn makebaseunit
+  "`makebaseunit` creates a units at the base of a new dimension for dimensional analysis."
+  [^String newdimension]
+  (->IFnUnit (BaseUnit. newdimension)))
+
+
 (defmacro defunit
 "`def` a symbol to hold a unit, and change that unit's `UnitFormat` to that symbol (for prettier printing)."
 [name value]
@@ -81,15 +88,8 @@
       (.. UnitFormat getInstance (label (implementation-hook ~name) (str '~name)))))
 
 
-;; These are implementation-independent, separated from the code above to encourage reuse.
 
-(extend-type IFnUnit
-  Wrappable
-  (wrap-in [this f] (fn [x] (f (this x))))
-  (wrap-out [this f] (fn [x] (this (f x))))
-  (unwrap-in [this f] (fn [x] (f (getValue x this))))
-  (unwrap-out [this f] (fn [x] (getValue (f x) this)))
-)
+;; This is implementation-independent, separated from the code above to encourage reuse.
 
 (defmacro defunit-with-SI-prefixes
   "A `defunit` that also defines all SI-prefixed units."
@@ -121,6 +121,3 @@
                            Z 1e21
                            Y 1e24
                            ]))))
-
-(defn makebaseunit [^String newdimension]
-  (->IFnUnit (BaseUnit. newdimension)))

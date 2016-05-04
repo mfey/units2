@@ -26,15 +26,6 @@
   (implementation-hook [this] "this may be useful for implementors, but should NOT be used in applications.") ;; this should be hidden from users... right?
   )
 
-(defprotocol Wrappable
-  "Defines the behavior for a function that can be wrapped/unwrapped around other functions. In the context of units, it is useful for mixing gauge-invariant (user) and gauge-dependent (library) code.
-  This utility is provided for one-to-one functions."
-  (wrap-in [this f] "Returns a function that converts an amount into a given unit, before passing it to the first argument of the supplied function.")
-  (wrap-out [this f] "Returns a function that converts an amount into a given unit, before returning it.")
-  (unwrap-in [this f] "Returns a function that extracts the value of an amount into a given unit, before passing it to the first argument of the supplied function.")
-  (unwrap-out [this f] "Returns a function that extracts the value of an amount in the given unit, before returning it.")
-  )
-
 (defprotocol Multiplicative
   (times [this] [this that]
          [this that the-other]) ;Seinfeld reference
@@ -42,7 +33,6 @@
   (inverse [this] "syntactic sugar for arity-1 (divide ...)")
   (power [this N] "syntactic sugar for all of the above")
 )
-
 
 
 (defn unit-from-powers
