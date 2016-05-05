@@ -75,22 +75,23 @@
 
 
 (defn makebaseunit
-  "`makebaseunit` creates a units at the base of a new dimension for dimensional analysis."
+  "Returns a new unit at the base of a new dimension; This function allows dimensional analysis to be extended by the user."
   [^String newdimension]
   (->IFnUnit (BaseUnit. newdimension)))
 
 
 (defmacro defunit
-"`def` a symbol to hold a unit, and change that unit's `UnitFormat` to that symbol (for prettier printing)."
+"`def` a var to hold a unit, and change that unit's printed representation to that var."
 [name value]
     `(do
       (def ~name ~value)
-      (.. UnitFormat getInstance (label (implementation-hook ~name) (str '~name)))))
+      (.. UnitFormat getInstance (label (implementation-hook ~name) (str '~name)))
+      #'~name) ; return like the regular `def`/`defn`/`defmacro`
+)
 
 
 
-;; This is implementation-independent, separated from the code above to encourage reuse.
-
+;; This is implementation-independent, please reuse!!!
 (defmacro defunit-with-SI-prefixes
   "A `defunit` that also defines all SI-prefixed units."
   [name value]
@@ -120,4 +121,5 @@
                            E 1e18
                            Z 1e21
                            Y 1e24
-                           ]))))
+                           ]))
+     #'~name))

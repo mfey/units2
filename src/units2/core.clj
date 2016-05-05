@@ -2,41 +2,41 @@
 
 (set! *warn-on-reflection* true)
 
-;; As a physicist, I use an analogy to gauge theory to think about code with units.
 
 (defprotocol Dimensionful
-  "The values represented by dimensionful datatypes are gauged under unit transformations. If 1km = 1000 meters are the same quantity under different but redundant descriptions, then we want our code to be invariant (ie not need rewriting) under transformations of the variables from one set of units to another."
-  (getUnit [this] "get the unit of")
-  (to [this Unit] "convert this to the given unit.")
-  (getValue [this Unit] "convert this to the given unit and return the value only.")
-  (AsUnit [this] "return a unit in which this quantity is unity")
+  "`Dimensionful` values are values that 'have a unit'. Their unit can be inspected (`getUnit`) and they can be converted into other units (`to`)."
+  (getUnit [this] "Returns the unit associated to this quantity.")
+  (to [this Unit] "Converts this quantity to the given unit.")
+  (getValue [this Unit] "Converts this quantity to the given unit, but returns a nondimensionful (normal Clojure) value.")
+  (AsUnit [this] "Returns a unit in which this quantity is unity.")
 )
 
 (defprotocol Unitlike
-  "Defines the behaviour of a unit"
-  (getDimension [this] "get the dimension of")
+  "`Unitlike` values are units (as far as duck typing is concerned). They can be compared and manipulated as first-class members of the language."
+  (getDimension [this] "Returns the dimension of this unit.")
   (compatible? [this that] "Do two units have the same dimension? If so, they are `compatible?'")
-  (getConverter [this that] "Returns a function that describes the unit transformation, as it acts on values... mostly for internal use.")
-  ;; Not 100% necessary, but nice to have
-  (rescale [this number] "Returns a unit linearly rescaled by the given factor")
-  (offset [this amount] "Returns a unit offset by the given amount")
-  )
+  (getConverter [this that] "Returns a function that describes the unit transformation, as it acts on normal Clojure values... mostly for internal use.")
+  ; Not 100% necessary, but nice to have
+  (rescale [this number] "Returns a unit linearly rescaled by the given factor.")
+  (offset [this amount] "Returns a unit offset by the given amount.")
+)
 
+;; this should be hidden from users somehow... right?
 (defprotocol Hackable
-  (implementation-hook [this] "this may be useful for implementors, but should NOT be used in applications.") ;; this should be hidden from users... right?
-  )
+  (implementation-hook [this] "this may be useful for implementors, but should NOT be used in applications.")
+)
 
 (defprotocol Multiplicative
   (times [this] [this that]
          [this that the-other]) ;Seinfeld reference
   (divide [this] [this that] [this that the-other])
-  (inverse [this] "syntactic sugar for arity-1 (divide ...)")
-  (power [this N] "syntactic sugar for all of the above")
+  (inverse [this] "syntactic sugar for arity-1 `divide`")
+  (power [this N] "syntactic sugar merging `times` and `divide`")
 )
 
 
 (defn unit-from-powers
-"Returns a composite unit from a map of `Multiplicative` units and (integer) powers, or a partitionable seq.
+"Returns a composite unit from a map or association-list of `Multiplicative` units and integer powers.
 
     `(this {kg 1 m -3})` -> a unit for density
     `(this [cm 2])` -> a small area unit
@@ -44,23 +44,25 @@
 [pfs]
 	(let [pairs (cond
                (map? pfs)
-                  ; todo: check nonempty
-                  (map list (keys pfs) (vals pfs))
+                  (if (empty? (keys pfs))
+                    (throw (IllegalArgumentException. "Can't generate a unit from an empty map!"))
+                    (map list (keys pfs) (vals pfs)))
                (sequential? pfs)
-                  ; todo: other checks
                   (cond
-                    (empty? pfs)       (throw (IllegalArgumentException. "Empty list not implemented yet"))
-                    (odd? (count pfs)) (throw (IllegalArgumentException. "Odd argnum error"))
+                    (empty? pfs)       (throw (IllegalArgumentException. "Can't generate a unit from an empty association-list!"))
+                    (odd? (count pfs)) (throw (IllegalArgumentException. "Odd number of elements in the association-list!"))
                     true               (partition 2 pfs))
-               true (throw (IllegalArgumentException. "args should be specified as a map or an alist")))
-        ; todo: some checks that we are indeed working with units and integers.
-	      mapped (map (fn [[a b]] (power a b)) pairs)]; generate ((power unit exponent) ... (power unit exponent))
-           (reduce (fn [x y] (times x y)) mapped)))
+               true (throw (IllegalArgumentException. "Mis-specified map or association-list!")))]
+      (when (not (every? (comp integer? second) pairs))
+        (throw (IllegalArgumentException. "All powers must be integers!")))
+      (when (not (every? (comp #(and (satisfies? Unitlike %) (satisfies? Multiplicative %)) first) pairs))
+        (throw (IllegalArgumentException. "All units must be `Multiplicative`!")))
+      (let [mapped (map (fn [[a b]] (power a b)) pairs)]; generate ((power unit exponent) ... (power unit exponent))
+        (reduce (fn [x y] (times x y)) mapped))))
 
 
 
 ;; A generic type for an amount with a unit, that doesn't care about the implementation of `unit` or of `value` (as long as these are consistent).
-
 (deftype amount [value unit]
   Dimensionful
   (getUnit [this] unit)
@@ -73,13 +75,13 @@
 )
 
 (defmethod print-method amount [a ^java.io.Writer w]
-  (.write w (str a))) ;; human and (almost) computer readable.
+  (.write w (str a))) ; human and (almost) computer readable.
 
 (defn amount? [x] (instance? amount x))
 
 
 
-;; this is NOT a safe way to check for linearity!
+;; This is NOT a safe way to check for linearity!
 (defn linear?
   "An extended Blum-Luby-Rubinfeld [BLR 1990] test
   (with a relative tolerance, for double precision)

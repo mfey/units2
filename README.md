@@ -49,6 +49,7 @@ Elements marked `(*)` are incomplete.
     + Inline Comments / Marginalia
     + Tutorial
     + Example code (`spice.clj`)
+    + `(*)` API Reference
 
 ### Version 3.0 (experimental features)
 + `(*)` Interop with `core.typed` (check for correct dimensions at compile time)

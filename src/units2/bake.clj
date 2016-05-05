@@ -7,11 +7,14 @@
 
 ;; ## Temperature [K]
 
-(defunit-with-SI-prefixes K (->IFnUnit SI/KELVIN)) ;; not used for baking
+(defunit-with-SI-prefixes K (->IFnUnit SI/KELVIN)) ; not used for baking :-D
 (defunit celsius (offset K (K 273.15)))
-(defunit fahrenheit (rescale (offset celsius (celsius -17.777)) (/ 5 9)))
+(defunit fahrenheit (rescale (offset celsius (celsius -17.7777)) (/ 5 9)))
 
-;(defunit approximate-celsius (rescale fahrenheit 2))
+;; A good approximation for baking temperatures is
+;;  <pre><code>
+;;  (defunit approximate-celsius (rescale fahrenheit 2))
+;;  </code></pre>
 
 ;; ## Weight [M]
 

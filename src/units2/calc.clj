@@ -124,13 +124,13 @@
              i
              ))))
 
-;; (defmacro multi-integrate
-;;   "can probably do this with a recursive function, but I found a macro that does what I want. Good enough for now..."
-;;   [f bounds]
-;;   (let [gs (into [] (take (count bounds) (repeatedly gensym)))
-;;         xs (map list gs bounds)]
-;;    ; xs
-;;   (reduce #(list 'integrate (list 'fn [(first %2)] %1) (second %2)) `(apply ~f ~gs) xs)
-;; ))
+; (defmacro multi-integrate
+;   "can probably do this with a recursive function, but I found a macro that does what I want. Good enough for now..."
+;   [f bounds]
+;   (let [gs (into [] (take (count bounds) (repeatedly gensym)))
+;         xs (map list gs bounds)]
+;    ; xs
+;   (reduce #(list 'integrate (list 'fn [(first %2)] %1) (second %2)) `(apply ~f ~gs) xs)
+; ))
 
-;; (macroexpand '(multi-integrate (fn [x y z] (+ x y z)) [[0 10] [-1 1] [0 1]]))
+; (macroexpand '(multi-integrate (fn [x y z] (+ x y z)) [[0 10] [-1 1] [0 1]]))

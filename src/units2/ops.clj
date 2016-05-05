@@ -10,35 +10,42 @@
 
 ;; ## Nota Bene
 ;;
-;;   1. The ops we define here are fine with `require :refer :all`, they reduce to their `clojure.core/` and `Math/` counterparts on non-`amount?` quantities. You shouldn't rely on this though, instead use the `with-unit-` macro to get (locally scoped) unqualified ops.
-;;   2. When standard functions would give surprising behaviour in combination with units, users might inadvertently write buggy code. We provide a version of the function that issues an Exception whenever it is used on units (to force the user to think about the behaviour they want)
-;;   3. Since most users DO know what they want, and since this is usually <pre><code> (getValue x (getUnit x)) </code></pre> these exceptions can be downgraded to warnings by rebinding `*unit-warnings-are-errors*`. Then `getValue`-`getUnit` is used.
+;;   1. The ops we define here are fine with `require :refer :all`, they reduce to their `clojure.core/` and `Math/` counterparts on non-`amount?` quantities.
+;;   2. When standard functions would give surprising behaviour in combination with units, users might inadvertently write buggy code. We provide a version of the function that issues an Exception whenever it is used on units (to force the user to think about the behaviour they want).
+;;   3. Since most users DO know what they want, and since this is usually <pre><code> (getValue x (getUnit x)) </code></pre> these exceptions can be downgraded to warnings by rebinding `*unit-warnings-are-errors*`. Then `getValue`-`getUnit` is used. These warnings can further be silenced by rebinding `*unit-warnings-are-printed*`.
 ;;   4. For exponentiation ops, we also provide a standardised augmented-arity version that uses divide-into-double on the first two args
-;;   <pre><code>(pow a b c) -> (Math/pow (divide-into-double a b) c)</code></pre>
+;;   <pre><code>
+;;   (pow a b c)
+;;   (Math/pow (divide-into-double a b) c)
+;;   </code></pre>
 ;;
 
 (ns units2.ops
-  (:refer-clojure :exclude [+ - * / rem quot == > >= < <= zero? pos? neg? min max]) ;redefinitions imminent! This turns off some WARNINGS.
+  ;redefinitions imminent! `:exclude` turns off some WARNINGS.
+  (:refer-clojure :exclude [+ - * / rem quot == > >= < <= zero? pos? neg? min max])
   (:require [units2.core :refer :all])
 )
 
 (set! *warn-on-reflection* true)
 
-(def ^:dynamic *unit-warnings-are-errors* true)
+;; ## WARNINGS
+
 ;; users who know what they are doing can set this to false at their own risk.
-(def ^:dynamic *unit-warnings-are-printed* true)
+(def ^:dynamic *unit-warnings-are-errors* true)
+
 ;; users who REALLY know what they are doing can prevent warnings from being printed.
 ;; this is ONLY provided to prevent the printing I/O from slowing down well-tested,
 ;; speed-critical computations, and should NOT be used lightly.
+(def ^:dynamic *unit-warnings-are-printed* true)
 
 
-;; ## Utilities
 
 (defn- warn [msg]
-  (if *unit-warnings-are-errors*
-    (throw (UnsupportedOperationException. (str msg)))
-    (if *unit-warnings-are-printed*
-     (println (clojure.string/join (concat "WARNING: " msg))))))
+  (cond
+    *unit-warnings-are-errors*
+      (throw (UnsupportedOperationException. (str msg)))
+    *unit-warnings-are-printed*
+     (println (clojure.string/join (concat "WARNING: " msg)))))
 
 
 ;; ## Comparisons
@@ -126,13 +133,13 @@
 ;; ## Arithmetic
 
 ;; dispatch for +,-
-
 (defmacro threecond [[a b] both one neither]
   `(cond
     (and (amount? ~a) (amount? ~b))  ~both
     (or  (amount? ~a) (amount? ~b))  ~one
     true                             ~neither))
 
+;; dispatch for +,- with a check that the conversion is linear
 (defmacro lincond [[a b] lin nonlin one neither]
   `(threecond [~a ~b]
       (if (linear? (getConverter (getUnit ~a) (getUnit ~b)))
@@ -142,7 +149,7 @@
       ~neither))
 
 (defn +
-  ([] 0)
+  ([] (clojure.core/+)) ; same return value as Clojure.
   ([a] a)
   ([a b]
     (lincond [a b]
@@ -154,19 +161,18 @@
 
 
 (defn -
-  ;; zero arity implicitly an error, let Clojure catch this
+  ([] (clojure.core/-)) ; zero arity explicitly an error, but let Clojure catch this.
   ([a] (if (amount? a) (->amount (clojure.core/- (getValue a (getUnit a))) (getUnit a)) (clojure.core/- a)))
   ([a b]
     (lincond [a b]
       (->amount (clojure.core/- (getValue a (getUnit a)) (getValue b (getUnit a))) (getUnit a))
       (throw (UnsupportedOperationException. (str "Nonlinear conversion between `" (getUnit a) "' and `" (getUnit b)"'!")))
       (throw (UnsupportedOperationException. (str "It's meaningless to subtract numbers with and without units! (`" a "' and `" b "' provided)")))
-                 (clojure.core/- a b)))
+      (clojure.core/- a b)))
     ([a b & rest] (- a (apply + b rest))))
 
 
 ;; dispatch for *,/
-
 (defmacro fourcond [[a b] one two three four]
   `(cond
     (and (amount? ~a) (amount? ~b))       ~one
@@ -175,7 +181,7 @@
     (not (or (amount? ~a) (amount? ~b)))  ~four))
 
 (defn *
-  ([] 1)
+  ([] (clojure.core/*)) ; same return value as Clojure.
   ([a] a)
   ([a b] (fourcond [a b]
     (->amount (clojure.core/* (getValue a (getUnit a)) (getValue b (getUnit b))) (times (getUnit a) (getUnit b)))
@@ -185,7 +191,7 @@
   ([a b & rest] (* a (apply * b rest))))
 
 (defn /
-  ;; zero arity implicitly an error, let Clojure catch this
+  ([] (clojure.core//)) ; zero arity explicitly an error, but let Clojure catch this.
   ([a] (if (amount? a)
          (->amount (clojure.core// (getValue a (getUnit a))) (inverse (getUnit a)))
          (clojure.core// a)))
@@ -197,7 +203,8 @@
   ([a b & rest] (/ a (apply * b rest))))
 
 (defn divide-into-double
-  "fractions with same dimensions in the numerator and denominator have a unit-free value; this is basically syntactic sugar for `(getValue a (AsUnit b))`."
+  "When all units involved are linear rescalings of one another, fractions with the same dimensions in the numerator and denominator have a *unique* unit-free value.
+  This is basically syntactic sugar for `(getValue a (AsUnit b))` with some error checking."
   [a b]
    (if (and (amount? a)
             (amount? b)
