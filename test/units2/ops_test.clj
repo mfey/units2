@@ -86,10 +86,13 @@
   (testing "exp"
     (is (= Math/E (ops/exp 1)))
     (is (= 1.0 (ops/exp 0))))
+    (is (= Math/E (ops/exp (m 1) (m 1))))
+    (is (try (ops/exp (m 1) 7) (catch java.lang.IllegalArgumentException e true)))
   (testing "logarithms"
     (is (= 0.0 (ops/log 1) (ops/log10 1)))
     (is (= 1.0 (ops/log10 10)))
     (is (= 3.0 (ops/log10 (km 1) (m 1)))))
+    (is (try (ops/log (m 1) 7) (catch java.lang.IllegalArgumentException e true)))
   (testing "expt"
     (is (ops/== (ops/expt (m 2) 3) ((power m 3) 8))))
   (testing "pow"
