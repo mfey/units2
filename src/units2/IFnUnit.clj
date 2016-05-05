@@ -3,7 +3,6 @@
   (:import (javax.measure.unit BaseUnit Unit UnitFormat)
            (javax.measure.converter UnitConverter ConversionException)))
 
-(set! *warn-on-reflection* true)
 
 ;; The reference implementation is based on javax.measure
 

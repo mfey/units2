@@ -5,13 +5,13 @@ A Clojure library for quantities with units.
 
 ## Rationale
 
-Clojure does not have built-in support for numerical quantities in a system of units. Most (all?) previous solutions to this problem construct ad-hoc domain specific languages, instead of transforming the entire language into a DSL (which is what Lisp languages are supposed to do). This library brings Clojure into the world of unit-aware computing (https://xkcd.com/1643/); in fact, it abstracts away as much of the unit bookkeeping as possible in a functional, lispy way.
+Clojure does not have built-in support for numerical quantities in a system of units. This library brings Clojure into the world of unit-aware computing (https://xkcd.com/1643/); in fact, it abstracts away as much of the unit bookkeeping as possible in a functional, lispy way.
 
 ## Features
 
 The aims of `units2` is to be highly expressive and easy to use. The salient points of `units2` are:
 
-+ A homoiconic syntax for units that you can `map`, `comp`, etc.
++ A homoiconic syntax for first-class units that you can `map`, `comp`, etc.
 + New units can be defined
     + in namespaces that collect them by application, and
     + at runtime, anonymously, even within local scope
@@ -43,8 +43,8 @@ Elements marked `(*)` are incomplete.
         + Astroparticle Physics (`units2.astro`)
     + Support for nonlinear unit conversions
 + Debugging:
-    + `(*)` Comprehensive Warning/Error messages
-    + `(*)` Exhaustive Testing
+    + Comprehensive Warning/Error messages
+    + `(*)` Painfully Exhaustive Testing
 + Comprehensive Documentation:
     + Inline Comments / Marginalia
     + Tutorial
@@ -52,6 +52,5 @@ Elements marked `(*)` are incomplete.
     + `(*)` API Reference
 
 ### Version 3.0 (experimental features)
-+ `(*)` Interop with `core.typed` (check for correct dimensions at compile time)
-+ `(*)` More cool stuff
++ `(*)` Interop with `core.typed` (automated dimensional analysis at compile time)
 

@@ -1,9 +1,7 @@
-(ns units2.baking
+(ns units2.bake
   (:require [units2.core :refer :all]
             [units2.IFnUnit :refer :all])
-  (:import (javax.measure.unit Unit SI NonSI)))
-
-(set! *warn-on-reflection* true)
+  (:import (javax.measure.unit SI NonSI)))
 
 ;; ## Temperature [K]
 

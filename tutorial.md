@@ -1,13 +1,11 @@
-# Getting Started
-
-## Getting Started (at the REPL)
+# Getting Started (at the REPL)
 
 Start by loading the core of the library and some commonly used units.
 
     (require '[units2.core :refer :all])
     (require '[units2.astro :refer :all])
 
-# Working with IFnUnits
+## Creating Amounts
 
 The unit for meters in the astro library is `m`, and amounts representing 7 meters and 2 kilometers are created by
 
@@ -18,16 +16,13 @@ which admittedly may not look like much at the REPL because of how amounts are p
 
     (class (celsius 16))
 
-Both units and amounts are first-class citizens of the language. You can check that units from the astro library are of type `units2.IFnUnit.IFnUnit`, which we'll discuss in more detail later. For now, know only that they are named as such since they implement `clojure.lang.IFn`.
-
-To convert an amount to another unit, just act with that unit on the given amount:
+Both units and amounts are first-class citizens of the language. You can check that units from the astro library are of type `units2.IFnUnit.IFnUnit`, which we'll discuss in more detail later. For now, remember only that they are named as such since they implement `clojure.lang.IFn`. Therefore, to convert an amount to another unit, just `apply` that unit on the given amount:
 
     (fahrenheit (celsius 0))
 
     (let [a (m 6)]
       [(km a) (m (km 0.5))]
     ) ; --> amounts of 0.006 km and 500 meters
-
 
 When the conversion does not exist, the library throws an exception, telling you that your code does not respect the rules of dimensional analysis:
 
@@ -37,7 +32,7 @@ Sometimes you may want to extract the value of an amount as a regular clojure nu
 
     (getValue (km 6) cm)
 
-That said, the only reason to extract a value from an amount is to interact with pre-existing clojure functions. To promote functional code, we recommend the following wrap/unwrap idioms:
+That said, the only reason to extract a value from an amount is to interact with pre-existing clojure functions. To promote functional code, we recommend the following `comp`-based wrap/unwrap idioms:
 
     (let [atan (comp rad #(Math/atan %))
           sin  (comp #(Math/sin %) #(getValue % rad))
@@ -79,14 +74,15 @@ These are joined together into the super-macro `(with-unit- [keywords] body)`, w
 
     ;;; 100 lines later
 
-    (average (m 7) (m 6) (cm 60)) ;; units work automatically
+    (average (m 7) (m 6) (cm 60))     ; units work automatically
+    (average (celsius 7) (celsius 6)) ; no matter their dimension
 
 Of course, you'd reach the same level of abstraction with `[units2.ops :refer :all]`, but explicitly mentioning redefinitions of the core language operations is probably a good idea.
 
 
 ## Exponentiation
 
-Exponentials and logarithms can be a bit subtle; but given how often they occur in application, using them should not require re-inventing the wheel.
+Exponentials and logarithms can be a bit subtle; but given how often they occur in code with units, using them should not require re-inventing the wheel.
 
 Besides `expt` (a new function we'll discuss soon), the usual `java.lang.math` functions are redefined over dimensionless ratios of amounts using the ages-old "`atan2`" convention `atan2(a,b) == atan(a/b)`.
 
@@ -94,14 +90,57 @@ Besides `expt` (a new function we'll discuss soon), the usual `java.lang.math` f
 
 They still accept arity-one definitions over regular numbers to behave nicely in `with-unit-expts`; and intrepid users can read the source to learn about `*unit-warnings-are-errors*` and arity-one exponentiation with units.
 
+The `expt` function (borrowing the name of `pow` in the LISP language Scheme) is a `pow` for amounts with units:
 
-The `expt` function (following the name of `pow` in Scheme) is a `pow` for amounts with units:
+    (op/expt (km 1) 3) ; --> large volume
+    (op/expt (m 1) -2) ; --> small surface density
 
-    (op/expt (m 1) 3) ; --> volume
 
-## Offset Pitfalls
+# Defining Custom IFnUnits
 
-Some standard operations (like `pos?`) become less meaningful. For example: the Celsius and Fahrenheit scales are offset, so that some temperatures are positive and negative depending on which unit you're quoting them in:
+`units2.astro` and `units2.bake` obviously don't contain each and every unit you might encounter when working with Clojure. Fortunately, it's easy to create your own IFnUnits (either at the top level of a namespace if you need them often, or just within a `let` scope if you don't).
+
+## core
+
+Sticking to the `units2.core` protocols, you can `rescale` or `offset` existing units, and you can turn any `amount` you've computed into a unit with `AsUnit`.
+
+    (rescale (offset celsius (celsius -17.777)) (/ 5 9)) ;; fahrenheit
+    (let [foot (AsUnit (cm 30))] (foot (m 1))) ;; how many feet in a meter?
+
+IFnUnits are also `Multiplicative`, so you can combine existing units with `times` and `divide`. However, the recommended way to combine `Multiplicative` units is to use the `unit-from-powers` function:
+
+    (unit-from-powers {kg 1 m 2 sec -2}) ; Joule (from map)
+    (unit-from-powers [kg 1 m 2 sec -2]) ; Joule (from alist)
+
+## `SI` and `NonSI`
+
+If the unit you want to define is a commonly used unit, then it might be a member of the `SI` or `NonSI` classes of `javax.measure.unit`. In that case, you can simply `import` these and call the `deftype`-constructor for `IFnUnit`:
+
+    (require '[units2.IFnUnit :refer :all])
+    (import '[javax.measure.unit SI NonSI])
+
+    (->IFnUnit SI/WATT)
+    ;; or (new units2.IFnUnit.IFnUnit SI/METER)
+
+
+For work at the REPL, units can also be bound to symbols with the `defunit` macro, so that the printed representation of a unit matches the symbol it's bound to.
+
+## `makebaseunit`
+
+When the units you care about have no relation to any existing unit, it's necessary to make them from scratch. You can (and should!) create new base units to express your problem. `makebaseunit` will create a new unit (along with a new dimension for the purpose of dimensional analysis). Imagine you're working on a program in the general problem space of human happiness. These things can't be measured in the SI, but
+
+    (defunit hedon (makebaseunit "Happy")) ; the hedon is a unit of happiness (dimensions of [H])
+    (defunit nap   (makebaseunit "sleep")) ; the nap is a (poorly-named?) measure of how deep one's sleep is.
+    (defunit restfulness (divide hedon nap))
+
+    (let [fullnight (op// (hedon 10) (nap 8))
+          powernap  (op// (hedon 1)  (nap 0.5))]
+      (map restfulness [fullnight powernap])) ;; which is more restful?
+
+
+# Offset Pitfalls
+
+Some standard operations (like `pos?`) become less meaningful with units. For example: the Celsius and Fahrenheit scales are offset, so that some temperatures are positive and negative depending on which unit you're quoting them in:
 
     (fahrenheit (celsius -10)) ;; +14 Fahrenheit
     (op/pos? (fahrenheit 14)) ;; -> Helpful Exception
@@ -122,16 +161,15 @@ However, operations like `pos?` and `zero?` are not the end of our worries. When
 
 but there are still plenty of ways to combine units and make the underlying `javax.measure` implementation of unit conversions throw a `ConversionException`. Without even using `ops`, one could engineer the following:
 
-    ;; temperature gradients
+    ;; temperature gradient conversions
     ((divide celsius mm) ((divide celsius m) 1)) ;; successful conversion (linear)
     ((divide fahrenheit m) ((divide celsius m) 1)) ;; unsuccessful conversion (nonlinear)
-
 
 # Advanced Features
 
 ## Calculus
 
-We can do calculus with amounts by leveraging existing implementations of derivatives and integrals of functions (such as Incanter or Apache Commons). The functions in `units2.calc` handle univariate calculus for any combination of regular/dimensionful quantities in the domain/range of the function.
+We can do calculus with amounts by leveraging existing implementations of derivatives and integrals of functions (such as Incanter or Apache Commons). The functions in `units2.calc` handle numerical univariate calculus for any combination of regular/dimensionful quantities in the domain/range of the function.
 
     (require '[units2.calc :refer :all])
 
@@ -140,47 +178,6 @@ We can do calculus with amounts by leveraging existing implementations of deriva
     (integrate (fn [x] (op/* x 2)) (map m [0 1])) ;; 1 square-meter
 
     (differentiate (fn [x] (op/* x x (m 2))) 1) ;; 4 meters
-
-## Defining Custom IFnUnits
-
-`units2.astro` and `.bake` don't contain all of the commonly-used units, let alone every unit you might encounter when working with Clojure. Fortunately, it's easy to create your own IFnUnits (either at the top level of a namespace if you need them often, or just within a `let` scope if you don't).
-
-### core
-
-Sticking to the `units2.core` protocols, you can `rescale` or `offset` existing units, and you can turn any `amount` you've computed into a unit with `AsUnit`.
-
-    (rescale (offset celsius (celsius -17.777)) (/ 5 9)) ;; fahrenheit
-    (let [foot (AsUnit (cm 30))] (foot (m 1))) ;; how many feet in a meter?
-
-IFnUnits are also `Multiplicative`, so you can combine existing units with `times` and `divide`. However, the recommended way to combine `Multiplicative` units is to use the `unit-from-powers` function:
-
-    (unit-from-powers {kg 1 m 2 sec -2}) ; Joule (from map)
-    (unit-from-powers [kg 1 m 2 sec -2]) ; Joule (from alist)
-
-### `SI` and `NonSI`
-
-If the unit you want to define is a commonly used unit, then it might be a member of the `SI` or `NonSI` classes of `javax.measure.unit`. In that case, you can simply `import` these and call the `deftype`-constructor for `IFnUnit`:
-
-    (require '[units2.IFnUnit :refer :all])
-    (import '[javax.measure.unit SI NonSI])
-
-    (->IFnUnit SI/WATT)
-    ;; or (new units2.IFnUnit.IFnUnit SI/METER)
-
-
-For work at the REPL, units can also be bound to symbols with the `defunit` macro, so that the printed representation of a unit matches the symbol it's bound to.
-
-### `makebaseunit`
-
-When the units you care about have no relation to any existing unit, it's necessary to make them from scratch. You can (and should!) create new base units to express your problem. `makebaseunit` will create a new unit (along with a new dimension for the purpose of dimensional analysis). Imagine you're working on a program in the general problem space of human happiness. These things can't be measured in the SI, but
-
-    (defunit hedon (makebaseunit "Happy")) ; the hedon is a unit of happiness (dimensions of [H])
-    (defunit nap   (makebaseunit "sleep")) ; the nap is a (poorly-named?) measure of how deep one's sleep is.
-    (defunit restfulness (divide hedon nap))
-
-    (let [fullnight (op// (hedon 10) (nap 8))
-          powernap  (op// (hedon 1)  (nap 0.5))]
-      (map restfulness [fullnight powernap])) ;; which is more restful?
 
 
 ## Extending the protocols

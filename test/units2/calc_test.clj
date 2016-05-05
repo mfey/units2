@@ -7,10 +7,13 @@
             [units2.calc :refer :all]))
 
 (deftest differentiation
-  (is (< 15.9 (differentiate (fn [x] (* 2 x x)) 4) 16.1))
-  ; fourth option to test too...
-  (is (ops/< (m 15.9) (differentiate (fn [x] (ops/* 2 x x)) (m 4)) (m 16.1)))
-  (is (ops/< (m 15.9) (differentiate (fn [x] (ops/* (m 2) x x)) 4) (m 16.1)))
+  (testing "without units"
+    (is (< 15.9 (differentiate (fn [x] (* 2 x x)) 4) 16.1)))
+  (testing "with units"
+    (is (ops/< (m 15.9) (differentiate (fn [x] (ops/* 2 x x)) (m 4)) (m 16.1)))
+    (is (ops/< (sec 15.9) (differentiate (fn [x] (ops/* (sec 2) x x)) 4) (sec 16.1)))
+    (is (ops/< ((inverse m) 15.9) (differentiate (comp (fn [x] (* 2 x x)) #(getValue % m)) (m 4)) ((inverse m) 16.1)))
+  )
 )
 
 (deftest integration

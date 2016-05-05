@@ -6,8 +6,7 @@
 (deftest amount-p
   (testing "amount?"
     (is (amount? (->amount 0 "meter"))) ; constructor is agnostic to actual units
-    (is (amount? (->amount 1 m)))
-    ))
+    (is (amount? (->amount 1 m)))))
 
 (deftest printing
   (testing "machine-readable (if IFn)"

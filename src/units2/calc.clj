@@ -17,8 +17,6 @@
            (org.apache.commons.math3.analysis.integration RombergIntegrator))
 )
 
-(set! *warn-on-reflection* true)
-
 ;; ## Differentiation
 
 (defn- low-level-derivative

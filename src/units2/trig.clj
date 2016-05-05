@@ -2,15 +2,11 @@
 
 (ns units2.trig
   (:require [units2.core :refer :all]
-            [units2.IFnUnit :refer :all])
-  (:import (javax.measure.unit Unit SI NonSI))
-)
+            [units2.IFnUnit :refer [defunit makebaseunit]]))
 
-
-(set! *warn-on-reflection* true)
 
 (defunit rad (makebaseunit "a")) ; a for angle
-(defunit deg (rescale rot (/ Math/PI 180)))
+(defunit deg (rescale rad (/ Math/PI 180)))
 
 (defmacro radians-in [trig javatrig]
   (let [a (gensym)]

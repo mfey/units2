@@ -3,8 +3,6 @@
             [units2.IFnUnit :refer :all])
   (:import (javax.measure.unit Unit SI NonSI)))
 
-(set! *warn-on-reflection* true)
-
 ;; ## Length [L]
 
 

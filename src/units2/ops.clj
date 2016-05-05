@@ -26,8 +26,6 @@
   (:require [units2.core :refer :all])
 )
 
-(set! *warn-on-reflection* true)
-
 ;; ## WARNINGS
 
 ;; users who know what they are doing can set this to false at their own risk.
@@ -205,7 +203,7 @@
 (defn divide-into-double
   "When all units involved are linear rescalings of one another, fractions with the same dimensions in the numerator and denominator have a *unique* unit-free value.
   This is basically syntactic sugar for `(getValue a (AsUnit b))` with some error checking."
-  [a b]
+  ^double [a b]
    (if (and (amount? a)
             (amount? b)
             (compatible? (getUnit a) (getUnit b))
@@ -251,7 +249,6 @@
 (defmacro with-unit-arithmetic
   "Locally rebinds arithmetic operators like `+`, and `/` to unit-aware equivalents."
   [& body]
-  ; TODO: run tests and bugproof this!!!
   (clojure.core/conj body
         '[+ units2.ops/+
          - units2.ops/-
@@ -288,8 +285,10 @@
              (warn "Exponentiation interacts nontrivially with rescalings of units.")
              (~cljexpt (getValue ~a (getUnit ~a))))
            (~cljexpt ~a)))
-       ([~a ~b] ;; minimal error checking here. TODO: check for amount? vs normal numbers.
-        (~cljexpt (divide-into-double ~a ~b))))))
+       ([~a ~b]
+        (if (every? amount? [~a ~b])
+          (~cljexpt (divide-into-double ~a ~b))
+          (throw (IllegalArgumentException. (str "Arity-2 " ~expt " requires two amounts! (" ~a " and " ~b " provided)"))))))))
 
 (defexpt exp   Math/exp)
 (defexpt log   Math/log)
@@ -299,10 +298,10 @@
   ([a b]
     (if (amount? a)
       (do
-        (warn "Exponentiation interacts nontrivially with rescalings of units.")
+        (warn "pow interacts nontrivially with rescalings of units.")
         (Math/pow (getValue a (getUnit a)) b))
       (Math/pow a b)))
-  ([a b c]
+  ([a b c] ;; TODO: check that (every amount? [a b])
    (Math/pow (divide-into-double a b) c)))
 
 (defmacro with-unit-expts
@@ -328,8 +327,10 @@
              (warn "Magnitudes interact nontrivially with rescalings of units.")
              (~javamgn (double (getValue ~a (getUnit ~a)))))
            (~javamgn (double ~a))))
-       ([~a ~b] ;; minimal error checking here. TODO: check for amount? vs normal numbers.
-        (~javamgn (double (divide-into-double ~a ~b)))))))
+       ([~a ~b]
+        (if (every? amount? [~a ~b])
+          (~javamgn (double (divide-into-double ~a ~b)))
+          (throw (IllegalArgumentException. (str "Arity-2 " ~expt " requires two amounts! ("~a" and "~b" provided)"))))))))
 
 (defmgn abs Math/abs)
 (defmgn floor Math/floor)

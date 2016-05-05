@@ -7,7 +7,7 @@
   (:require [units2.core :refer :all]
             [units2.ops :as ops]
             [units2.IFnUnit :refer :all])
-  (:import (javax.measure.unit Unit SI))
+  (:import (javax.measure.unit SI))
 )
 
 

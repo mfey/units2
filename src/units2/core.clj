@@ -1,8 +1,5 @@
 (ns units2.core)
 
-(set! *warn-on-reflection* true)
-
-
 (defprotocol Dimensionful
   "`Dimensionful` values are values that 'have a unit'. Their unit can be inspected (`getUnit`) and they can be converted into other units (`to`)."
   (getUnit [this] "Returns the unit associated to this quantity.")
@@ -77,7 +74,9 @@
 (defmethod print-method amount [a ^java.io.Writer w]
   (.write w (str a))) ; human and (almost) computer readable.
 
-(defn amount? [x] (instance? amount x))
+(defn amount?
+  "Returns true if x is an instance of units2.core.amount."
+  [x] (instance? amount x))
 
 
 
