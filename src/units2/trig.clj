@@ -2,10 +2,10 @@
 
 (ns units2.trig
   (:require [units2.core :refer :all]
-            [units2.IFnUnit :refer [defunit makebaseunit]]))
+            [units2.IFnUnit :refer [defunit defbaseunit]]))
 
 
-(defunit rad (makebaseunit "a")) ; a for angle
+(defbaseunit rad ::angle)
 (defunit deg (rescale rad (/ Math/PI 180)))
 
 (defmacro radians-in [trig javatrig]

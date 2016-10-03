@@ -23,7 +23,8 @@
 (ns units2.ops
   ;redefinitions imminent! `:exclude` turns off some WARNINGS.
   (:refer-clojure :exclude [+ - * / rem quot == > >= < <= zero? pos? neg? min max])
-  (:require [units2.core :refer :all])
+  (:require [units2.core :refer :all]
+            [clojure.spec :as spec]) ; TODO: spec these functions!!!
 )
 
 ;; ## WARNINGS
@@ -32,7 +33,7 @@
 (def ^:dynamic *unit-warnings-are-errors* true)
 
 ;; users who REALLY know what they are doing can prevent warnings from being printed.
-;; this is ONLY provided to prevent the printing I/O from slowing down well-tested,
+;; this is ONLY provided to prevent the printing I/O from slowing down well-tested, innermost-loop,
 ;; speed-critical computations, and should NOT be used lightly.
 (def ^:dynamic *unit-warnings-are-printed* true)
 
@@ -56,7 +57,7 @@
     (cond
       (every? amount? ~args)
         (apply ~cljcmp (map #(getValue % (getUnit (first ~args))) ~args))
-      (every? #(not (amount? %)) ~args)
+      (every? #(not (amount? %)) ~args) ; includes empty argslist.
         (apply ~cljcmp ~args)
       true
         (throw (UnsupportedOperationException. "It makes no sense to compare values with and without units!"))))))
@@ -67,6 +68,12 @@
 (defcmp > clojure.core/>)
 (defcmp <= clojure.core/<=)
 (defcmp >= clojure.core/>=)
+
+;TODO: add something like this to the macro: `(spec/fdef ~cmp :args (spec/+ (spec/or :units2.core/amount number?)) :ret boolean?)
+
+;(spec/fdef == :args (spec/+ any?) :ret boolean?)
+;(clojure.spec.gen/generate (clojure.spec/gen (spec/+ any?)))
+
 
 (defmacro defsgn [sgn cljsgn]
   (let [a (gensym)]

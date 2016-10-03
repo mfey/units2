@@ -1,4 +1,5 @@
-(ns units2.core)
+(ns units2.core
+  (:require [clojure.spec :as spec]))
 
 (defprotocol Dimensionful
   "`Dimensionful` values are values that 'have a unit'. Their unit can be inspected (`getUnit`) and they can be converted into other units (`to`)."
@@ -58,6 +59,8 @@
         (reduce (fn [x y] (times x y)) mapped))))
 
 
+(spec/def ::amount (spec/and #(satisfies? Dimensionful %)
+                             #(satisfies? Unitlike (getUnit %))))
 
 ;; A generic type for an amount with a unit, that doesn't care about the implementation of `unit` or of `value` (as long as these are consistent).
 (deftype amount [value unit]
@@ -74,9 +77,10 @@
 (defmethod print-method amount [a ^java.io.Writer w]
   (.write w (str a))) ; human and (almost) computer readable.
 
+
 (defn amount?
   "Returns true if x is an instance of units2.core.amount."
-  [x] (instance? amount x))
+  [x] (instance? amount x)) ; TODO: think about whether we want this or (spec/valid? ::amount %)
 
 
 

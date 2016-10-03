@@ -9,7 +9,7 @@
 (defunit celsius (offset K (K 273.15)))
 (defunit fahrenheit (rescale (offset celsius (celsius -17.7777)) (/ 5 9)))
 
-;; A good approximation for baking temperatures is
+;; A good approximation valid for baking temperatures is
 ;;  <pre><code>
 ;;  (defunit approximate-celsius (rescale fahrenheit 2))
 ;;  </code></pre>
@@ -39,3 +39,6 @@
 (defunit cup_us (rescale g 236.5882365)) ; wikipedia
 
 ; fun fact: teaspoon of sugar = 15 calories
+
+
+;; TODO: something computational about the 1:1:1:1 ratio of pound cake.

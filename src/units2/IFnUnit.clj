@@ -1,5 +1,7 @@
 (ns units2.IFnUnit
-  (:require [units2.core :refer :all])
+  (:require [units2.core :refer :all]
+            [clojure.spec :as spec]
+            [clojure.spec.gen :as gen])
   (:import (javax.measure.unit BaseUnit Unit UnitFormat)
            (javax.measure.converter UnitConverter ConversionException)))
 
@@ -73,12 +75,6 @@
   )
 
 
-(defn makebaseunit
-  "Returns a new unit at the base of a new dimension; This function allows dimensional analysis to be extended by the user."
-  [^String newdimension]
-  (->IFnUnit (BaseUnit. newdimension)))
-
-
 (defmacro defunit
 "`def` a var to hold a unit, and change that unit's printed representation to that var."
 [name value]
@@ -88,6 +84,23 @@
       #'~name) ; return like the regular `def`/`defn`/`defmacro`
 )
 
+(defn makebaseunit
+  "Returns a new (anonymous) unit at the base of a new dimension. See also `defbaseunit`."
+  [^String newdimension]
+   (->IFnUnit (BaseUnit. newdimension)))
+
+(defmacro defbaseunit
+  "Creates a new unit at the base of a new dimension. This function allows dimensional analysis to be extended by the user.
+
+  If the dimensionname is given as a keyword, a `clojure.spec` spec for the dimension is generated."
+  [unitname dimensionname] ; dimensionname as a namespaced keyword
+  `(do
+    (defunit ~unitname (->IFnUnit (BaseUnit. (name ~dimensionname))))
+    ~(if (keyword? dimensionname)
+    `(spec/def ~dimensionname (spec/with-gen
+        (spec/and amount? #(compatible? (getUnit %) ~unitname))
+        (fn [] (gen/fmap ~unitname (gen/double)))))) ; TODO: better generator coverage than `double`
+    #'~unitname))
 
 
 ;; This is implementation-independent, please reuse!!!

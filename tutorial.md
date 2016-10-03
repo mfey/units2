@@ -95,6 +95,9 @@ The `expt` function (borrowing the name of `pow` in the LISP language Scheme) is
     (op/expt (km 1) 3) ; --> large volume
     (op/expt (m 1) -2) ; --> small surface density
 
+# Spec
+
+TODO: Describe interop with clojure.spec
 
 # Defining Custom IFnUnits
 
@@ -137,6 +140,13 @@ When the units you care about have no relation to any existing unit, it's necess
           powernap  (op// (hedon 1)  (nap 0.5))]
       (map restfulness [fullnight powernap])) ;; which is more restful?
 
+There's also experimental support for a more advanced `defbaseunit`, which automatically connects dimensional analysis to `clojure.spec`:
+
+    (defbaseunit U ::dim)
+    (require [clojure.spec :as s])
+    (s/exercise ::dim)
+
+However, these features are still relatively incomplete and unsafe.
 
 # Offset Pitfalls
 
@@ -178,7 +188,6 @@ We can do calculus with amounts by leveraging existing implementations of deriva
     (integrate (fn [x] (op/* x 2)) (map m [0 1])) ;; 1 square-meter
 
     (differentiate (fn [x] (op/* x x (m 2))) 1) ;; 4 meters
-
 
 ## Extending the protocols
 
