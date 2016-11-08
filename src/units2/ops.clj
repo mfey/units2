@@ -20,6 +20,9 @@
 ;;   </code></pre>
 ;;
 
+;; TODO: fix docstrings
+;; TODO: add/fix function specs (useful for spec instrumentation)
+
 (ns units2.ops
   ;redefinitions imminent! `:exclude` turns off some WARNINGS.
   (:refer-clojure :exclude [+ - * / rem quot == > >= < <= zero? pos? neg? min max])
@@ -53,14 +56,18 @@
 
 (defmacro defcmp [cmp cljcmp]
   (let [args (gensym)]
- `(defn ~cmp [& ~args]
-    (cond
-      (every? amount? ~args)
-        (apply ~cljcmp (map #(getValue % (getUnit (first ~args))) ~args))
-      (every? #(not (amount? %)) ~args) ; includes empty argslist.
-        (apply ~cljcmp ~args)
-      true
-        (throw (UnsupportedOperationException. "It makes no sense to compare values with and without units!"))))))
+`(do
+   (spec/fdef ~cmp :args (spec/or :all-amounts (spec/+ :units2.core/amount)
+                                  :all-numbers (spec/+ number?)) :ret boolean?)
+   ;; todo: assert that all amounts must be compatible... somehow?
+   (defn ~cmp [& ~args]
+      (cond
+        (every? amount? ~args)
+          (apply ~cljcmp (map #(getValue % (getUnit (first ~args))) ~args))
+        (every? #(not (amount? %)) ~args) ; includes empty argslist.
+          (apply ~cljcmp ~args)
+        true
+          (throw (UnsupportedOperationException. "It makes no sense to compare values with and without units!")))))))
 
 
 (defcmp == clojure.core/==)
@@ -69,20 +76,19 @@
 (defcmp <= clojure.core/<=)
 (defcmp >= clojure.core/>=)
 
-;TODO: add something like this to the macro: `(spec/fdef ~cmp :args (spec/+ (spec/or :units2.core/amount number?)) :ret boolean?)
-
-;(spec/fdef == :args (spec/+ any?) :ret boolean?)
 ;(clojure.spec.gen/generate (clojure.spec/gen (spec/+ any?)))
 
 
 (defmacro defsgn [sgn cljsgn]
   (let [a (gensym)]
-  `(defn ~sgn [~a]
+  `(do
+    (spec/fdef ~sgn :args (spec/or :units2.core/amount number?) :ret boolean?)
+    (defn ~sgn [~a]
       (if (amount? ~a)
      (do
        (warn (str ~sgn " interacts nontrivially with rescalings of units."))
        (~cljsgn (getValue ~a (getUnit ~a))))
-     (~cljsgn ~a)))))
+     (~cljsgn ~a))))))
 
 (defsgn zero? clojure.core/zero?)
 (defsgn pos? clojure.core/pos?)
@@ -153,6 +159,8 @@
       ~one
       ~neither))
 
+;(spec/fdef + :args ... :ret (spec/or :units2.core/amount number?))
+
 (defn +
   ([] (clojure.core/+)) ; same return value as Clojure.
   ([a] a)
@@ -164,6 +172,7 @@
       (clojure.core/+ a b)))
     ([a b & rest] (reduce + (conj rest a b))))
 
+;(spec/fdef - :args ... :ret (spec/or :units2.core/amount number?))
 
 (defn -
   ([] (clojure.core/-)) ; zero arity explicitly an error, but let Clojure catch this.
@@ -185,6 +194,8 @@
     (and (amount? ~b) (not (amount? ~a))) ~three
     (not (or (amount? ~a) (amount? ~b)))  ~four))
 
+;(spec/fdef * :args ... :ret (spec/or :units2.core/amount number?))
+
 (defn *
   ([] (clojure.core/*)) ; same return value as Clojure.
   ([a] a)
@@ -194,6 +205,8 @@
     (->amount (clojure.core/* (getValue b (getUnit b)) (double a)) (getUnit b))
     (clojure.core/* a b)))
   ([a b & rest] (* a (apply * b rest))))
+
+;(spec/fdef / :args ... :ret (spec/or :units2.core/amount number?))
 
 (defn /
   ([] (clojure.core//)) ; zero arity explicitly an error, but let Clojure catch this.
@@ -206,6 +219,8 @@
     (* (/ b) (double a))
     (clojure.core// a b)))
   ([a b & rest] (/ a (apply * b rest))))
+
+;(spec/fdef + :args [:units2.core/amount :units2.core/amount] :ret number?)
 
 (defn divide-into-double
   "When all units involved are linear rescalings of one another, fractions with the same dimensions in the numerator and denominator have a *unique* unit-free value.
@@ -235,7 +250,9 @@
 
 (defmacro defratio [ratio clojureratio]
   (let [a (gensym) b (gensym)]
- `(defn ~ratio [~a ~b]
+ `(do
+    ;;(spec/fdef ~ratio :args [a b] :ret (spec/or :units2.core/amount number?))
+    (defn ~ratio [~a ~b]
     (if (amount? ~a)
       (do
         (warn "Modular arithmetic interacts nontrivially with rescalings of units.")
@@ -246,7 +263,7 @@
         (do
           (warn "Modular arithmetic interacts nontrivially with rescalings of units.")
           (->amount (~clojureratio ~a (getValue ~b (getUnit ~b))) (inverse (getUnit ~b))))
-        (~clojureratio ~a ~b))))))
+        (~clojureratio ~a ~b)))))))
 
 (defratio rem clojure.core/rem)
 (defratio quot clojure.core/quot)
@@ -269,6 +286,8 @@
 
 ;; ## Powers and Exponentiation
 
+;(spec/fdef expt :args [:units2.core/amount integer?] :ret :units2.core/amount)
+
 (defn expt
   "`(expt b n) == b^n`
 
@@ -285,7 +304,9 @@
 
 (defmacro defexpt [expt cljexpt]
   (let [a (gensym) b (gensym)]
-    `(defn ~expt
+    `(do
+       ;(spec/fdef ~expt ...)
+       (defn ~expt
        ([~a]
          (if (amount? ~a)
            (do
@@ -295,7 +316,7 @@
        ([~a ~b]
         (if (every? amount? [~a ~b])
           (~cljexpt (divide-into-double ~a ~b))
-          (throw (IllegalArgumentException. (str "Arity-2 " ~expt " requires two amounts! (" ~a " and " ~b " provided)"))))))))
+          (throw (IllegalArgumentException. (str "Arity-2 " ~expt " requires two amounts! (" ~a " and " ~b " provided)")))))))))
 
 (defexpt exp   Math/exp)
 (defexpt log   Math/log)
@@ -327,7 +348,9 @@
 
 (defmacro defmgn [mgn javamgn]
   (let [a (gensym) b (gensym)]
-    `(defn ~mgn
+    `(do
+       ;(spec/fdef ~mgn :args :ret)
+       (defn ~mgn
        ([~a]
          (if (amount? ~a)
            (do
@@ -337,7 +360,7 @@
        ([~a ~b]
         (if (every? amount? [~a ~b])
           (~javamgn (double (divide-into-double ~a ~b)))
-          (throw (IllegalArgumentException. (str "Arity-2 " ~expt " requires two amounts! ("~a" and "~b" provided)"))))))))
+          (throw (IllegalArgumentException. (str "Arity-2 " ~expt " requires two amounts! ("~a" and "~b" provided)")))))))))
 
 (defmgn abs Math/abs)
 (defmgn floor Math/floor)

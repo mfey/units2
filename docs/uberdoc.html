@@ -3291,6 +3291,8 @@ and protocol dispatch (nice, fast) rather than java interop and reflection (ugly
 (Math/pow (divide-into-double a b) c)
 </code></pre></li>
 </ol>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>TODO: fix docstrings
+TODO: add function specs (useful for spec instrumentation)</p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns units2.ops
   ;redefinitions imminent! `:exclude` turns off some WARNINGS.
@@ -3314,30 +3316,32 @@ speed-critical computations, and should NOT be used lightly.</p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defmacro defcmp [cmp cljcmp]
   (let [args (gensym)]
- `(defn ~cmp [&amp; ~args]
-    (cond
-      (every? amount? ~args)
-        (apply ~cljcmp (map #(getValue % (getUnit (first ~args))) ~args))
-      (every? #(not (amount? %)) ~args) ; includes empty argslist.
-        (apply ~cljcmp ~args)
-      true
-        (throw (UnsupportedOperationException. &quot;It makes no sense to compare values with and without units!&quot;))))))</pre></td></tr><tr><td class="docs">
+`(do
+   (spec/fdef ~cmp :args (spec/+ (spec/or :units2.core/amount number?)) :ret boolean?)
+   (defn ~cmp [&amp; ~args]
+      (cond
+        (every? amount? ~args)
+          (apply ~cljcmp (map #(getValue % (getUnit (first ~args))) ~args))
+        (every? #(not (amount? %)) ~args) ; includes empty argslist.
+          (apply ~cljcmp ~args)
+        true
+          (throw (UnsupportedOperationException. &quot;It makes no sense to compare values with and without units!&quot;)))))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defcmp == clojure.core/==)
 (defcmp &lt; clojure.core/&lt;)
 (defcmp &gt; clojure.core/&gt;)
 (defcmp &lt;= clojure.core/&lt;=)
-(defcmp &gt;= clojure.core/&gt;=)</pre></td></tr><tr><td class="docs"><p>TODO: add something like this to the macro: `(spec/fdef ~cmp :args (spec/+ (spec/or :units2.core/amount number?)) :ret boolean?)</p>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>(spec/fdef == :args (spec/+ any?) :ret boolean?)
-(clojure.spec.gen/generate (clojure.spec/gen (spec/+ any?)))</p>
+(defcmp &gt;= clojure.core/&gt;=)</pre></td></tr><tr><td class="docs"><p>(clojure.spec.gen/generate (clojure.spec/gen (spec/+ any?)))</p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defmacro defsgn [sgn cljsgn]
   (let [a (gensym)]
-  `(defn ~sgn [~a]
+  `(do
+    (spec/fdef ~sgn :args (spec/or :units2.core/amount number?) :ret boolean?)
+    (defn ~sgn [~a]
       (if (amount? ~a)
      (do
        (warn (str ~sgn &quot; interacts nontrivially with rescalings of units.&quot;))
        (~cljsgn (getValue ~a (getUnit ~a))))
-     (~cljsgn ~a)))))</pre></td></tr><tr><td class="docs">
+     (~cljsgn ~a))))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defsgn zero? clojure.core/zero?)
 (defsgn pos? clojure.core/pos?)
 (defsgn neg? clojure.core/neg?)</pre></td></tr><tr><td class="docs">
@@ -3393,7 +3397,8 @@ with the comment "If you're willing to do that, you should be prepared for users
         ~lin
         ~nonlin)
       ~one
-      ~neither))</pre></td></tr><tr><td class="docs">
+      ~neither))</pre></td></tr><tr><td class="docs"><p>(spec/fdef + :args ... :ret (spec/or :units2.core/amount number?))</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn +
   ([] (clojure.core/+)) ; same return value as Clojure.
   ([a] a)
@@ -3403,7 +3408,8 @@ with the comment "If you're willing to do that, you should be prepared for users
       (throw (UnsupportedOperationException. (str &quot;Nonlinear conversion between `&quot; (getUnit a) &quot;' and `&quot; (getUnit b)&quot;'!&quot;)))
       (throw (UnsupportedOperationException. (str &quot;It's meaningless to add numbers with and without units! (`&quot; a &quot;' and `&quot; b &quot;' provided)&quot;)))
       (clojure.core/+ a b)))
-    ([a b &amp; rest] (reduce + (conj rest a b))))</pre></td></tr><tr><td class="docs">
+    ([a b &amp; rest] (reduce + (conj rest a b))))</pre></td></tr><tr><td class="docs"><p>(spec/fdef - :args ... :ret (spec/or :units2.core/amount number?))</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn -
   ([] (clojure.core/-)) ; zero arity explicitly an error, but let Clojure catch this.
   ([a] (if (amount? a) (-&gt;amount (clojure.core/- (getValue a (getUnit a))) (getUnit a)) (clojure.core/- a)))
@@ -3419,7 +3425,8 @@ with the comment "If you're willing to do that, you should be prepared for users
     (and (amount? ~a) (amount? ~b))       ~one
     (and (amount? ~a) (not (amount? ~b))) ~two
     (and (amount? ~b) (not (amount? ~a))) ~three
-    (not (or (amount? ~a) (amount? ~b)))  ~four))</pre></td></tr><tr><td class="docs">
+    (not (or (amount? ~a) (amount? ~b)))  ~four))</pre></td></tr><tr><td class="docs"><p>(spec/fdef * :args ... :ret (spec/or :units2.core/amount number?))</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn *
   ([] (clojure.core/*)) ; same return value as Clojure.
   ([a] a)
@@ -3428,7 +3435,8 @@ with the comment "If you're willing to do that, you should be prepared for users
     (-&gt;amount (clojure.core/* (getValue a (getUnit a)) (double b)) (getUnit a))
     (-&gt;amount (clojure.core/* (getValue b (getUnit b)) (double a)) (getUnit b))
     (clojure.core/* a b)))
-  ([a b &amp; rest] (* a (apply * b rest))))</pre></td></tr><tr><td class="docs">
+  ([a b &amp; rest] (* a (apply * b rest))))</pre></td></tr><tr><td class="docs"><p>(spec/fdef / :args ... :ret (spec/or :units2.core/amount number?))</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn /
   ([] (clojure.core//)) ; zero arity explicitly an error, but let Clojure catch this.
   ([a] (if (amount? a)
@@ -3439,7 +3447,8 @@ with the comment "If you're willing to do that, you should be prepared for users
     (-&gt;amount (clojure.core// (getValue a (getUnit a)) (double b)) (getUnit a))
     (* (/ b) (double a))
     (clojure.core// a b)))
-  ([a b &amp; rest] (/ a (apply * b rest))))</pre></td></tr><tr><td class="docs"><p>When all units involved are linear rescalings of one another, fractions with the same dimensions in the numerator and denominator have a <em>unique</em> unit-free value.
+  ([a b &amp; rest] (/ a (apply * b rest))))</pre></td></tr><tr><td class="docs"><p>(spec/fdef + :args [:units2.core/amount :units2.core/amount] :ret number?)</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>When all units involved are linear rescalings of one another, fractions with the same dimensions in the numerator and denominator have a <em>unique</em> unit-free value.
   This is basically syntactic sugar for <code>(getValue a (AsUnit b))</code> with some error checking.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn divide-into-double
   ^double [a b]
@@ -3464,7 +3473,9 @@ with the comment "If you're willing to do that, you should be prepared for users
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defmacro defratio [ratio clojureratio]
   (let [a (gensym) b (gensym)]
- `(defn ~ratio [~a ~b]
+ `(do
+    ;;(spec/fdef ~ratio :args [a b] :ret (spec/or :units2.core/amount number?))
+    (defn ~ratio [~a ~b]
     (if (amount? ~a)
       (do
         (warn &quot;Modular arithmetic interacts nontrivially with rescalings of units.&quot;)
@@ -3475,7 +3486,7 @@ with the comment "If you're willing to do that, you should be prepared for users
         (do
           (warn &quot;Modular arithmetic interacts nontrivially with rescalings of units.&quot;)
           (-&gt;amount (~clojureratio ~a (getValue ~b (getUnit ~b))) (inverse (getUnit ~b))))
-        (~clojureratio ~a ~b))))))</pre></td></tr><tr><td class="docs">
+        (~clojureratio ~a ~b)))))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defratio rem clojure.core/rem)
 (defratio quot clojure.core/quot)</pre></td></tr><tr><td class="docs"><p>Locally rebinds arithmetic operators like <code>+</code>, and <code>/</code> to unit-aware equivalents.</p>
 </td><td class="codes"><pre class="brush: clojure">(defmacro with-unit-arithmetic
@@ -3489,6 +3500,7 @@ with the comment "If you're willing to do that, you should be prepared for users
          rem  units2.ops/rem
         ]
     'clojure.core/let))</pre></td></tr><tr><td class="docs"><h2>Powers and Exponentiation</h2>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>(spec/fdef expt :args [:units2.core/amount integer?] :ret :units2.core/amount)</p>
 </td><td class="codes"></td></tr><tr><td class="docs"><p><code>(expt b n) == b^n</code></p>
 
 <p>  where <code>n</code> is an integer and <code>b</code> is an amount.</p>
@@ -3502,7 +3514,9 @@ so we define them over ratios of amounts: exp(a/b), log(a/b), etc.</p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defmacro defexpt [expt cljexpt]
   (let [a (gensym) b (gensym)]
-    `(defn ~expt
+    `(do
+       ;(spec/fdef ~expt ...)
+       (defn ~expt
        ([~a]
          (if (amount? ~a)
            (do
@@ -3512,7 +3526,7 @@ so we define them over ratios of amounts: exp(a/b), log(a/b), etc.</p>
        ([~a ~b]
         (if (every? amount? [~a ~b])
           (~cljexpt (divide-into-double ~a ~b))
-          (throw (IllegalArgumentException. (str &quot;Arity-2 &quot; ~expt &quot; requires two amounts! (&quot; ~a &quot; and &quot; ~b &quot; provided)&quot;))))))))</pre></td></tr><tr><td class="docs">
+          (throw (IllegalArgumentException. (str &quot;Arity-2 &quot; ~expt &quot; requires two amounts! (&quot; ~a &quot; and &quot; ~b &quot; provided)&quot;)))))))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defexpt exp   Math/exp)
 (defexpt log   Math/log)
 (defexpt log10 Math/log10)</pre></td></tr><tr><td class="docs">
@@ -3538,7 +3552,9 @@ so we define them over ratios of amounts: exp(a/b), log(a/b), etc.</p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defmacro defmgn [mgn javamgn]
   (let [a (gensym) b (gensym)]
-    `(defn ~mgn
+    `(do
+       ;(spec/fdef ~mgn :args :ret)
+       (defn ~mgn
        ([~a]
          (if (amount? ~a)
            (do
@@ -3548,7 +3564,7 @@ so we define them over ratios of amounts: exp(a/b), log(a/b), etc.</p>
        ([~a ~b]
         (if (every? amount? [~a ~b])
           (~javamgn (double (divide-into-double ~a ~b)))
-          (throw (IllegalArgumentException. (str &quot;Arity-2 &quot; ~expt &quot; requires two amounts! (&quot;~a&quot; and &quot;~b&quot; provided)&quot;))))))))</pre></td></tr><tr><td class="docs">
+          (throw (IllegalArgumentException. (str &quot;Arity-2 &quot; ~expt &quot; requires two amounts! (&quot;~a&quot; and &quot;~b&quot; provided)&quot;)))))))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defmgn abs Math/abs)
 (defmgn floor Math/floor)
 (defmgn ceil Math/ceil)
