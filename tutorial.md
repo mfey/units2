@@ -77,7 +77,7 @@ These are joined together into the super-macro `(with-unit- [keywords] body)`, w
     (average (m 7) (m 6) (cm 60))     ; units work automatically
     (average (celsius 7) (celsius 6)) ; no matter their dimension
 
-Of course, you'd reach the same level of abstraction with `[units2.ops :refer :all]`, but explicitly mentioning redefinitions of the core language operations is probably a good idea.
+Of course, you'd reach the same level of abstraction with `[units2.ops :refer [...]]`, but limiting redefinitions of the core language operations and explicitly mentioning them where they are necessary is probably a good idea.
 
 
 ## Exponentiation
@@ -97,7 +97,25 @@ The `expt` function (borrowing the name of `pow` in the LISP language Scheme) is
 
 # Spec
 
-TODO: Describe interop with clojure.spec
+The `units2.astro` library also defines a variety of specs such as `::length`, `::time`, etc., to do dimensional analysis with specs:
+
+    (require '[clojure.spec :as spec])
+    (spec/valid? :units2.astro/length (m 7)) ; --> true
+    (spec/valid? :units2.astro/energy (celsius 7)) ; --> false
+
+These can also be used to generate amounts of the given dimension(s):
+
+    (require '[clojure.spec.gen :as gen])
+    (repeatedly 5 #(gen/generate (spec/gen :units2.astro/time)))
+    (gen/generate (spec/gen (spec/or :l :units2.astro/length
+                                     :t :units2.astro/time)))
+
+Note that the generated amounts are all in the base unit of the given dimension.
+
+These specs automatically `derive` into `:units2.core/amount` and, are used in its generator:
+
+    (descendants :units2.core/amount)
+    (repeatedly 5 #(gen/generate (spec/gen :units2.core/amount)))
 
 # Defining Custom IFnUnits
 

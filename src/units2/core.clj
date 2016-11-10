@@ -1,6 +1,5 @@
 (ns units2.core
-  (:require [clojure.spec :as spec]
-            [clojure.spec.gen :as gen]))
+  (:require [clojure.spec :as spec]))
 
 (defprotocol Dimensionful
   "`Dimensionful` values are values that 'have a unit'. Their unit can be inspected (`getUnit`) and they can be converted into other units (`to`)."
@@ -60,11 +59,13 @@
         (reduce (fn [x y] (times x y)) mapped))))
 
 (spec/def ::amount
-  ;(spec/with-gen
+  (spec/with-gen
     (spec/and #(satisfies? Dimensionful %)
               #(satisfies? Unitlike (getUnit %)))
-  ;  (fn [] ...)
-    )
+    (fn [] (let [children (descendants ::amount)]
+              (if (nil? children)
+                (throw (Exception. "`(descendants :units2.core/amount)` is empty! Uninstantiable generator."))
+                (spec/gen  (rand-nth (into [] children))))))))
 
 ;; A generic type for an amount with a unit, that doesn't care about the implementation of `unit` or of `value` (as long as these are consistent).
 (deftype amount [value unit]

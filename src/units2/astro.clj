@@ -11,9 +11,12 @@
 ;  `(spec/def ~kw (spec/and :units2.core/amount #(compatible? (getUnit %) ~baseunit))))
 
 (defmacro mk-spec [kw baseunit]
-  `(spec/def ~kw (spec/with-gen
-    (spec/and :units2.core/amount #(compatible? (getUnit %) ~baseunit))
-    (fn [] (gen/fmap ~baseunit (gen/double))))))
+  `(do
+    (spec/def ~kw (spec/with-gen
+      (spec/and :units2.core/amount #(compatible? (getUnit %) ~baseunit))
+      (fn [] (gen/fmap ~baseunit (gen/gen-for-pred number?)))))
+     (derive ~kw :units2.core/amount) ; useful for autogenerating amounts.
+     ))
 
 ;; ## Length [L]
 

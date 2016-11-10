@@ -92,14 +92,16 @@
 (defmacro defbaseunit
   "Creates a new unit at the base of a new dimension. This function allows dimensional analysis to be extended by the user.
 
-  If the dimensionname is given as a keyword, a `clojure.spec` spec for the dimension is generated."
+  If the dimensionname is given as a namespaced keyword, a `clojure.spec` spec for the dimension is generated."
   [unitname dimensionname] ; dimensionname as a namespaced keyword
   `(do
     (defunit ~unitname (->IFnUnit (BaseUnit. (name ~dimensionname))))
-    ~(if (keyword? dimensionname)
-    `(spec/def ~dimensionname (spec/with-gen
-        (spec/and amount? #(compatible? (getUnit %) ~unitname))
-        (fn [] (gen/fmap ~unitname (gen/double)))))) ; TODO: better generator coverage than `double`
+    ~(if (and (keyword? dimensionname) (not (nil? (namespace dimensionname)))) ; namespaced keyword
+    `(do
+       (spec/def ~dimensionname (spec/with-gen
+         (spec/and amount? #(compatible? (getUnit %) ~unitname))
+         (fn [] (gen/fmap ~unitname (gen/gen-for-pred number?)))))
+       (derive ~dimensionname :units2.core/amount))) ; useful for autogenerating amounts.
     #'~unitname))
 
 

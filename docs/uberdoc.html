@@ -2877,9 +2877,11 @@ net.brehaut.ClojureTools = (function (SH) {
  `(spec/def ~kw (spec/and :units2.core/amount #(compatible? (getUnit %) ~baseunit))))</p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defmacro mk-spec [kw baseunit]
-  `(spec/def ~kw (spec/with-gen
-    (spec/and :units2.core/amount #(compatible? (getUnit %) ~baseunit))
-    (fn [] (gen/fmap ~baseunit (gen/double))))))</pre></td></tr><tr><td class="docs"><h2>Length [L]</h2>
+  `(do
+    (spec/def ~kw (spec/with-gen
+      (spec/and :units2.core/amount #(compatible? (getUnit %) ~baseunit))
+      (fn [] (gen/fmap ~baseunit (gen/gen-for-pred number?)))))
+     (derive ~kw :units2.core/amount) ; useful for autogenerating amounts.))</pre></td></tr><tr><td class="docs"><h2>Length [L]</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes m (-&gt;IFnUnit SI/METER))
 (mk-spec ::length m)</pre></td></tr><tr><td class="docs">
@@ -3113,8 +3115,14 @@ net.brehaut.ClojureTools = (function (SH) {
         (throw (IllegalArgumentException. &quot;All units must be `Multiplicative`!&quot;)))
       (let [mapped (map (fn [[a b]] (power a b)) pairs)]; generate ((power unit exponent) ... (power unit exponent))
         (reduce (fn [x y] (times x y)) mapped))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(spec/def ::amount (spec/and #(satisfies? Dimensionful %)
-                             #(satisfies? Unitlike (getUnit %))))</pre></td></tr><tr><td class="docs"><p>A generic type for an amount with a unit, that doesn't care about the implementation of <code>unit</code> or of <code>value</code> (as long as these are consistent).</p>
+</td><td class="codes"><pre class="brush: clojure">(spec/def ::amount
+  (spec/with-gen
+    (spec/and #(satisfies? Dimensionful %)
+              #(satisfies? Unitlike (getUnit %)))
+    (fn [] (let [children (descendants ::amount)]
+              (if (nil? children)
+                (throw (Exception. &quot;`(descendants :units2.core/amount)` is empty! Uninstantiable generator.&quot;))
+                (spec/gen  (rand-nth (into [] children))))))))</pre></td></tr><tr><td class="docs"><p>A generic type for an amount with a unit, that doesn't care about the implementation of <code>unit</code> or of <code>value</code> (as long as these are consistent).</p>
 </td><td class="codes"><pre class="brush: clojure">(deftype amount [value unit]
   Dimensionful
   (getUnit [this] unit)
@@ -3122,11 +3130,13 @@ net.brehaut.ClojureTools = (function (SH) {
   (to [this other-unit] (new amount (getValue this other-unit) other-unit))
   (AsUnit [this] (rescale unit value))
   Object
-  (toString [this] (str &quot;(&quot; unit &quot; &quot; value &quot;)&quot;)))</pre></td></tr><tr><td class="docs">
+  (toString [this] (str &quot;(&quot; unit &quot; &quot; value &quot;)&quot;)))</pre></td></tr><tr><td class="docs"><p>the amount type and the amount spec don't overlap exactly.
+I can create (->amount 8 "hi") which will fail at unit conversions but exist as an object...</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defmethod print-method amount [a ^java.io.Writer w]
   (.write w (str a))) ; human and (almost) computer readable.</pre></td></tr><tr><td class="docs"><p>Returns true if x is an instance of units2.core.amount.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn amount?
-  [x] (instance? amount x)) ; TODO: think about whether we want this or (spec/valid? ::amount %)</pre></td></tr><tr><td class="docs"><p>An extended Blum-Luby-Rubinfeld [BLR 1990] test
+  [x] (instance? amount x)) ; TODO: think about whether we want this or (spec/valid? ::amount %) or both.</pre></td></tr><tr><td class="docs"><p>An extended Blum-Luby-Rubinfeld [BLR 1990] test
   (with a relative tolerance, for double precision)
   taking seven samples of <code>f</code> to perform seven tests.</p>
 
@@ -3228,15 +3238,17 @@ and protocol dispatch (nice, fast) rather than java interop and reflection (ugly
   [^String newdimension]
    (-&gt;IFnUnit (BaseUnit. newdimension)))</pre></td></tr><tr><td class="docs"><p>Creates a new unit at the base of a new dimension. This function allows dimensional analysis to be extended by the user.</p>
 
-<p>  If the dimensionname is given as a keyword, a <code>clojure.spec</code> spec for the dimension is generated.</p>
+<p>  If the dimensionname is given as a namespaced keyword, a <code>clojure.spec</code> spec for the dimension is generated.</p>
 </td><td class="codes"><pre class="brush: clojure">(defmacro defbaseunit
   [unitname dimensionname] ; dimensionname as a namespaced keyword
   `(do
     (defunit ~unitname (-&gt;IFnUnit (BaseUnit. (name ~dimensionname))))
-    ~(if (keyword? dimensionname)
-    `(spec/def ~dimensionname (spec/with-gen
-        (spec/and amount? #(compatible? (getUnit %) ~unitname))
-        (fn [] (gen/fmap ~unitname (gen/double)))))) ; TODO: better generator coverage than `double`
+    ~(if (and (keyword? dimensionname) (not (nil? (namespace dimensionname)))) ; namespaced keyword
+    `(do
+       (spec/def ~dimensionname (spec/with-gen
+         (spec/and amount? #(compatible? (getUnit %) ~unitname))
+         (fn [] (gen/fmap ~unitname (gen/gen-for-pred number?)))))
+       (derive ~dimensionname :units2.core/amount))) ; useful for autogenerating amounts.
     #'~unitname))</pre></td></tr><tr><td class="docs"><p>A <code>defunit</code> that also defines all SI-prefixed units.</p>
 
 <p>This is implementation-independent, please reuse!!!</p>
@@ -3292,7 +3304,7 @@ and protocol dispatch (nice, fast) rather than java interop and reflection (ugly
 </code></pre></li>
 </ol>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>TODO: fix docstrings
-TODO: add function specs (useful for spec instrumentation)</p>
+TODO: add/fix function specs (useful for spec instrumentation)</p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns units2.ops
   ;redefinitions imminent! `:exclude` turns off some WARNINGS.
@@ -3309,7 +3321,8 @@ speed-critical computations, and should NOT be used lightly.</p>
     *unit-warnings-are-errors*
       (throw (UnsupportedOperationException. (str msg)))
     *unit-warnings-are-printed*
-     (println (clojure.string/join (concat &quot;WARNING: &quot; msg)))))</pre></td></tr><tr><td class="docs"><h2>Comparisons</h2>
+     (println (clojure.string/join (concat &quot;WARNING: &quot; msg)))))</pre></td></tr><tr><td class="docs"><p>TODO: define a spec for "a sequence of compatible amounts"</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><h2>Comparisons</h2>
 
 <p>Defining <code>==</code> , <code>&gt;=</code>, or <code>&lt;</code> is easy; but <code>zero?</code>, <code>pos?</code>, and <code>neg?</code> can return different answers depending on the input units
 (to see why, consider the Farenheit and Celius temperature scales)</p>
@@ -3317,11 +3330,15 @@ speed-critical computations, and should NOT be used lightly.</p>
 </td><td class="codes"><pre class="brush: clojure">(defmacro defcmp [cmp cljcmp]
   (let [args (gensym)]
 `(do
-   (spec/fdef ~cmp :args (spec/+ (spec/or :units2.core/amount number?)) :ret boolean?)
+   (spec/fdef ~cmp :args (spec/or :all-amounts (spec/+ :units2.core/amount)
+                                  :all-numbers (spec/+ number?)) :ret boolean?)
+   ;; todo: assert in the spec that all amounts must be compatible... somehow?
    (defn ~cmp [&amp; ~args]
       (cond
         (every? amount? ~args)
-          (apply ~cljcmp (map #(getValue % (getUnit (first ~args))) ~args))
+          (if (every? #(compatible? (getUnit (first ~args)) %) (map getUnit (rest ~args)))
+            (apply ~cljcmp (map #(getValue % (getUnit (first ~args))) ~args))
+            (throw (UnsupportedOperationException. &quot;It makes no sense to compare values in incompatible units!&quot;)))
         (every? #(not (amount? %)) ~args) ; includes empty argslist.
           (apply ~cljcmp ~args)
         true
@@ -3335,7 +3352,7 @@ speed-critical computations, and should NOT be used lightly.</p>
 </td><td class="codes"><pre class="brush: clojure">(defmacro defsgn [sgn cljsgn]
   (let [a (gensym)]
   `(do
-    (spec/fdef ~sgn :args (spec/or :units2.core/amount number?) :ret boolean?)
+    (spec/fdef ~sgn :args (spec/or :amount :units2.core/amount :number number?) :ret boolean?)
     (defn ~sgn [~a]
       (if (amount? ~a)
      (do
@@ -3500,14 +3517,15 @@ with the comment "If you're willing to do that, you should be prepared for users
          rem  units2.ops/rem
         ]
     'clojure.core/let))</pre></td></tr><tr><td class="docs"><h2>Powers and Exponentiation</h2>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>(spec/fdef expt :args [:units2.core/amount integer?] :ret :units2.core/amount)</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(spec/fdef expt :args (spec/tuple :units2.core/amount integer?) :ret :units2.core/amount)</pre></td></tr><tr><td class="docs"><p>TODO: avoid dividing by zero...</p>
 </td><td class="codes"></td></tr><tr><td class="docs"><p><code>(expt b n) == b^n</code></p>
 
 <p>  where <code>n</code> is an integer and <code>b</code> is an amount.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn expt
   [b n]
   (if (clojure.core/neg? n)
-    (apply / (repeat (+ 2 (- n)) b)) ; ugly hack, but it works fine.
+    (apply / (repeat (+ 2 (- n)) b)) ; ugly hack, but it works fine. unless (zero? b)!!!
     (apply * (repeat n b))))</pre></td></tr><tr><td class="docs"><p>The functions below should only be defined on dimensionless quantities
 (to see why, just imagine Maclaurin-expanding the <code>exp</code> or <code>ln</code> functions)
 so we define them over ratios of amounts: exp(a/b), log(a/b), etc.</p>

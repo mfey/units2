@@ -64,7 +64,7 @@ Objective: bare minimal functionality and some syntactic sugar.
         + Astroparticle Physics (`units2.astro`)
     + Support for nonlinear unit conversions
 + Debugging:
-    + Comprehensive Warning/Error messages
+    + `(*)` Comprehensive Warning/Error messages
     + `(*)` Painfully Exhaustive Testing
 + Comprehensive Documentation:
     + Inline Comments / Marginalia

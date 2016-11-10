@@ -1,70 +1,101 @@
-# units2 API
+# units2 API -- Overview
 
-## Overview
+This is not a full specification of the edge cases, the thrown errors, etc. Think of it as the API-lite or the Getting-Started-API or the Cheatsheet.
 
-BLA
+# Namespaces
 
-## Namespaces
+## units2.core
 
-### units2.core
-
-#### Dimensionful
+### Dimensionful
 
 Protocol
 
-#### Unitlike
+Method  | arguments | output | description |
+------: | ---- | ---- | ---- |
+AsUnit  | amount | unit | Returns a new unit in which the given amount is unity. |
+getUnit | amount | unit | Returns the unit associated to the given amount. |
+getValue| amount, unit | double | Returns the value of the given amount in the given unit as a double (if possible). |
+to      | amount, unit | amount | Converts the given amount to the given unit (if possible) and returns it. See also `IFnUnit`. |
+
+For all `x` and all units `U`, we should have `(getValue (to x U) U) ==> x`.
+
+### Unitlike
 
 Protocol
 
-#### units2.core.amount
+Method  | arguments | output | description |
+------: | ---- | ---- | ---- |
+compatible? | unit1 unit2 | boolean | Returns true when conversions between the two units are possible. |
+offset  | unit amount | unit | Returns a unit offset by the given amount (if possible). |
+rescale | unit number | unit | Returns a unit linearly rescaled by the given factor. |
+
+### units2.core.amount
 
 Type
 
-#### unit-from-powers
+Implementation of `Dimensionful`.
+
+### unit-from-powers
 
 Function
 
-#### amount?
+Returns a composite unit from a map of units and integer powers.
+
+### amount?
 
 Function (Predicate)
 
-### units2.IFnUnit
+Returns `true` when given an `units2.core.amount` object, and `false` otherwise.
 
-#### IFnUnit
+## units2.IFnUnit
+
+### IFnUnit
 
 Type
 
-#### defunit
+Implementation of `Unitlike` and of `IFn`.
+
+### defunit
 
 Macro
 
-#### makebaseunit
+`def` the given var to hold the given unit, and change that unit's printed representation to that var.
+
+### makebaseunit
 
 Function (Constructor)
 
-#### defbaseunit
+Returns a new (anonymous) unit at the base of a new dimension. See also `defbaseunit`.
+
+### defbaseunit
 
 Macro
 
-#### defunit-with-SI-prefixes
+A hybrid between `defunit` and `makebaseunit`.
+
+### defunit-with-SI-prefixes
 
 Macro
 
-### units2.ops
+A `defunit` that also defunits all SI-prefixed units.
 
-#### with-unit-, with-unit-arithmetic, with-unit-comparisons, with-unit-expts, with-unit-magnitudes,
+## units2.ops
+
+### with-unit-, with-unit-arithmetic, with-unit-comparisons, with-unit-expts, with-unit-magnitudes
 
 Macros
 
-#### ==, <, >, <=, >=
+Rebind various clojure.core and java.lang.Math functions to unit-aware equivalents within the macro-scope.
+
+### ==, <, >, <=, >=
 
 Functions
 
-#### zero?, pos?, neg?, min, max
+### zero?, pos?, neg?, min, max
 
 Functions
 
-#### +, -, \*, /, rem, quot
+### +, -, \*, /, rem, quot
 
 Functions
 
@@ -83,6 +114,8 @@ Function
 #### expt
 
 Function
+
+Returns the given amount raised to the given integer power.
 
 #### abs, floor, ceil, round
 

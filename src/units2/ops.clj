@@ -50,6 +50,9 @@
      (println (clojure.string/join (concat "WARNING: " msg)))))
 
 
+;; TODO: define a spec for "a sequence of compatible amounts"
+
+
 ;; ## Comparisons
 ;; Defining `==` , `>=`, or `<` is easy; but `zero?`, `pos?`, and `neg?` can return different answers depending on the input units
 ;; (to see why, consider the Farenheit and Celius temperature scales)
@@ -59,11 +62,13 @@
 `(do
    (spec/fdef ~cmp :args (spec/or :all-amounts (spec/+ :units2.core/amount)
                                   :all-numbers (spec/+ number?)) :ret boolean?)
-   ;; todo: assert that all amounts must be compatible... somehow?
+   ;; todo: assert in the spec that all amounts must be compatible... somehow?
    (defn ~cmp [& ~args]
       (cond
         (every? amount? ~args)
-          (apply ~cljcmp (map #(getValue % (getUnit (first ~args))) ~args))
+          (if (every? #(compatible? (getUnit (first ~args)) %) (map getUnit (rest ~args)))
+            (apply ~cljcmp (map #(getValue % (getUnit (first ~args))) ~args))
+            (throw (UnsupportedOperationException. "It makes no sense to compare values in incompatible units!")))
         (every? #(not (amount? %)) ~args) ; includes empty argslist.
           (apply ~cljcmp ~args)
         true
@@ -82,7 +87,7 @@
 (defmacro defsgn [sgn cljsgn]
   (let [a (gensym)]
   `(do
-    (spec/fdef ~sgn :args (spec/or :units2.core/amount number?) :ret boolean?)
+    (spec/fdef ~sgn :args (spec/or :amount :units2.core/amount :number number?) :ret boolean?)
     (defn ~sgn [~a]
       (if (amount? ~a)
      (do
@@ -286,7 +291,8 @@
 
 ;; ## Powers and Exponentiation
 
-;(spec/fdef expt :args [:units2.core/amount integer?] :ret :units2.core/amount)
+(spec/fdef expt :args (spec/tuple :units2.core/amount integer?) :ret :units2.core/amount)
+;; TODO: avoid dividing by zero...
 
 (defn expt
   "`(expt b n) == b^n`
@@ -295,7 +301,7 @@
   "
   [b n]
   (if (clojure.core/neg? n)
-    (apply / (repeat (+ 2 (- n)) b)) ; ugly hack, but it works fine.
+    (apply / (repeat (+ 2 (- n)) b)) ; ugly hack, but it works fine. unless (zero? b)!!!
     (apply * (repeat n b))))
 
 ;; The functions below should only be defined on dimensionless quantities
