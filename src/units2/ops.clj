@@ -50,7 +50,7 @@
      (println (clojure.string/join (concat "WARNING: " msg)))))
 
 
-;; TODO: define a spec for "a sequence of compatible amounts"
+;; TODO: define a spec for "a sequence of compatible amounts" ???????
 
 
 ;; ## Comparisons
@@ -80,8 +80,6 @@
 (defcmp > clojure.core/>)
 (defcmp <= clojure.core/<=)
 (defcmp >= clojure.core/>=)
-
-;(clojure.spec.gen/generate (clojure.spec/gen (spec/+ any?)))
 
 
 (defmacro defsgn [sgn cljsgn]
@@ -199,7 +197,11 @@
     (and (amount? ~b) (not (amount? ~a))) ~three
     (not (or (amount? ~a) (amount? ~b)))  ~four))
 
-;(spec/fdef * :args ... :ret (spec/or :units2.core/amount number?))
+(spec/fdef *
+  :args (spec/* (spec/or :amount :units2.core/amount :number number?))
+  :ret (spec/or :amount :units2.core/amount :number number?)
+  ; :fn (if (every? number? args), returns a number, else an amount)
+  )
 
 (defn *
   ([] (clojure.core/*)) ; same return value as Clojure.
@@ -211,7 +213,11 @@
     (clojure.core/* a b)))
   ([a b & rest] (* a (apply * b rest))))
 
-;(spec/fdef / :args ... :ret (spec/or :units2.core/amount number?))
+(spec/fdef /
+  :args (spec/+ (spec/or :amount :units2.core/amount :number number?))
+  :ret (spec/or :amount :units2.core/amount :number number?)
+  ; :fn (if (every? number? args), returns a number, else an amount)
+  )
 
 (defn /
   ([] (clojure.core//)) ; zero arity explicitly an error, but let Clojure catch this.

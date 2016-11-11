@@ -9,19 +9,22 @@ Few languages have built-in support for numerical quantities in a system of unit
 
 ## Illustrative Code Snippet
 
-    (with-unit-arithmetic
-      (defn average [a b]
+```clojure
+(with-unit-arithmetic
+    (defn average [a b]
         "a function that computes an average, no matter what the units are"
         (/ (+ a b) 2)))
 
-    ;; assume sec, minute, day are units in the namespace.
+;; assume sec, minute, day are units in the namespace.
 
-    (let [f (comp print hour average)] ; compute average and print the result in units of hours
-        (f 4 5)
-        (f (minute 180) (day 0.5))
-        (average 4 5)) ; --> 4.5 hours, 7.5 hours, 4.5
+(let [f (comp print hour average)] ; compute average and print the result in units of hours
+    (f 4 5)
+    (f (minute 180) (day 0.5))
+    (average 4 5)) ; --> 4.5 hours, 7.5 hours; 4.5
 
-    ;; Note that dimensional analysis, unit conversions and coercions all happen automatically and behind the scenes. Also note that the unit-aware average behaves normally on normal clojure numbers.
+;; Note that dimensional analysis, unit conversions and coercions all happen automatically.
+;; Also note that the unit-aware `average` behaves normally on normal clojure numbers.
+```
 
 ## Features
 

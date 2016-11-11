@@ -95,28 +95,6 @@ The `expt` function (borrowing the name of `pow` in the LISP language Scheme) is
     (op/expt (km 1) 3) ; --> large volume
     (op/expt (m 1) -2) ; --> small surface density
 
-# Spec
-
-The `units2.astro` library also defines a variety of specs such as `::length`, `::time`, etc., to do dimensional analysis with specs:
-
-    (require '[clojure.spec :as spec])
-    (spec/valid? :units2.astro/length (m 7)) ; --> true
-    (spec/valid? :units2.astro/energy (celsius 7)) ; --> false
-
-These can also be used to generate amounts of the given dimension(s):
-
-    (require '[clojure.spec.gen :as gen])
-    (repeatedly 5 #(gen/generate (spec/gen :units2.astro/time)))
-    (gen/generate (spec/gen (spec/or :l :units2.astro/length
-                                     :t :units2.astro/time)))
-
-Note that the generated amounts are all in the base unit of the given dimension.
-
-These specs automatically `derive` into `:units2.core/amount` and, are used in its generator:
-
-    (descendants :units2.core/amount)
-    (repeatedly 5 #(gen/generate (spec/gen :units2.core/amount)))
-
 # Defining Custom IFnUnits
 
 `units2.astro` and `units2.bake` obviously don't contain each and every unit you might encounter when working with Clojure. Fortunately, it's easy to create your own IFnUnits (either at the top level of a namespace if you need them often, or just within a `let` scope if you don't).
@@ -194,6 +172,33 @@ but there are still plenty of ways to combine units and make the underlying `jav
     ((divide fahrenheit m) ((divide celsius m) 1)) ;; unsuccessful conversion (nonlinear)
 
 # Advanced Features
+
+## Spec Interop
+
+The `units2.astro` library also defines a variety of specs such as `::length`, `::time`, etc., to do dimensional analysis with specs:
+
+    (require '[clojure.spec :as spec])
+    (spec/valid? :units2.astro/length (m 7)) ; --> true
+    (spec/valid? :units2.astro/energy (celsius 7)) ; --> false
+
+These can also be used to generate amounts of the given dimension(s):
+
+    (require '[clojure.spec.gen :as gen])
+    (repeatedly 5 #(gen/generate (spec/gen :units2.astro/time)))
+    (gen/generate (spec/gen (spec/or :l :units2.astro/length
+                                     :t :units2.astro/time)))
+
+Note that the generated amounts are all in the base unit of the given dimension.
+
+These specs automatically `derive` into `:units2.core/amount` and, are used in its generator:
+
+    (descendants :units2.core/amount)
+    (repeatedly 5 #(gen/generate (spec/gen :units2.core/amount)))
+
+This feature is relevant for generatively testing functions with specs that are unit-aware:
+
+    (spec/exercise-fn 'units2.ops/*)
+
 
 ## Calculus
 

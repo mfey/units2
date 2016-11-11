@@ -25,15 +25,15 @@ Protocol
 
 Method  | arguments | output | description |
 ------: | ---- | ---- | ---- |
-compatible? | unit1 unit2 | boolean | Returns true when conversions between the two units are possible. |
-offset  | unit amount | unit | Returns a unit offset by the given amount (if possible). |
-rescale | unit number | unit | Returns a unit linearly rescaled by the given factor. |
+compatible? | unit1, unit2 | boolean | Returns true when conversions between the two units are possible. |
+offset  | unit, amount | unit | Returns a unit offset by the given amount (if possible). |
+rescale | unit, number | unit | Returns a unit linearly rescaled by the given factor. |
 
 ### units2.core.amount
 
 Type
 
-Implementation of `Dimensionful`.
+Implementation of `Dimensionful`. See also `IFnUnit`.
 
 ### unit-from-powers
 
@@ -53,7 +53,7 @@ Returns `true` when given an `units2.core.amount` object, and `false` otherwise.
 
 Type
 
-Implementation of `Unitlike` and of `IFn`.
+Implementation of `Unitlike` and of `IFn`. Applying an `IFnUnit` on a regular clojure number returns an `units2.core.amount` with this unit. Applying an `IFnUnit` on such an amount returns that amount converted into this unit.
 
 ### defunit
 
@@ -102,6 +102,8 @@ Functions
 #### divide-into-double
 
 Function
+
+Returns the ratio of two compatible units as a double (if possible).
 
 #### exp, log , log10
 

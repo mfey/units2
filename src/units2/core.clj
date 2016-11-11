@@ -64,7 +64,7 @@
               #(satisfies? Unitlike (getUnit %)))
     (fn [] (let [children (descendants ::amount)]
               (if (nil? children)
-                (throw (Exception. "`(descendants :units2.core/amount)` is empty! Uninstantiable generator."))
+                (throw (IllegalStateException. "`(descendants :units2.core/amount)` is empty! Uninstantiable generator."))
                 (spec/gen  (rand-nth (into [] children))))))))
 
 ;; A generic type for an amount with a unit, that doesn't care about the implementation of `unit` or of `value` (as long as these are consistent).
