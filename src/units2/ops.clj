@@ -21,7 +21,7 @@
 ;;
 
 ;; TODO: fix docstrings
-;; TODO: add/fix function specs (useful for spec instrumentation)
+;; TODO: add/fix function specs
 
 (ns units2.ops
   ;redefinitions imminent! `:exclude` turns off some WARNINGS.
@@ -49,30 +49,60 @@
     *unit-warnings-are-printed*
      (println (clojure.string/join (concat "WARNING: " msg)))))
 
+;; ## Specs
 
-;; TODO: define a spec for "a sequence of compatible amounts" ???????
+(spec/def ::number-or-amount (spec/or :amount :units2.core/amount :number number?))
 
+(spec/def ::compatible-amounts
+  (spec/and
+    (spec/coll-of :units2.core/amount)
+    (fn [amountlist]
+      (if (clojure.core/< (count amountlist) 2)
+        true ; obvious if
+        (every? #(compatible? (getUnit (first amountlist)) (getUnit %)) (rest amountlist))))))
+
+(spec/def ::numbers-or-compatible-amounts
+  (spec/or :all-amounts ::compatible-amounts
+           :all-numbers (spec/coll-of number?)))
 
 ;; ## Comparisons
-;; Defining `==` , `>=`, or `<` is easy; but `zero?`, `pos?`, and `neg?` can return different answers depending on the input units
-;; (to see why, consider the Farenheit and Celius temperature scales)
 
+
+;; Defining `==` , `>=`, or `<` seems easy; but the desired behaviour for
+;; comparisons of incompatible units could be either to return false or
+;; throw an exception; we opt for the latter, since strictly speaking
+;; `is 3 meters smaller than 5 seconds?' is a meaningless question and
+;; shouldn't be given a boolean answer; consider for a moment the alternate
+;; behaviour, which violates the excluded-middle-law:
+;; <pre><code>
+;; (not (< (m 4) (celcius 6)) ;; not untruthy
+;; (>= (m 4) (celcius 6)) ;; untruthy
+;; </code></pre>
+;;
+;; The behaviour for `==` could be different than other comparators,
+;; since e.g. 3 meters and 5 seconds are never the same amount; but
+;; consistently throwing exceptions seems like the safer route.
 (defmacro defcmp [cmp cljcmp]
-  (let [args (gensym)]
+  (let [args (gensym)
+        warning "It makes no sense to compare values in incompatible units!"
+        docstr (str "Official Clojure doc: " (eval `(:doc (meta (var ~cljcmp))))
+                    "\n Units2 added doc: " warning)
+        ]
 `(do
-   (spec/fdef ~cmp :args (spec/or :all-amounts (spec/+ :units2.core/amount)
-                                  :all-numbers (spec/+ number?)) :ret boolean?)
-   ;; todo: assert in the spec that all amounts must be compatible... somehow?
-   (defn ~cmp [& ~args]
+   (spec/fdef ~cmp :args (spec/and
+                            ::numbers-or-compatible-amounts
+                            #(not (empty? %)))
+                   :ret boolean?)
+   (defn ~cmp ~docstr [& ~args]
       (cond
         (every? amount? ~args)
           (if (every? #(compatible? (getUnit (first ~args)) %) (map getUnit (rest ~args)))
             (apply ~cljcmp (map #(getValue % (getUnit (first ~args))) ~args))
-            (throw (UnsupportedOperationException. "It makes no sense to compare values in incompatible units!")))
+            (throw (UnsupportedOperationException. ~warning)))
         (every? #(not (amount? %)) ~args) ; includes empty argslist.
           (apply ~cljcmp ~args)
         true
-          (throw (UnsupportedOperationException. "It makes no sense to compare values with and without units!")))))))
+          (throw (UnsupportedOperationException. ~warning)))))))
 
 
 (defcmp == clojure.core/==)
@@ -81,21 +111,46 @@
 (defcmp <= clojure.core/<=)
 (defcmp >= clojure.core/>=)
 
-
+;; `zero?`, `pos?`, and `neg?` can return different answers depending on the input units
+;; (to see why, consider the Farenheit and Celius temperature scales)
 (defmacro defsgn [sgn cljsgn]
-  (let [a (gensym)]
+  (let [a (gensym)
+        b (gensym)
+        warning " interacts nontrivially with rescalings/offsets of units."
+        docstr (str "Official Clojure doc: " (eval `(:doc (meta (var ~cljsgn))))
+                    "\n Units2 added doc:" warning)]
   `(do
-    (spec/fdef ~sgn :args (spec/or :amount :units2.core/amount :number number?) :ret boolean?)
-    (defn ~sgn [~a]
+    (spec/fdef ~sgn
+      :args
+        ; depending on the dynamical variable *unit-warnings-are-errors*,
+        ; what the inputs
+        ; this is kind of ugly, we'll need to help the spec generator
+        (spec/with-gen
+           (fn [~b]
+             (if *unit-warnings-are-errors*
+                 (number? ~b)
+                 (spec/valid? ::number-or-amount ~b)))
+           (fn []
+             (if *unit-warnings-are-errors*
+               (spec/gen number?)
+               (spec/gen ::number-or-amount))))
+      :ret boolean?)
+    (defn ~sgn ~docstr [~a]
       (if (amount? ~a)
      (do
-       (warn (str ~sgn " interacts nontrivially with rescalings of units."))
+       (warn (str ~sgn ~warning))
        (~cljsgn (getValue ~a (getUnit ~a))))
      (~cljsgn ~a))))))
 
 (defsgn zero? clojure.core/zero?)
 (defsgn pos? clojure.core/pos?)
 (defsgn neg? clojure.core/neg?)
+
+
+; TODO: add error throws for incompatibility.
+
+(spec/fdef min :args ::numbers-or-compatible-amounts
+               :ret  ::number-or-amount)
 
 (defn min
   [& args]
@@ -104,6 +159,9 @@
       (->amount (apply clojure.core/min (map #(getValue % U) args)) U))
     (apply clojure.core/min args)
     ))
+
+(spec/fdef max :args ::numbers-or-compatible-amounts
+               :ret  ::number-or-amount)
 
 (defn max
   [& args]
@@ -114,7 +172,7 @@
     ))
 
 (defmacro with-unit-comparisons
-  "Locally rebind `>`, `>=`, `<`, `zero?`, `pos?`, ... to unit-aware equivalents."
+  "Locally rebind `==`, `>=`, `<`, `zero?`, `pos?`, `min`, ... to unit-aware equivalents."
   [& body]
   (clojure.core/conj body '[== units2.ops/==
          >  units2.ops/>
@@ -162,7 +220,7 @@
       ~one
       ~neither))
 
-;(spec/fdef + :args ... :ret (spec/or :units2.core/amount number?))
+(spec/fdef + :args ::numbers-or-compatible-amounts :ret ::number-or-amount)
 
 (defn +
   ([] (clojure.core/+)) ; same return value as Clojure.
@@ -176,6 +234,8 @@
     ([a b & rest] (reduce + (conj rest a b))))
 
 ;(spec/fdef - :args ... :ret (spec/or :units2.core/amount number?))
+
+(spec/fdef - :args ::numbers-or-compatible-amounts :ret ::number-or-amount)
 
 (defn -
   ([] (clojure.core/-)) ; zero arity explicitly an error, but let Clojure catch this.
@@ -231,7 +291,11 @@
     (clojure.core// a b)))
   ([a b & rest] (/ a (apply * b rest))))
 
-;(spec/fdef + :args [:units2.core/amount :units2.core/amount] :ret number?)
+(spec/fdef divide-into-double :args (spec/and ::compatible-amounts
+                                              #(clojure.core/== 2 (count %))
+                                              ;#(linear? (getConverter (getUnit (first %) (getUnit (second %)))))
+                                              )
+                              :ret double?)
 
 (defn divide-into-double
   "When all units involved are linear rescalings of one another, fractions with the same dimensions in the numerator and denominator have a *unique* unit-free value.
@@ -260,26 +324,28 @@
 ;;   </code></pre>
 
 (defmacro defratio [ratio clojureratio]
-  (let [a (gensym) b (gensym)]
+  (let [a (gensym) b (gensym)
+        warning "Modular arithmetic interacts nontrivially with rescalings of units."
+        docstr (str "Official Clojure doc: " (eval `(:doc (meta (var ~clojureratio))))
+                    "\n Units2 added doc: " warning)
+        ]
  `(do
     ;;(spec/fdef ~ratio :args [a b] :ret (spec/or :units2.core/amount number?))
-    (defn ~ratio [~a ~b]
+    (defn ~ratio ~docstr [~a ~b]
     (if (amount? ~a)
       (do
-        (warn "Modular arithmetic interacts nontrivially with rescalings of units.")
+        (warn ~warning)
         (if (amount? ~b)
           (->amount (~clojureratio (getValue ~a (getUnit ~a)) (getValue ~b (getUnit ~b))) (divide (getUnit ~a) (getUnit ~b)))
           (->amount (~clojureratio (getValue ~a (getUnit ~a)) ~b) (getUnit ~a))))
       (if (amount? ~b)
         (do
-          (warn "Modular arithmetic interacts nontrivially with rescalings of units.")
+          (warn ~warning)
           (->amount (~clojureratio ~a (getValue ~b (getUnit ~b))) (inverse (getUnit ~b))))
         (~clojureratio ~a ~b)))))))
 
 (defratio rem clojure.core/rem)
 (defratio quot clojure.core/quot)
-
-
 
 (defmacro with-unit-arithmetic
   "Locally rebinds arithmetic operators like `+`, and `/` to unit-aware equivalents."
@@ -294,11 +360,10 @@
         ]
     'clojure.core/let))
 
-
 ;; ## Powers and Exponentiation
 
 (spec/fdef expt :args (spec/tuple :units2.core/amount integer?) :ret :units2.core/amount)
-;; TODO: avoid dividing by zero...
+; specify that we can't divide by zero!!!
 
 (defn expt
   "`(expt b n) == b^n`
@@ -307,18 +372,22 @@
   "
   [b n]
   (if (clojure.core/neg? n)
-    (apply / (repeat (+ 2 (- n)) b)) ; ugly hack, but it works fine. unless (zero? b)!!!
+    (apply / (repeat (+ 2 (- n)) b)) ; ugly hack, but it works fine. It even (correctly) throws a divide by zero exception when b is zero!
     (apply * (repeat n b))))
 
-;; The functions below should only be defined on dimensionless quantities
+;; The exponential functions below should only be defined on dimensionless quantities
 ;; (to see why, just imagine Maclaurin-expanding the `exp` or `ln` functions)
 ;; so we define them over ratios of amounts: exp(a/b), log(a/b), etc.
-
 (defmacro defexpt [expt cljexpt]
-  (let [a (gensym) b (gensym)]
+  (let [a (gensym) b (gensym)
+        docstr (str "`" (str expt) "` is only sensible for dimensionless quanities.")
+        ]
     `(do
-       ;(spec/fdef ~expt ...)
-       (defn ~expt
+       (spec/fdef ~expt ;:args (spec/or :arity1 (spec/or :amount :units2.core/amount :number number?)
+                        ;               :arity2 (spec/tuple :units2.core/amount :units2.core/amount))
+                                       ;these units must be linearly related!!!
+                        :ret double?)
+       (defn ~expt ~docstr
        ([~a]
          (if (amount? ~a)
            (do
@@ -359,10 +428,12 @@
 ;; ## Magnitudes
 
 (defmacro defmgn [mgn javamgn]
-  (let [a (gensym) b (gensym)]
+  (let [a (gensym) b (gensym)
+        docstr (str "`" mgn "` is only sensible for dimensionless quantities.")
+        ]
     `(do
        ;(spec/fdef ~mgn :args :ret)
-       (defn ~mgn
+       (defn ~mgn ~docstr
        ([~a]
          (if (amount? ~a)
            (do

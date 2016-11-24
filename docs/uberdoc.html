@@ -2866,7 +2866,7 @@ net.brehaut.ClojureTools = (function (SH) {
   };
 })(SyntaxHighlighter);
 </script><title>units2 -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name"><a href="https://github.com/mfey/units2">units2</a></h1><h2 class="project-version">2.5</h2><br /><p>A Clojure library for quantities with units.</p>
-</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.9.0-alpha10</td></tr><tr><td class="dep-name">clj-science/jscience</td><td class="dotted"><hr /></td><td class="dep-version">4.3.1</td></tr><tr><td class="dep-name">org.apache.commons/commons-math3</td><td class="dotted"><hr /></td><td class="dep-version">3.5</td></tr><tr><td class="dep-name">org.clojure/test.check</td><td class="dotted"><hr /></td><td class="dep-version">0.9.0</td></tr><tr><td class="dep-name">incanter</td><td class="dotted"><hr /></td><td class="dep-version">1.5.6</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#units2.astro">units2.astro</a></li><li><a href="#units2.bake">units2.bake</a></li><li><a href="#units2.calc">units2.calc</a></li><li><a href="#units2.core">units2.core</a></li><li><a href="#units2.IFnUnit">units2.IFnUnit</a></li><li><a href="#units2.ops">units2.ops</a></li><li><a href="#units2.spice">units2.spice</a></li><li><a href="#units2.trig">units2.trig</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#units2.astro" name="units2.astro"><h1 class="project-name">units2.astro</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.9.0-alpha10</td></tr><tr><td class="dep-name">clj-science/jscience</td><td class="dotted"><hr /></td><td class="dep-version">4.3.1</td></tr><tr><td class="dep-name">org.apache.commons/commons-math3</td><td class="dotted"><hr /></td><td class="dep-version">3.5</td></tr><tr><td class="dep-name">org.clojure/test.check</td><td class="dotted"><hr /></td><td class="dep-version">0.9.0</td></tr><tr><td class="dep-name">incanter</td><td class="dotted"><hr /></td><td class="dep-version">1.5.6</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#units2.astro">units2.astro</a></li><li><a href="#units2.calc">units2.calc</a></li><li><a href="#units2.core">units2.core</a></li><li><a href="#units2.IFnUnit">units2.IFnUnit</a></li><li><a href="#units2.ops">units2.ops</a></li><li><a href="#units2.spice">units2.spice</a></li><li><a href="#units2.trig">units2.trig</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#units2.astro" name="units2.astro"><h1 class="project-name">units2.astro</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns units2.astro
   (:require [units2.core :refer :all]
             [units2.IFnUnit :refer :all]
@@ -2943,36 +2943,7 @@ net.brehaut.ClojureTools = (function (SH) {
 </td><td class="codes"><pre class="brush: clojure">(defbaseunit zee ::redshift)
 (defunit onepluszee (offset zee (zee -1)))</pre></td></tr><tr><td class="docs"><h2>No units</h2>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>define this last, just in case</p>
-</td><td class="codes"><pre class="brush: clojure">(defunit dimensionless (unit-from-powers {m 0}))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#units2.bake" name="units2.bake"><h1 class="project-name">units2.bake</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(ns units2.bake
-  (:require [units2.core :refer :all]
-            [units2.IFnUnit :refer :all])
-  (:import (javax.measure.unit SI NonSI)))</pre></td></tr><tr><td class="docs"><h2>Temperature [K]</h2>
-</td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes K (-&gt;IFnUnit SI/KELVIN)) ; not used for baking :-D</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit celsius (offset K (K 273.15)))
-(defunit fahrenheit (rescale (offset celsius (celsius -17.7777)) (/ 5 9)))</pre></td></tr><tr><td class="docs"><p>A good approximation valid for baking temperatures is
- <pre><code>
- (defunit approximate-celsius (rescale fahrenheit 2))
- </code></pre></p>
-</td><td class="codes"></td></tr><tr><td class="docs"><h2>Weight [M]</h2>
-</td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes g (-&gt;IFnUnit SI/GRAM))
-(defunit lb (rescale g 453.6))</pre></td></tr><tr><td class="docs"><h2>Fluid Volumes [L^3]</h2>
-</td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes L (-&gt;IFnUnit NonSI/LITRE))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit ounce_uk (-&gt;IFnUnit NonSI/OUNCE_LIQUID_UK))
-(defunit ounce_us (-&gt;IFnUnit NonSI/OUNCE_LIQUID_US))
-(defunit oz ounce_us)</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit tablespoon_metric (rescale mL 15))
-(defunit tablespoon_us (rescale mL 14.8))
-(defunit tbsp tablespoon_us)</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit teaspoon_metric (rescale tablespoon_metric (/ 1 3)))
-(defunit teaspoon_us  (rescale tablespoon_us (/ 1 3)))
-(defunit tsp teaspoon_us)</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit cup_metric (rescale g 250))
-(defunit cup_us (rescale g 236.5882365)) ; wikipedia</pre></td></tr><tr><td class="docs"><p>TODO: something computational about the 1:1:1:1 ratio of pound cake.</p>
-</td><td class="codes"></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#units2.calc" name="units2.calc"><h1 class="project-name">units2.calc</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Calculus on functions using the (generically defined) <code>units2.core.amount</code> type.</p>
+</td><td class="codes"><pre class="brush: clojure">(defunit dimensionless (unit-from-powers {m 0}))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#units2.calc" name="units2.calc"><h1 class="project-name">units2.calc</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Calculus on functions using the (generically defined) <code>units2.core.amount</code> type.</p>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>This implementation assumes:</p>
 
 <ol>
@@ -3121,7 +3092,7 @@ net.brehaut.ClojureTools = (function (SH) {
               #(satisfies? Unitlike (getUnit %)))
     (fn [] (let [children (descendants ::amount)]
               (if (nil? children)
-                (throw (Exception. &quot;`(descendants :units2.core/amount)` is empty! Uninstantiable generator.&quot;))
+                (throw (IllegalStateException. &quot;`(descendants :units2.core/amount)` is empty! Uninstantiable generator.&quot;))
                 (spec/gen  (rand-nth (into [] children))))))))</pre></td></tr><tr><td class="docs"><p>A generic type for an amount with a unit, that doesn't care about the implementation of <code>unit</code> or of <code>value</code> (as long as these are consistent).</p>
 </td><td class="codes"><pre class="brush: clojure">(deftype amount [value unit]
   Dimensionful
@@ -3227,7 +3198,7 @@ and protocol dispatch (nice, fast) rather than java interop and reflection (ugly
    (divide [this] (inverse this))
    (divide [this that] (new IFnUnit (.divide  javax-unit (to-javax IFnUnit that))))
    (divide [this that the-other] (new IFnUnit (.divide  javax-unit (.times (to-javax IFnUnit that) (to-javax IFnUnit the-other)))))
-   (power [this N] (new IFnUnit (.pow javax-unit N))))</pre></td></tr><tr><td class="docs"><p><code>def</code> a var to hold a unit, and change that unit's printed representation to that var.</p>
+   (power [this N] (new IFnUnit (.pow javax-unit N))) ;; this is not Multiplicative?)</pre></td></tr><tr><td class="docs"><p><code>def</code> a var to hold a unit, and change that unit's printed representation to that var.</p>
 </td><td class="codes"><pre class="brush: clojure">(defmacro defunit
 [name value]
     `(do
@@ -3303,8 +3274,7 @@ and protocol dispatch (nice, fast) rather than java interop and reflection (ugly
 (Math/pow (divide-into-double a b) c)
 </code></pre></li>
 </ol>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>TODO: fix docstrings
-TODO: add/fix function specs (useful for spec instrumentation)</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>TODO: add/fix function specs (useful for spec instrumentation)</p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns units2.ops
   ;redefinitions imminent! `:exclude` turns off some WARNINGS.
@@ -3321,59 +3291,107 @@ speed-critical computations, and should NOT be used lightly.</p>
     *unit-warnings-are-errors*
       (throw (UnsupportedOperationException. (str msg)))
     *unit-warnings-are-printed*
-     (println (clojure.string/join (concat &quot;WARNING: &quot; msg)))))</pre></td></tr><tr><td class="docs"><p>TODO: define a spec for "a sequence of compatible amounts"</p>
-</td><td class="codes"></td></tr><tr><td class="docs"><h2>Comparisons</h2>
+     (println (clojure.string/join (concat &quot;WARNING: &quot; msg)))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(spec/def ::number-or-amount (spec/or :amount :units2.core/amount :number number?))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(spec/def ::compatible-amounts
+  (spec/and
+    (spec/coll-of :units2.core/amount)
+    (fn [amountlist]
+      (if (clojure.core/&lt; (count amountlist) 2)
+        true ; obvious if
+        (every? #(compatible? (getUnit (first amountlist)) (getUnit %)) (rest amountlist))))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(spec/def ::numbers-or-compatible-amounts
+  (spec/or :all-amounts ::compatible-amounts
+           :all-numbers (spec/coll-of number?)))</pre></td></tr><tr><td class="docs"><h2>Comparisons</h2>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Defining <code>==</code> , <code>&gt;=</code>, or <code>&lt;</code> seems easy; but the desired behaviour for
+comparisons of incompatible units could be either to return false or
+throw an exception; we opt for the latter, since strictly speaking
+`is 3 meters smaller than 5 seconds?' is a meaningless question and
+shouldn't be given a boolean answer; consider for a moment the alternate
+behaviour, which violates the excluded-middle-law:</p>
 
-<p>Defining <code>==</code> , <code>&gt;=</code>, or <code>&lt;</code> is easy; but <code>zero?</code>, <code>pos?</code>, and <code>neg?</code> can return different answers depending on the input units
-(to see why, consider the Farenheit and Celius temperature scales)</p>
-</td><td class="codes"></td></tr><tr><td class="docs">
+<pre><code>
+(not (< (m 4) (celcius 6)) ;; not untruthy
+(>= (m 4) (celcius 6)) ;; untruthy
+</code></pre>
+
+<p>The behaviour for <code>==</code> could be different than other comparators,
+since e.g. 3 meters and 5 seconds are never the same amount; but
+consistently throwing exceptions seems like the safer route.</p>
 </td><td class="codes"><pre class="brush: clojure">(defmacro defcmp [cmp cljcmp]
-  (let [args (gensym)]
+  (let [args (gensym)
+        warning &quot;It makes no sense to compare values in incompatible units!&quot;
+        docstr (str &quot;Official Clojure doc: &quot; (eval `(:doc (meta (var ~cljcmp))))
+                    &quot;\n Units2 added doc: &quot; warning)
+        ]
 `(do
-   (spec/fdef ~cmp :args (spec/or :all-amounts (spec/+ :units2.core/amount)
-                                  :all-numbers (spec/+ number?)) :ret boolean?)
-   ;; todo: assert in the spec that all amounts must be compatible... somehow?
-   (defn ~cmp [&amp; ~args]
+   (spec/fdef ~cmp :args (spec/and
+                            ::numbers-or-compatible-amounts
+                            #(not (empty? %)))
+                   :ret boolean?)
+   (defn ~cmp ~docstr [&amp; ~args]
       (cond
         (every? amount? ~args)
           (if (every? #(compatible? (getUnit (first ~args)) %) (map getUnit (rest ~args)))
             (apply ~cljcmp (map #(getValue % (getUnit (first ~args))) ~args))
-            (throw (UnsupportedOperationException. &quot;It makes no sense to compare values in incompatible units!&quot;)))
+            (throw (UnsupportedOperationException. ~warning)))
         (every? #(not (amount? %)) ~args) ; includes empty argslist.
           (apply ~cljcmp ~args)
         true
-          (throw (UnsupportedOperationException. &quot;It makes no sense to compare values with and without units!&quot;)))))))</pre></td></tr><tr><td class="docs">
+          (throw (UnsupportedOperationException. ~warning)))))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defcmp == clojure.core/==)
 (defcmp &lt; clojure.core/&lt;)
 (defcmp &gt; clojure.core/&gt;)
 (defcmp &lt;= clojure.core/&lt;=)
-(defcmp &gt;= clojure.core/&gt;=)</pre></td></tr><tr><td class="docs"><p>(clojure.spec.gen/generate (clojure.spec/gen (spec/+ any?)))</p>
-</td><td class="codes"></td></tr><tr><td class="docs">
+(defcmp &gt;= clojure.core/&gt;=)</pre></td></tr><tr><td class="docs"><p><code>zero?</code>, <code>pos?</code>, and <code>neg?</code> can return different answers depending on the input units
+(to see why, consider the Farenheit and Celius temperature scales)</p>
 </td><td class="codes"><pre class="brush: clojure">(defmacro defsgn [sgn cljsgn]
-  (let [a (gensym)]
+  (let [a (gensym)
+        b (gensym)
+        warning &quot; interacts nontrivially with rescalings/offsets of units.&quot;
+        docstr (str &quot;Official Clojure doc: &quot; (eval `(:doc (meta (var ~cljsgn))))
+                    &quot;\n Units2 added doc:&quot; warning)]
   `(do
-    (spec/fdef ~sgn :args (spec/or :amount :units2.core/amount :number number?) :ret boolean?)
-    (defn ~sgn [~a]
+    (spec/fdef ~sgn
+      :args
+        ; depending on the dynamical variable *unit-warnings-are-errors*,
+        ; what the inputs
+        ; this is kind of ugly, we'll need to help the spec generator
+        (spec/with-gen
+           (fn [~b]
+             (if *unit-warnings-are-errors*
+                 (number? ~b)
+                 (spec/valid? ::number-or-amount ~b)))
+           (fn []
+             (if *unit-warnings-are-errors*
+               (spec/gen number?)
+               (spec/gen ::number-or-amount))))
+      :ret boolean?)
+    (defn ~sgn ~docstr [~a]
       (if (amount? ~a)
      (do
-       (warn (str ~sgn &quot; interacts nontrivially with rescalings of units.&quot;))
+       (warn (str ~sgn ~warning))
        (~cljsgn (getValue ~a (getUnit ~a))))
      (~cljsgn ~a))))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defsgn zero? clojure.core/zero?)
 (defsgn pos? clojure.core/pos?)
 (defsgn neg? clojure.core/neg?)</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(spec/fdef min :args ::numbers-or-compatible-amounts
+               :ret  ::number-or-amount)</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn min
   [&amp; args]
   (if (amount? (first args))
     (let [U (getUnit (first args))]
       (-&gt;amount (apply clojure.core/min (map #(getValue % U) args)) U))
     (apply clojure.core/min args)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(spec/fdef max :args ::numbers-or-compatible-amounts
+               :ret  ::number-or-amount)</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn max
   [&amp; args]
   (if (amount? (first args))
     (let [U (getUnit (first args))]
       (-&gt;amount (apply clojure.core/max (map #(getValue % U) args)) U))
-    (apply clojure.core/max args)))</pre></td></tr><tr><td class="docs"><p>Locally rebind <code>&gt;</code>, <code>&gt;=</code>, <code>&lt;</code>, <code>zero?</code>, <code>pos?</code>, ... to unit-aware equivalents.</p>
+    (apply clojure.core/max args)))</pre></td></tr><tr><td class="docs"><p>Locally rebind <code>==</code>, <code>&gt;=</code>, <code>&lt;</code>, <code>zero?</code>, <code>pos?</code>, <code>min</code>, ... to unit-aware equivalents.</p>
 </td><td class="codes"><pre class="brush: clojure">(defmacro with-unit-comparisons
   [&amp; body]
   (clojure.core/conj body '[== units2.ops/==
@@ -3414,8 +3432,8 @@ with the comment "If you're willing to do that, you should be prepared for users
         ~lin
         ~nonlin)
       ~one
-      ~neither))</pre></td></tr><tr><td class="docs"><p>(spec/fdef + :args ... :ret (spec/or :units2.core/amount number?))</p>
-</td><td class="codes"></td></tr><tr><td class="docs">
+      ~neither))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(spec/fdef + :args ::numbers-or-compatible-amounts :ret ::number-or-amount)</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn +
   ([] (clojure.core/+)) ; same return value as Clojure.
   ([a] a)
@@ -3427,6 +3445,7 @@ with the comment "If you're willing to do that, you should be prepared for users
       (clojure.core/+ a b)))
     ([a b &amp; rest] (reduce + (conj rest a b))))</pre></td></tr><tr><td class="docs"><p>(spec/fdef - :args ... :ret (spec/or :units2.core/amount number?))</p>
 </td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(spec/fdef - :args ::numbers-or-compatible-amounts :ret ::number-or-amount)</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn -
   ([] (clojure.core/-)) ; zero arity explicitly an error, but let Clojure catch this.
   ([a] (if (amount? a) (-&gt;amount (clojure.core/- (getValue a (getUnit a))) (getUnit a)) (clojure.core/- a)))
@@ -3442,8 +3461,12 @@ with the comment "If you're willing to do that, you should be prepared for users
     (and (amount? ~a) (amount? ~b))       ~one
     (and (amount? ~a) (not (amount? ~b))) ~two
     (and (amount? ~b) (not (amount? ~a))) ~three
-    (not (or (amount? ~a) (amount? ~b)))  ~four))</pre></td></tr><tr><td class="docs"><p>(spec/fdef * :args ... :ret (spec/or :units2.core/amount number?))</p>
-</td><td class="codes"></td></tr><tr><td class="docs">
+    (not (or (amount? ~a) (amount? ~b)))  ~four))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(spec/fdef *
+  :args (spec/* (spec/or :amount :units2.core/amount :number number?))
+  :ret (spec/or :amount :units2.core/amount :number number?)
+  ; :fn (if (every? number? args), returns a number, else an amount)
+  )</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn *
   ([] (clojure.core/*)) ; same return value as Clojure.
   ([a] a)
@@ -3452,8 +3475,12 @@ with the comment "If you're willing to do that, you should be prepared for users
     (-&gt;amount (clojure.core/* (getValue a (getUnit a)) (double b)) (getUnit a))
     (-&gt;amount (clojure.core/* (getValue b (getUnit b)) (double a)) (getUnit b))
     (clojure.core/* a b)))
-  ([a b &amp; rest] (* a (apply * b rest))))</pre></td></tr><tr><td class="docs"><p>(spec/fdef / :args ... :ret (spec/or :units2.core/amount number?))</p>
-</td><td class="codes"></td></tr><tr><td class="docs">
+  ([a b &amp; rest] (* a (apply * b rest))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(spec/fdef /
+  :args (spec/+ (spec/or :amount :units2.core/amount :number number?))
+  :ret (spec/or :amount :units2.core/amount :number number?)
+  ; :fn (if (every? number? args), returns a number, else an amount)
+  )</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn /
   ([] (clojure.core//)) ; zero arity explicitly an error, but let Clojure catch this.
   ([a] (if (amount? a)
@@ -3464,8 +3491,12 @@ with the comment "If you're willing to do that, you should be prepared for users
     (-&gt;amount (clojure.core// (getValue a (getUnit a)) (double b)) (getUnit a))
     (* (/ b) (double a))
     (clojure.core// a b)))
-  ([a b &amp; rest] (/ a (apply * b rest))))</pre></td></tr><tr><td class="docs"><p>(spec/fdef + :args [:units2.core/amount :units2.core/amount] :ret number?)</p>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>When all units involved are linear rescalings of one another, fractions with the same dimensions in the numerator and denominator have a <em>unique</em> unit-free value.
+  ([a b &amp; rest] (/ a (apply * b rest))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(spec/fdef divide-into-double :args (spec/and ::compatible-amounts
+                                              #(clojure.core/== 2 (count %))
+                                              ;#(linear? (getConverter (getUnit (first %) (getUnit (second %)))))
+                                              )
+                              :ret double?)</pre></td></tr><tr><td class="docs"><p>When all units involved are linear rescalings of one another, fractions with the same dimensions in the numerator and denominator have a <em>unique</em> unit-free value.
   This is basically syntactic sugar for <code>(getValue a (AsUnit b))</code> with some error checking.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn divide-into-double
   ^double [a b]
@@ -3489,19 +3520,23 @@ with the comment "If you're willing to do that, you should be prepared for users
   </code></pre></p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defmacro defratio [ratio clojureratio]
-  (let [a (gensym) b (gensym)]
+  (let [a (gensym) b (gensym)
+        warning &quot;Modular arithmetic interacts nontrivially with rescalings of units.&quot;
+        docstr (str &quot;Official Clojure doc: &quot; (eval `(:doc (meta (var ~clojureratio))))
+                    &quot;\n Units2 added doc: &quot; warning)
+        ]
  `(do
     ;;(spec/fdef ~ratio :args [a b] :ret (spec/or :units2.core/amount number?))
-    (defn ~ratio [~a ~b]
+    (defn ~ratio ~docstr [~a ~b]
     (if (amount? ~a)
       (do
-        (warn &quot;Modular arithmetic interacts nontrivially with rescalings of units.&quot;)
+        (warn ~warning)
         (if (amount? ~b)
           (-&gt;amount (~clojureratio (getValue ~a (getUnit ~a)) (getValue ~b (getUnit ~b))) (divide (getUnit ~a) (getUnit ~b)))
           (-&gt;amount (~clojureratio (getValue ~a (getUnit ~a)) ~b) (getUnit ~a))))
       (if (amount? ~b)
         (do
-          (warn &quot;Modular arithmetic interacts nontrivially with rescalings of units.&quot;)
+          (warn ~warning)
           (-&gt;amount (~clojureratio ~a (getValue ~b (getUnit ~b))) (inverse (getUnit ~b))))
         (~clojureratio ~a ~b)))))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defratio rem clojure.core/rem)
@@ -3518,23 +3553,26 @@ with the comment "If you're willing to do that, you should be prepared for users
         ]
     'clojure.core/let))</pre></td></tr><tr><td class="docs"><h2>Powers and Exponentiation</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(spec/fdef expt :args (spec/tuple :units2.core/amount integer?) :ret :units2.core/amount)</pre></td></tr><tr><td class="docs"><p>TODO: avoid dividing by zero...</p>
-</td><td class="codes"></td></tr><tr><td class="docs"><p><code>(expt b n) == b^n</code></p>
+</td><td class="codes"><pre class="brush: clojure">(spec/fdef expt :args (spec/tuple :units2.core/amount integer?) :ret :units2.core/amount)</pre></td></tr><tr><td class="docs"><p><code>(expt b n) == b^n</code></p>
 
 <p>  where <code>n</code> is an integer and <code>b</code> is an amount.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn expt
   [b n]
   (if (clojure.core/neg? n)
-    (apply / (repeat (+ 2 (- n)) b)) ; ugly hack, but it works fine. unless (zero? b)!!!
-    (apply * (repeat n b))))</pre></td></tr><tr><td class="docs"><p>The functions below should only be defined on dimensionless quantities
+    (apply / (repeat (+ 2 (- n)) b)) ; ugly hack, but it works fine. It even (correctly) throws a divide by zero exception when b is zero!
+    (apply * (repeat n b))))</pre></td></tr><tr><td class="docs"><p>The exponential functions below should only be defined on dimensionless quantities
 (to see why, just imagine Maclaurin-expanding the <code>exp</code> or <code>ln</code> functions)
 so we define them over ratios of amounts: exp(a/b), log(a/b), etc.</p>
-</td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defmacro defexpt [expt cljexpt]
-  (let [a (gensym) b (gensym)]
+  (let [a (gensym) b (gensym)
+        docstr (str &quot;`&quot; (str expt) &quot;` is only sensible for dimensionless quanities.&quot;)
+        ]
     `(do
-       ;(spec/fdef ~expt ...)
-       (defn ~expt
+       (spec/fdef ~expt ;:args (spec/or :arity1 (spec/or :amount :units2.core/amount :number number?)
+                        ;               :arity2 (spec/tuple :units2.core/amount :units2.core/amount))
+                                       ;these units must be linearly related!!!
+                        :ret double?)
+       (defn ~expt ~docstr
        ([~a]
          (if (amount? ~a)
            (do
@@ -3569,10 +3607,12 @@ so we define them over ratios of amounts: exp(a/b), log(a/b), etc.</p>
       'clojure.core/let))</pre></td></tr><tr><td class="docs"><h2>Magnitudes</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defmacro defmgn [mgn javamgn]
-  (let [a (gensym) b (gensym)]
+  (let [a (gensym) b (gensym)
+        docstr (str &quot;`&quot; mgn &quot;` is only sensible for dimensionless quantities.&quot;)
+        ]
     `(do
        ;(spec/fdef ~mgn :args :ret)
-       (defn ~mgn
+       (defn ~mgn ~docstr
        ([~a]
          (if (amount? ~a)
            (do
@@ -3697,7 +3737,7 @@ determine these amounts empirically: keep mouthwashing with milk until it's not 
   `(def ~trig (comp rad #(~javatrig %))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(radians-out asin Math/asin)
 (radians-out acos Math/acos)
-(radians-out atan Math/atan)</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/gdeer81/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_units2.astro">units2.astro</li><li class="floating-toc-li" id="floating-toc_units2.bake">units2.bake</li><li class="floating-toc-li" id="floating-toc_units2.calc">units2.calc</li><li class="floating-toc-li" id="floating-toc_units2.core">units2.core</li><li class="floating-toc-li" id="floating-toc_units2.IFnUnit">units2.IFnUnit</li><li class="floating-toc-li" id="floating-toc_units2.ops">units2.ops</li><li class="floating-toc-li" id="floating-toc_units2.spice">units2.spice</li><li class="floating-toc-li" id="floating-toc_units2.trig">units2.trig</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
+(radians-out atan Math/atan)</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/gdeer81/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_units2.astro">units2.astro</li><li class="floating-toc-li" id="floating-toc_units2.calc">units2.calc</li><li class="floating-toc-li" id="floating-toc_units2.core">units2.core</li><li class="floating-toc-li" id="floating-toc_units2.IFnUnit">units2.IFnUnit</li><li class="floating-toc-li" id="floating-toc_units2.ops">units2.ops</li><li class="floating-toc-li" id="floating-toc_units2.spice">units2.spice</li><li class="floating-toc-li" id="floating-toc_units2.trig">units2.trig</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
 SyntaxHighlighter.all();
 
 // hackity hack

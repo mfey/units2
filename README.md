@@ -73,6 +73,7 @@ Objective: bare minimal functionality and some syntactic sugar.
     + Inline Comments / Marginalia
     + Tutorial
     + Example code (`spice.clj`)
+    + `(*)` Docstrings
     + `(*)` API Reference
 
 ### Version 3.0
