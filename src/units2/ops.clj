@@ -40,8 +40,6 @@
 ;; speed-critical computations, and should NOT be used lightly.
 (def ^:dynamic *unit-warnings-are-printed* true)
 
-
-
 (defn- warn [msg]
   (cond
     *unit-warnings-are-errors*
@@ -51,19 +49,71 @@
 
 ;; ## Specs
 
-(spec/def ::number-or-amount (spec/or :amount :units2.core/amount :number number?))
+(spec/def ::number-or-amount (spec/or :number number? :amount :units2.core/amount))
 
 (spec/def ::compatible-amounts
   (spec/and
-    (spec/coll-of :units2.core/amount)
-    (fn [amountlist]
+    (spec/* :units2.core/amount)
+    (fn [amountlist] ;; it's really the conformed value here, but for amounts it's the same thing!
       (if (clojure.core/< (count amountlist) 2)
         true ; obvious if
         (every? #(compatible? (getUnit (first amountlist)) (getUnit %)) (rest amountlist))))))
 
 (spec/def ::numbers-or-compatible-amounts
-  (spec/or :all-amounts ::compatible-amounts
-           :all-numbers (spec/coll-of number?)))
+  (spec/or :all-numbers (spec/* number?)
+           :all-amounts ::compatible-amounts))
+
+(spec/def ::some-numbers-or-compatible-amounts
+  (spec/and ::numbers-or-compatible-amounts
+            #(not (empty? (spec/unform ::numbers-or-compatible-amounts %)))))
+
+(declare zero?); this spec uses the unit-aware zero? function.
+
+(spec/def ::two-linear-units-second-nonzero
+  (spec/and (spec/coll-of :units2.core/amount :count 2)
+            (fn [amountlist] ;; it's really the conformed value here, but for amounts it's the same thing!
+              (if (clojure.core/< (count amountlist) 2)
+                true ; obvious if
+                (every? #(compatible? (getUnit (first amountlist)) (getUnit %)) (rest amountlist))))
+            #(linear? (getConverter (getUnit (first %)) (getUnit (second %)))) ; again, conformed value is same.
+            #(binding [*unit-warnings-are-errors* false]
+               (not (zero? (second %))))
+            ))
+
+;; this spec correctly sees the safety switch in
+;;   (binding [*...* false] (valid? ...))
+;; but the generator only returns numbers (no amounts), so we can't generatively
+;; test the `unsafe' behaviour. This kind of defeats the purpose of generative
+;; tests, but turning the safety off isn't something I'd recommend to users.
+;; On the downside,
+(spec/def ::number-unless-safety-is-off
+  (spec/with-gen
+    (spec/and ::number-or-amount
+              #(if *unit-warnings-are-errors*
+                  (do
+                   ; (print "true branch validation")
+                    (number? (spec/unform ::number-or-amount %)))
+                  (do
+                   ; (print "false branch validation")
+                    true)))
+    (fn []
+      (if *unit-warnings-are-errors*
+             (spec/gen number?)
+             (do
+              ; (print "false branch generator")
+               (spec/gen ::number-or-amount))
+             ))))
+;;
+;; the "print statement analysis" shows that we correctly employ the
+;; `false branch' generator when we rebind, but then in the function
+;; `gensub` of `spec.clj` there's a second-pass `(valid? spec %)` that
+;; chooses the true branch for validation (it doesn't see the rebinding!)
+
+;; Now, if we `(alter-var-root #'*unit-warnings-are-errors* (constantly false))
+;; at the repl then we get the generator behaviour we want on rebinding... because
+;; statefulness is magic... but even then (exercise-fn `zero?) fails anyway.
+;; NOT WORTH IT.
+
 
 ;; ## Comparisons
 
@@ -89,9 +139,7 @@
                     "\n Units2 added doc: " warning)
         ]
 `(do
-   (spec/fdef ~cmp :args (spec/and
-                            ::numbers-or-compatible-amounts
-                            #(not (empty? %)))
+   (spec/fdef ~cmp :args ::some-numbers-or-compatible-amounts
                    :ret boolean?)
    (defn ~cmp ~docstr [& ~args]
       (cond
@@ -121,19 +169,7 @@
                     "\n Units2 added doc:" warning)]
   `(do
     (spec/fdef ~sgn
-      :args
-        ; depending on the dynamical variable *unit-warnings-are-errors*,
-        ; what the inputs
-        ; this is kind of ugly, we'll need to help the spec generator
-        (spec/with-gen
-           (fn [~b]
-             (if *unit-warnings-are-errors*
-                 (number? ~b)
-                 (spec/valid? ::number-or-amount ~b)))
-           (fn []
-             (if *unit-warnings-are-errors*
-               (spec/gen number?)
-               (spec/gen ::number-or-amount))))
+      :args ::number-unless-safety-is-off
       :ret boolean?)
     (defn ~sgn ~docstr [~a]
       (if (amount? ~a)
@@ -146,10 +182,10 @@
 (defsgn pos? clojure.core/pos?)
 (defsgn neg? clojure.core/neg?)
 
+;; We get  `(binding [units2.ops/*unit-warnings-are-errors* false] (spec/valid? (:args (spec/get-spec `zero?)) (m 7)))`
+;; but not `(binding [units2.ops/*unit-warnings-are-errors* false] (gen/sample (spec/gen :units2.ops/number-unless-safety-is-off)))`
 
-; TODO: add error throws for incompatibility.
-
-(spec/fdef min :args ::numbers-or-compatible-amounts
+(spec/fdef min :args ::some-numbers-or-compatible-amounts
                :ret  ::number-or-amount)
 
 (defn min
@@ -160,7 +196,7 @@
     (apply clojure.core/min args)
     ))
 
-(spec/fdef max :args ::numbers-or-compatible-amounts
+(spec/fdef max :args ::some-numbers-or-compatible-amounts
                :ret  ::number-or-amount)
 
 (defn max
@@ -233,9 +269,9 @@
       (clojure.core/+ a b)))
     ([a b & rest] (reduce + (conj rest a b))))
 
-;(spec/fdef - :args ... :ret (spec/or :units2.core/amount number?))
 
-(spec/fdef - :args ::numbers-or-compatible-amounts :ret ::number-or-amount)
+(spec/fdef - :args ::some-numbers-or-compatible-amounts
+             :ret ::number-or-amount)
 
 (defn -
   ([] (clojure.core/-)) ; zero arity explicitly an error, but let Clojure catch this.
@@ -274,7 +310,12 @@
   ([a b & rest] (* a (apply * b rest))))
 
 (spec/fdef /
-  :args (spec/+ (spec/or :amount :units2.core/amount :number number?))
+  :args (spec/and (spec/+ ::number-or-amount)
+                  (fn [x] ; also: don't divide by zero!!!
+                    (binding [*unit-warnings-are-errors* false]
+                      (if (empty? (rest x))
+                        (not (zero? (spec/unform ::number-or-amount (first x))))
+                        (every? #(not (zero? (spec/unform ::number-or-amount %))) (rest x))))))
   :ret (spec/or :amount :units2.core/amount :number number?)
   ; :fn (if (every? number? args), returns a number, else an amount)
   )
@@ -291,10 +332,7 @@
     (clojure.core// a b)))
   ([a b & rest] (/ a (apply * b rest))))
 
-(spec/fdef divide-into-double :args (spec/and ::compatible-amounts
-                                              #(clojure.core/== 2 (count %))
-                                              ;#(linear? (getConverter (getUnit (first %) (getUnit (second %)))))
-                                              )
+(spec/fdef divide-into-double :args ::two-linear-units-second-nonzero
                               :ret double?)
 
 (defn divide-into-double
@@ -309,7 +347,6 @@
       (throw (IllegalArgumentException. (str "divide-into-double requires two amounts with linearly related units! (`" a "' and `" b "' provided)")))))
 
 ;;   Modular arithmetic interacts nontrivially with rescalings of units.
-
 ;;   Consider the following:
 ;;   <pre><code>
 ;; (let [a (->amount 2.5 meter)
@@ -322,7 +359,6 @@
 ;;     (== (rem a c)
 ;;         (rem b c)))) ; FALSE
 ;;   </code></pre>
-
 (defmacro defratio [ratio clojureratio]
   (let [a (gensym) b (gensym)
         warning "Modular arithmetic interacts nontrivially with rescalings of units."
@@ -330,7 +366,7 @@
                     "\n Units2 added doc: " warning)
         ]
  `(do
-    ;;(spec/fdef ~ratio :args [a b] :ret (spec/or :units2.core/amount number?))
+    (spec/fdef ~ratio :args ::two-linear-units-second-nonzero :ret (spec/or :units2.core/amount number?))
     (defn ~ratio ~docstr [~a ~b]
     (if (amount? ~a)
       (do
@@ -362,8 +398,13 @@
 
 ;; ## Powers and Exponentiation
 
-(spec/fdef expt :args (spec/tuple :units2.core/amount integer?) :ret :units2.core/amount)
-; specify that we can't divide by zero!!!
+(spec/fdef expt :args (spec/and (spec/tuple :units2.core/amount integer?)
+                                (fn [[base exponent]]
+                                  (if (<= 0 exponent)
+                                    true
+                                    (binding [*unit-warnings-are-errors* false]
+                                      (not (zero? base))))))
+                :ret :units2.core/amount)
 
 (defn expt
   "`(expt b n) == b^n`
@@ -382,12 +423,7 @@
   (let [a (gensym) b (gensym)
         docstr (str "`" (str expt) "` is only sensible for dimensionless quanities.")
         ]
-    `(do
-       (spec/fdef ~expt ;:args (spec/or :arity1 (spec/or :amount :units2.core/amount :number number?)
-                        ;               :arity2 (spec/tuple :units2.core/amount :units2.core/amount))
-                                       ;these units must be linearly related!!!
-                        :ret double?)
-       (defn ~expt ~docstr
+    `(defn ~expt ~docstr
        ([~a]
          (if (amount? ~a)
            (do
@@ -397,11 +433,15 @@
        ([~a ~b]
         (if (every? amount? [~a ~b])
           (~cljexpt (divide-into-double ~a ~b))
-          (throw (IllegalArgumentException. (str "Arity-2 " ~expt " requires two amounts! (" ~a " and " ~b " provided)")))))))))
+          (throw (IllegalArgumentException. (str "Arity-2 `" ~expt "` requires two amounts! (" ~a " and " ~b " provided)"))))))))
+
+; def specs separately (for function ranges!)
 
 (defexpt exp   Math/exp)
 (defexpt log   Math/log)
 (defexpt log10 Math/log10)
+
+(spec/fdef pow :ret double?)
 
 (defn pow
   ([a b]
@@ -410,8 +450,10 @@
         (warn "pow interacts nontrivially with rescalings of units.")
         (Math/pow (getValue a (getUnit a)) b))
       (Math/pow a b)))
-  ([a b c] ;; TODO: check that (every amount? [a b])
-   (Math/pow (divide-into-double a b) c)))
+  ([a b c]
+     (if (and (amount? a) (amount? b))
+       (Math/pow (divide-into-double a b) c)
+       (throw (IllegalArgumentException. (str "Arity-2 `pow` requires two amounts! (" a " and " b " provided)"))))))
 
 (defmacro with-unit-expts
 "Locally rebinds exponentiation functions to unit-aware equivalents."
@@ -432,7 +474,7 @@
         docstr (str "`" mgn "` is only sensible for dimensionless quantities.")
         ]
     `(do
-       ;(spec/fdef ~mgn :args :ret)
+       ;(spec/fdef ~mgn :args :ret :fn)
        (defn ~mgn ~docstr
        ([~a]
          (if (amount? ~a)
