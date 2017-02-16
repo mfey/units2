@@ -7,9 +7,6 @@
 
 ;; In order to define SI prefixes and maintain compatibility with imports from the javax library, we don't use `defbaseunit` as often as I'd like... so we need to generate specs manually.
 
-;(defmacro mk-spec [kw baseunit]
-;  `(spec/def ~kw (spec/and :units2.core/amount #(compatible? (getUnit %) ~baseunit))))
-
 (defmacro mk-spec [kw baseunit]
   `(do
     (spec/def ~kw (spec/with-gen
@@ -29,7 +26,7 @@
 
 ;; ## Time [T]
 
-;; Seconds are not shortened to `s` as in the SI because `ns` is the Clojure namspace macro. The astrophysical sec is `arcsec`.
+;; Seconds are not shortened to `s` as in the SI because `ns` (nanosecond) is already the Clojure namspace macro. The astrophysical unit of angle sec is `arcsec`.
 
 (defunit-with-SI-prefixes sec (->IFnUnit SI/SECOND))
 (mk-spec ::time sec)

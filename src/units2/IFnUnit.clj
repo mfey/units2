@@ -58,7 +58,7 @@
                             (number? x) (new units2.core.amount x this)))
   (invoke [this x] (apply this [x]))
   ; higher arity invoke/apply should NOT be defined. Use `map' to avoid silly nonsense.
-  ; this is independent of the IFnUnit implementation, but does depend on units2.core.amount so it can't be moved below.
+  ; this is independent of the IFnUnit implementation, but does depend on units2.core.amount.
 
   Object
   (toString [this] (.toString javax-unit))

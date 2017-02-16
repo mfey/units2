@@ -49,7 +49,7 @@ There's a **tutorial** to help get started with the library, and some example co
 
 No Clojure library is complete without a bit of etymology (https://xkcd.com/1012/).
 
-Alteration of *unity*, from Old French *unite* ("uniqueness, oneness", c. 1200), from the Latin *unitas* (cf. below), itself derived from *unus* ("one"). *Unit* was popularized by the English translation of Euclid's Elements (1570), to express the Greek *monos* ("unique, solitary"). Extended sense of "a quantity adopted as a standard of measure" is from 1738.
+Alteration of *unity*, from Old French *unite* ("uniqueness, oneness", c. 1200), from the Latin *unitas* (cf. below), itself derived from *unus* ("one"). *Unit* was popularized by the English translation of Euclid's Elements (1570), to express the Greek *monos* ("unique, solitary"). Extended sense of "a quantity adopted as a standard of measure" is from [1738](https://books.google.com/ngrams/graph?content=unit%2Cmeasure%2Cquantity&year_start=1720&year_end=2010&corpus=15&smoothing=3&share=&direct_url=t1%3B%2Cunit%3B%2Cc0%3B.t1%3B%2Cmeasure%3B%2Cc0%3B.t1%3B%2Cquantity%3B%2Cc0).
 
 Originally *unitas*, *unitatis*, (f), "oneness, sameness, agreement". More explicitly:
 
@@ -57,9 +57,6 @@ Originally *unitas*, *unitatis*, (f), "oneness, sameness, agreement". More expli
 2. quantity considered as an elementary piece for constructing all others
 3. quantity chosen as a term of comparison, to evaluate others of the same sort
 4. conformity of sentiment, accord, harmony
-
-
-<iframe name="ngram_chart" src="https://books.google.com/ngrams/interactive_chart?content=unit%2Cmeasure%2Cquantity&year_start=1720&year_end=2008&corpus=15&smoothing=3&share=&direct_url=t1%3B%2Cunit%3B%2Cc0%3B.t1%3B%2Cmeasure%3B%2Cc0%3B.t1%3B%2Cquantity%3B%2Cc0" width=900 height=500 marginwidth=0 marginheight=0 hspace=0 vspace=0 frameborder=0 scrolling=no></iframe>
 
 ## Roadmap / TODO
 
