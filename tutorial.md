@@ -99,7 +99,7 @@ The `expt` function (borrowing the name of `pow` in the LISP language Scheme) is
 
 # Defining Custom IFnUnits
 
-`units2.astro` and `units2.bake` obviously don't contain each and every unit you might encounter when working with Clojure. Fortunately, it's easy to create your own IFnUnits (either at the top level of a namespace if you need them often, or just within a `let` scope if you don't).
+`units2.astro` obviously doesn't contain each and every unit you might encounter when working with Clojure. Fortunately, it's easy to create your own IFnUnits (either at the top level of a namespace if you need them often, or just within a `let` scope if you don't).
 
 ## core
 

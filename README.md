@@ -38,9 +38,8 @@ The aims of `units2` are to be highly expressive, unintrusive, and easy to use. 
     + as namespace-qualified symbols (idiomatic clojure), and
     + within the scope of a context-creating macro (idiomatic in any lisp)
 + Dimensional analysis can be extended by the user (even at runtime!)
-+ Automatic 'unitification' of numerical differentiation and integration schemes.
 
-This library also respects the distinction between the algebra on quantities with units and the algebra on units themselves. This is an important prerequisite for dimensional analysis, nonlinear unit conversions (e.g. celsius-fahrenheit).
+This library also respects the distinction between the algebra on quantities with units and the algebra on units themselves. This is an important prerequisite for dimensional analysis, nonlinear unit conversions (e.g. celsius-fahrenheit), and automatic 'unitification' of numerical differentiation and integration schemes.
 
 ## Tutorial / Sample Code / Documentation
 
