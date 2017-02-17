@@ -204,15 +204,22 @@ This feature is relevant for generatively testing functions with specs that are 
 
 ## Calculus
 
-We can do calculus with amounts by leveraging existing implementations of derivatives and integrals of functions (such as Incanter or Apache Commons). The functions in `units2.calc` handle numerical univariate calculus for any combination of regular/dimensionful quantities in the domain/range of the function.
+The functions in `units2.calc` handle numerical univariate calculus (differentiation and integration) for any combination of regular/dimensionful quantities in the domain/range of the function.
+
+If you're not too picky about which numerical algorithms are being used behind the scenes, just use `differentiate` and `integrate`:
 
     (require '[units2.calc :refer :all])
 
-    (integrate (fn [x] (* x 2)) [0 1]) ;; 1
-    (integrate (fn [x] (op/* x (sec 2))) [0 1]) ;; 1 second
-    (integrate (fn [x] (op/* x 2)) (map m [0 1])) ;; 1 square-meter
+    (integrate (fn [x] (* x 2)) [0 1] []) ;; 1
+    (integrate (fn [x] (op/* x (sec 2))) [0 1] []) ;; 1 second
+    (integrate (fn [x] (op/* x 2)) (map m [0 1]) []) ;; 1 square-meter
 
-    (differentiate (fn [x] (op/* x x (m 2))) 1) ;; 4 meters
+    (differentiate (fn [x] (op/* x x (m 2))) 1 []) ;; 4 meters
+
+The extra `[]` are for sending extra arguments to the default algorithms (from `Incanter.optimize`).
+
+If you want to use a different algorithm, it's easy to wrap the algebra of units around existing implementations using the functions `decorate-differentiator` and `decorate-integrator`. Examples are provided in the source of `units2.calc`.
+
 
 ## Extending the protocols
 

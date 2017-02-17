@@ -2947,98 +2947,94 @@ net.brehaut.ClojureTools = (function (SH) {
 <ol>
 <li>that the values in <code>amount</code> are sensible numbers.</li>
 <li>that the units in <code>amount</code> have an implementation of <code>getConverter</code> (but not necessarily a full implementation of the <code>Unitlike</code> protocol) in order to use <code>getValue</code>.</li>
-<li>nothing else.</li>
+<li>nothing else (not even arithmetic from <code>units2.ops</code>)!</li>
 </ol>
 
-<p>As such, it should be fairly easy to reuse most of this code for other implementations.</p>
+<p>As such, it should be trivial to reuse this code for other implementations.</p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns units2.calc
   (:require [units2.core :refer :all]
-            [units2.ops :as ops]
-            [incanter.optimize :as optim])
-  (:import (org.apache.commons.math3.analysis UnivariateFunction)
-           (org.apache.commons.math3.analysis.integration RombergIntegrator)))</pre></td></tr><tr><td class="docs"><h2>Differentiation</h2>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>Differentiate a function along it's first argument, which must be numeric (other arguments, if any exist, may be supplied with :args)</p>
-</td><td class="codes"><pre class="brush: clojure">(defn- low-level-derivative
-  [f &amp; {:keys [args dx] :or {args [] dx 1e-6}}]
-  (optim/derivative (fn [x] (apply f x args)) :dx dx))</pre></td></tr><tr><td class="docs"><p>This differentiation deals with units properly. TODO: pass extra arguments...</p>
-</td><td class="codes"><pre class="brush: clojure">(defn differentiate
-  [f x &amp; {:keys [args dx] :or {args [] dx 1e-6}}]
-  (let [in  (amount? x)
-        out (amount? (f x))
-        ux  (if in  (getUnit x))
-        uf  (if out (getUnit (f x)))]
-    (cond ; choose how to differentiate based on units of input/output of f
-      (and (not in) (not out))
-         ((low-level-derivative f) x)
-      (and in out)
-         (-&gt;amount ((low-level-derivative (fn [x] (getValue  (f (-&gt;amount x ux)) uf)))
-                  (getValue x ux)) (divide uf ux))
-      (and (not in) out)
-         (-&gt;amount ((low-level-derivative (fn [x] (getValue (f x) uf))) x) uf)
-      (and in (not out))
-         (-&gt;amount ((low-level-derivative (fn [x] (f (-&gt;amount x ux)))) (getValue x ux)) (inverse ux)))))</pre></td></tr><tr><td class="docs">
+            [incanter.optimize :as optim]))</pre></td></tr><tr><td class="docs"><h2>Abstract Algebra of Units in Calculus</h2>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>i.e. Batteries-not-included logic for integrating and differentiating functions (in 1D) with units</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Notice that we're really just defining the algebra on the units here;
+the numerical heavy-lifting of actually performing derivatives and
+integrals is left to external libraries and/or user-defined schemes.</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn make-differentiator [numerical-differentiation-scheme] ; the scheme is a function (scheme f x args) -&gt; (df/dx x) that doesn't know about units.
+  (fn [f x args] ; f is the function to be differentiated at a position x (with possible extra args to the scheme)
+    (let [scheme numerical-differentiation-scheme
+          in  (amount? x)
+          out (amount? (f x))
+          ux  (if in  (getUnit x))
+          uf  (if out (getUnit (f x)))]
+      (cond ; choose how to differentiate based on units of input/output of f
+        (and (not in) (not out))
+           (scheme f x args)
+        (and in out)
+           (-&gt;amount (scheme (comp (from uf) f ux) (getValue x ux) args)
+                     (divide uf ux))
+        (and (not in) out)
+           (-&gt;amount (scheme (comp (from uf) f) x args)
+                     uf)
+        (and in (not out))
+           (-&gt;amount (scheme (comp f ux) (getValue x ux) args)
+                     (inverse ux))))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn make-integrator [numerical-integration-scheme] ; the scheme is a function (scheme f [xmin xmax] args) -&gt; (- (F xmax) (F xmin)) that doesn't know about units.
+  (fn [f [xmin xmax] args] ; f is the function to be integrated from xmin to max (with possible extra args to the scheme)
+    (let [scheme numerical-integration-scheme
+          in  (amount? xmin)           ; check whether inputs/outputs
+          out (amount? (f xmin))       ; of the integrand function have
+          ux  (if in  (getUnit xmin))  ; any units; if so, extract them
+          uf  (if out (getUnit (f xmin)))] ;
+      (cond ; choose how to integrate based on units of input/output of f
+        (and (not in) (not out))
+           (scheme f [xmin xmax] args)
+        (and in out)
+           (-&gt;amount (scheme (comp (from uf) f ux) [(getValue xmin ux) (getValue xmax ux)] args)
+                     (times uf ux))
+        (and in (not out))
+           (-&gt;amount (scheme (comp f ux) [(getValue xmin ux) (getValue xmax ux)] args)
+                     ux)
+        (and (not in) out)
+           (-&gt;amount (scheme (comp (from uf) f) [xmin xmax] args)
+                     uf)))))</pre></td></tr><tr><td class="docs"><h2>Concrete Differentiation</h2>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>(using Incanter)</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def differentiate
+  (make-differentiator
+    (fn [f x args]
+      ((optim/derivative (fn [x] (apply f x args))) x))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn derivative [f]
-  (fn [x] (differentiate f x)))</pre></td></tr><tr><td class="docs"><h2>Integration</h2>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>Integrate a function along its first argument, which must be numeric (other arguments, if any exist, may be supplied with :args)</p>
-</td><td class="codes"><pre class="brush: clojure">(defn- low-level-integrate
-  [f [mini maxi] args maxeval integrator]
-  (case integrator
-    :mapreduce
-      (let [step (/ (- maxi mini) maxeval)]
-        (* (apply + (map f (range mini maxi step))) step))
-    :incanter
-      (optim/integrate (fn [x] (apply f x args)) mini maxi)
-    :Romberg
-     (.integrate (RombergIntegrator.) maxeval (proxy [UnivariateFunction] [] (value [x] (apply f x args))) mini maxi)))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(low-level-integrate (fn [x] (* 2 x)) [0 10] [] 30 :Romberg)</pre></td></tr><tr><td class="docs"><p>This integration function deals with units properly.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn- integrate-with-units
-  [f [mini maxi] &amp; {:keys [args maxeval integrator] :or {args [] maxeval 1e6 integrator :Romberg}}]
-  (let [in  (amount? mini)           ; check whether inputs/outputs
-        out (amount? (f mini))       ; of the integrand function have
-        ux  (if in  (getUnit mini))  ; any units; if so, extract them
-        uf  (if out (getUnit (f mini)))] ;
-    (cond ; choose how to integrate based on units of input/output of f
-      (and (not in) (not out))
-         (low-level-integrate f [mini maxi] args maxeval integrator)
-      (and in out)
-         (ops/* (low-level-integrate (fn [^double x] (getValue (f (-&gt;amount x ux)) uf)) [(getValue mini ux) (getValue maxi ux)] args maxeval integrator)
-                (-&gt;amount 1 uf)
-                (-&gt;amount 1 ux))
-      (and in (not out))
-         (-&gt;amount (low-level-integrate (fn [^double x] (f (-&gt;amount x ux))) [(getValue mini ux) (getValue maxi ux)] args maxeval integrator)
-                 ux)
-      (and (not in) out)
-         (-&gt;amount (low-level-integrate (fn [^double x] (getValue (f x) uf)) [mini maxi] args maxeval integrator)
-                 uf))))</pre></td></tr><tr><td class="docs"><p>the number of options available is getting out of hand... pass a hash of options instead?</p>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>This integration function deals with logarithmic ranges and units properly at the same time...</p>
-</td><td class="codes"><pre class="brush: clojure">(defn integrate
-  [f [mini maxi] &amp; {:keys [args maxeval integrator log] :or {args [] maxeval 1e6 integrator :Romberg log false}}]
-  (if (not log)
-      (integrate-with-units f [mini maxi] :args args :maxeval maxeval :integrator integrator)
-    ;; TODO: throw exception if negative or zero integration bounds...
-      (let [in  (amount? mini)           ; check whether inputs/outputs
-            out (amount? (f mini))       ; of the integrand function have
-            ux  (if in  (getUnit mini))  ; any units; if so, extract them
-            uf  (if out (getUnit (f mini)))
-            ; force the integration to happen without units (we'll recover them later)
-            lmini (Math/log (if in (getValue mini ux) mini))
-            lmaxi (Math/log (if in (getValue maxi ux) maxi))
-            lf  (if in
-                  (fn [y] (ops/* (Math/exp y) (f (-&gt;amount (Math/exp y) ux))))
-                  (fn [y] (ops/* (Math/exp y) (f (Math/exp y)))))
-            i (integrate-with-units lf [lmini lmaxi] :args args :maxeval maxeval :integrator integrator)
-            ]
-        ; now recover the units
-        (cond
-          (and (not in) (not out))
-             i
-          (and in out)
-             (ops/* (-&gt;amount 1 ux) i)
-          (and in (not out))
-             (-&gt;amount i ux)
-          (and (not in) out)
-             i))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#units2.core" name="units2.core"><h1 class="project-name">units2.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+  (fn [x] (differentiate f x)))</pre></td></tr><tr><td class="docs"><h2>Concrete Integration</h2>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>(naive)</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def naive-integrate
+  (make-integrator
+    (fn [f [xmin xmax] [maxeval]]
+      (let [step (/ (- xmax xmin) maxeval)]
+        (* (apply + (map f (range xmin xmax step))) step)))))</pre></td></tr><tr><td class="docs"><p>(naive-integrate #(* % 2) [1 2] [1e3])</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>(using Incanter)</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def incanter-integrate
+  (make-integrator
+    (fn [f [xmin xmax] args]
+      (optim/integrate (fn [x] (apply f x args)) xmin xmax))))</pre></td></tr><tr><td class="docs"><p>(incanter-integrate #(* % 2) [1 2] [])</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>(using Apache Commons)</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def apache-integrate
+  (make-integrator
+    (fn [f [xmin xmax] [integrator-object maxeval more-args]]
+      (.integrate integrator-object maxeval
+                  (proxy
+                    [org.apache.commons.math3.analysis.UnivariateFunction]
+                    []
+                    (value [x] (apply f x more-args)))
+                  xmin xmax))))</pre></td></tr><tr><td class="docs"><p>(apache-integrate #(* % 2) [1 2]
+                 [(org.apache.commons.math3.analysis.integration.RombergIntegrator.)
+                  1e4
+                  []])</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def integrate incanter-integrate)</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#units2.core" name="units2.core"><h1 class="project-name">units2.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns units2.core
   (:require [clojure.spec :as spec]))</pre></td></tr><tr><td class="docs"><p><code>Dimensionful</code> values are values that 'have a unit'. Their unit can be inspected (<code>getUnit</code>) and they can be converted into other units (<code>to</code>).</p>
 </td><td class="codes"><pre class="brush: clojure">(defprotocol Dimensionful
@@ -3278,8 +3274,8 @@ and protocol dispatch (nice, fast) rather than java interop and reflection (ugly
 (Math/pow (divide-into-double a b) c)
 </code></pre></li>
 </ol>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>TODO: fix docstrings
-TODO: add/fix function specs</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><h3>TODO: fix docstrings</h3>
+</td><td class="codes"></td></tr><tr><td class="docs"><h3>TODO: add/fix function specs</h3>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns units2.ops
   ;redefinitions imminent! `:exclude` turns off some WARNINGS.
@@ -3380,7 +3376,7 @@ consistently throwing exceptions seems like the safer route.</p>
   (let [args (gensym)
         warning &quot;It makes no sense to compare values in incompatible units!&quot;
         docstr (str &quot;Official Clojure doc: &quot; (eval `(:doc (meta (var ~cljcmp))))
-                    &quot;\n Units2 added doc: &quot; warning)
+                    &quot;\nUnits2 added doc: &quot; warning)
         ]
 `(do
    (spec/fdef ~cmp :args ::some-numbers-or-compatible-amounts
@@ -3405,7 +3401,7 @@ consistently throwing exceptions seems like the safer route.</p>
   (let [a (gensym)
         warning &quot; interacts nontrivially with rescalings/offsets of units.&quot;
         docstr (str &quot;Official Clojure doc: &quot; (eval `(:doc (meta (var ~cljsgn))))
-                    &quot;\n Units2 added doc:&quot; warning)]
+                    &quot;\nUnits2 added doc:&quot; warning)]
   `(do
     (spec/fdef ~sgn
       :args ::number-unless-safety-is-off
@@ -3420,7 +3416,7 @@ consistently throwing exceptions seems like the safer route.</p>
 (defsgn pos? clojure.core/pos?)
 (defsgn neg? clojure.core/neg?)</pre></td></tr><tr><td class="docs"><p>(zero? 0)</p>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>(spec/exercise (:args (spec/get-spec `units2.ops/pos?)))</p>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>We get  <code>(binding [units2.ops/*unit-warnings-are-errors* false] (spec/valid? (:args (spec/get-spec</code>zero?)) (m 7)))`
+</td><td class="codes"></td></tr><tr><td class="docs"><p>We get  <code>(binding [units2.ops/*unit-warnings-are-errors* false] (spec/valid? (:args (spec/get-spec units2.ops/zero?)) (m 7)))</code>
 but not <code>(binding [units2.ops/*unit-warnings-are-errors* false] (gen/sample (spec/gen :units2.ops/number-unless-safety-is-off)))</code></p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(spec/fdef min :args ::some-numbers-or-compatible-amounts
@@ -3571,7 +3567,7 @@ with the comment "If you're willing to do that, you should be prepared for users
   (let [a (gensym) b (gensym)
         warning &quot;Modular arithmetic interacts nontrivially with rescalings of units.&quot;
         docstr (str &quot;Official Clojure doc: &quot; (eval `(:doc (meta (var ~clojureratio))))
-                    &quot;\n Units2 added doc: &quot; warning)
+                    &quot;\nUnits2 added doc: &quot; warning)
         ]
  `(do
     (spec/fdef ~ratio :args ::two-linear-units-second-nonzero :ret (spec/or :units2.core/amount number?))

@@ -5,9 +5,9 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.9.0-alpha10"]
                  [clj-science/jscience "4.3.1"]
-                 [org.apache.commons/commons-math3 "3.5"]
+                 [org.apache.commons/commons-math3 "3.5"] ; optional: for integrals
                  [org.clojure/test.check "0.9.0"]
-                 [incanter "1.5.6"]]
+                 [incanter "1.5.6"]] ; optional: for derivatives/integrals
   :plugins [[lein-marginalia "0.9.0"]
             ]
 )

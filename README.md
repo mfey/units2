@@ -32,18 +32,19 @@ The aims of `units2` are to be highly expressive, unintrusive, and easy to use. 
 
 + A lispy syntax for first-class units that you can `map`, `comp`, etc.
 + New units can be defined
-    + in namespaces that collect them by application, and
+    + in reusable namespaces that collect them by application, and
     + at runtime, anonymously, even within local scope
 + Augmented math ops (`+`,`-`,`*`,`/`, etc.), accessible
     + as namespace-qualified symbols (idiomatic clojure), and
     + within the scope of a context-creating macro (idiomatic in any lisp)
 + Dimensional analysis can be extended by the user (even at runtime!)
++ Automatic 'unitification' of numerical differentiation and integration schemes.
 
-This library also respects the distinction between the algebra on quantities with units and the algebra on units themselves. This is an important prerequisite for dimensional analysis and for nonlinear unit conversions (e.g. celsius-fahrenheit).
+This library also respects the distinction between the algebra on quantities with units and the algebra on units themselves. This is an important prerequisite for dimensional analysis, nonlinear unit conversions (e.g. celsius-fahrenheit).
 
 ## Tutorial / Sample Code / Documentation
 
-There's a **tutorial** to help get started with the library, and some example code in `spice.clj`. Also, some effort was put into writing readable, well-commented code, so please read the Marginalia (html) output in `docs/`!
+There's a **tutorial** to help get started with the library, and some example code in `spice.clj`. There's also a summary of the API (more of a cheatsheet really). Some effort was put into writing readable, well-commented code, so please read the Marginalia (html) output in `docs/`!
 
 ## Etymology of *Unit*
 

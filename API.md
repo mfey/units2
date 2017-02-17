@@ -123,3 +123,13 @@ Returns the given amount raised to the given integer power.
 #### abs, floor, ceil, round
 
 Functions
+
+## units2.calc
+
+### decorate-differentiator, decorate-integrator
+
+Higher-order functions for wrapping the algebra of units around pre-existing differentiation and integration schemes.
+
+### differentiate, integrate
+
+Decorated versions of Incanter's derivatives and integrals that can deal with units.
