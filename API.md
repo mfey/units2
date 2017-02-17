@@ -17,7 +17,7 @@ getUnit | amount | unit | Returns the unit associated to the given amount. |
 getValue| amount, unit | double | Returns the value of the given amount in the given unit as a double (if possible). |
 to      | amount, unit | amount | Converts the given amount to the given unit (if possible) and returns it. See also `IFnUnit`. |
 
-For all `x` and all units `U`, we should have `(getValue (to x U) U) ==> x`.
+For all `x` and all units `U` for which `(to x U)` is well-defined, we should have `(getValue (to x U) U) ==> x`.
 
 ### Unitlike
 
@@ -26,6 +26,7 @@ Protocol
 Method  | arguments | output | description |
 ------: | ---- | ---- | ---- |
 compatible? | unit1, unit2 | boolean | Returns true when conversions between the two units are possible. |
+from    | unit | fn: amount -> number | Returns a function `#(getValue % unit)`.
 offset  | unit, amount | unit | Returns a unit offset by the given amount (if possible). |
 rescale | unit, number | unit | Returns a unit linearly rescaled by the given factor. |
 

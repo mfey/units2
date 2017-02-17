@@ -14,14 +14,15 @@
 ;;   2. When standard functions would give surprising behaviour in combination with units, users might inadvertently write buggy code. We provide a version of the function that issues an Exception whenever it is used on units (to force the user to think about the behaviour they want).
 ;;   3. Since most users DO know what they want, and since this is usually <pre><code> (getValue x (getUnit x)) </code></pre> these exceptions can be downgraded to warnings by rebinding `*unit-warnings-are-errors*`. Then `getValue`-`getUnit` is used. These warnings can further be silenced by rebinding `*unit-warnings-are-printed*`.
 ;;   4. For exponentiation ops, we also provide a standardised augmented-arity version that uses divide-into-double on the first two args
-;;   <pre><code>
+;;   <pre><code> ;; these two expressions are equivalent
 ;;   (pow a b c)
 ;;   (Math/pow (divide-into-double a b) c)
 ;;   </code></pre>
 ;;
 
-;; TODO: fix docstrings
-;; TODO: add/fix function specs
+;; ### TODO: fix docstrings
+
+;; ### TODO: add/fix function specs
 
 (ns units2.ops
   ;redefinitions imminent! `:exclude` turns off some WARNINGS.
@@ -133,7 +134,7 @@
 ;; `is 3 meters smaller than 5 seconds?' is a meaningless question and
 ;; shouldn't be given a boolean answer; consider for a moment the alternate
 ;; behaviour, which violates the excluded-middle-law:
-;; <pre><code>
+;; <pre><code> ;; this is ugly!
 ;; (not (< (m 4) (celcius 6)) ;; not untruthy
 ;; (>= (m 4) (celcius 6)) ;; untruthy
 ;; </code></pre>
@@ -145,7 +146,7 @@
   (let [args (gensym)
         warning "It makes no sense to compare values in incompatible units!"
         docstr (str "Official Clojure doc: " (eval `(:doc (meta (var ~cljcmp))))
-                    "\n Units2 added doc: " warning)
+                    "\nUnits2 added doc: " warning)
         ]
 `(do
    (spec/fdef ~cmp :args ::some-numbers-or-compatible-amounts
@@ -154,7 +155,7 @@
       (cond
         (every? amount? ~args)
           (if (every? #(compatible? (getUnit (first ~args)) %) (map getUnit (rest ~args)))
-            (apply ~cljcmp (map #(getValue % (getUnit (first ~args))) ~args))
+            (apply ~cljcmp (map (from (getUnit (first ~args))) ~args))
             (throw (UnsupportedOperationException. ~warning)))
         (every? #(not (amount? %)) ~args) ; includes empty argslist.
           (apply ~cljcmp ~args)
@@ -174,7 +175,7 @@
   (let [a (gensym)
         warning " interacts nontrivially with rescalings/offsets of units."
         docstr (str "Official Clojure doc: " (eval `(:doc (meta (var ~cljsgn))))
-                    "\n Units2 added doc:" warning)]
+                    "\nUnits2 added doc:" warning)]
   `(do
     (spec/fdef ~sgn
       :args ::number-unless-safety-is-off
@@ -195,7 +196,7 @@
 
 ;(spec/exercise (:args (spec/get-spec `units2.ops/pos?)))
 
-;; We get  `(binding [units2.ops/*unit-warnings-are-errors* false] (spec/valid? (:args (spec/get-spec `zero?)) (m 7)))`
+;; We get  `(binding [units2.ops/*unit-warnings-are-errors* false] (spec/valid? (:args (spec/get-spec units2.ops/zero?)) (m 7)))`
 ;; but not `(binding [units2.ops/*unit-warnings-are-errors* false] (gen/sample (spec/gen :units2.ops/number-unless-safety-is-off)))`
 
 (spec/fdef min :args ::some-numbers-or-compatible-amounts
@@ -205,7 +206,7 @@
   [& args]
   (if (amount? (first args))
     (let [U (getUnit (first args))]
-      (->amount (apply clojure.core/min (map #(getValue % U) args)) U))
+      (->amount (apply clojure.core/min (map (from U) args)) U))
     (apply clojure.core/min args)
     ))
 
@@ -216,7 +217,7 @@
   [& args]
   (if (amount? (first args))
     (let [U (getUnit (first args))]
-      (->amount (apply clojure.core/max (map #(getValue % U) args)) U))
+      (->amount (apply clojure.core/max (map (from U) args)) U))
     (apply clojure.core/max args)
     ))
 
@@ -376,7 +377,7 @@
   (let [a (gensym) b (gensym)
         warning "Modular arithmetic interacts nontrivially with rescalings of units."
         docstr (str "Official Clojure doc: " (eval `(:doc (meta (var ~clojureratio))))
-                    "\n Units2 added doc: " warning)
+                    "\nUnits2 added doc: " warning)
         ]
  `(do
     (spec/fdef ~ratio :args ::two-linear-units-second-nonzero :ret (spec/or :units2.core/amount number?))

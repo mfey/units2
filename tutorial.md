@@ -35,9 +35,11 @@ Sometimes you may want to extract the value of an amount as a regular clojure nu
 That said, the only reason to extract a value from an amount is to interact with pre-existing clojure functions. To promote functional code, we recommend the following `comp`-based wrap/unwrap idioms:
 
     (let [atan (comp rad #(Math/atan %))
-          sin  (comp #(Math/sin %) #(getValue % rad))
+          sin  (comp #(Math/sin %) (from rad))
           angle (deg 90)]
       (atan (sin angle)))
+
+where `(from <unit>)` is just syntactic sugar for `#(getValue % <unit>)`.
 
 # Mathematics with units -- the `ops` library
 

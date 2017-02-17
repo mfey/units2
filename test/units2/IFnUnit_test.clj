@@ -18,6 +18,10 @@
   (is (satisfies? Multiplicative m))
 )
 
+(deftest from-method
+  (is (fn? (from m)))
+  (is (== 1 ((from m) (m 1)) (getValue (m 1) m))))
+
 (deftest redefinitions
   (testing "rescale"
     (is (= (m (rescale m 1))))

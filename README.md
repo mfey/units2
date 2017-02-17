@@ -49,7 +49,7 @@ There's a **tutorial** to help get started with the library, and some example co
 
 No Clojure library is complete without a bit of etymology (https://xkcd.com/1012/).
 
-Alteration of *unity*, from Old French *unite* ("uniqueness, oneness", c. 1200), from the Latin *unitas* (cf. below), itself derived from *unus* ("one"). *Unit* was popularized by the English translation of Euclid's Elements (1570), to express the Greek *monos* ("unique, solitary"). Extended sense of "a quantity adopted as a standard of measure" is from [1738](https://books.google.com/ngrams/graph?content=unit%2Cmeasure%2Cquantity&year_start=1720&year_end=2010&corpus=15&smoothing=3&share=&direct_url=t1%3B%2Cunit%3B%2Cc0%3B.t1%3B%2Cmeasure%3B%2Cc0%3B.t1%3B%2Cquantity%3B%2Cc0).
+*Unit* is an alteration of *unity*, from Old French *unite* ("uniqueness, oneness", c. 1200), from the Latin *unitas* (cf. below), itself derived from *unus* ("one"). *Unit* was popularized by the English translation of Euclid's Elements (1570), to express the Greek *monos* ("unique, solitary"). Extended sense of "a quantity adopted as a standard of measure" is from 1738.
 
 Originally *unitas*, *unitatis*, (f), "oneness, sameness, agreement". More explicitly:
 
