@@ -20,6 +20,7 @@
       true (throw (Exception. "error in to-javax!"))))
 
 (deftype IFnUnit [^Unit javax-unit]
+
   Hackable
   (implementation-hook [this] javax-unit)
 
@@ -142,3 +143,88 @@
                            Y 1e24
                            ]))
      #'~name))
+
+(defmacro defunit-with-IEC-prefixes
+  "A `defunit` that also defines all IEC-prefixed units."
+  [name value]
+  `(do
+     (defunit ~name ~value) ;; Don't forget the base unit!!
+     ~@(map (fn [pre] `(defunit
+                         ~(symbol (str (first pre) name))
+                         (rescale ~name ~(second pre))))
+            (partition 2 '[Ki (Math/pow 1024 1)
+                           Mi (Math/pow 1024 2)
+                           Gi (Math/pow 1024 3)
+                           Ti (Math/pow 1024 4)
+                           Pi (Math/pow 1024 5)
+                           Ei (Math/pow 1024 6)
+                           Zi (Math/pow 1024 7)
+                           Yi (Math/pow 1024 8)
+                           ]))
+     #'~name))
+
+;; FUTURE:
+;; ; Define U = (* a (- U0 b)) so that rescalings are trivial.
+
+;; (deftype IFnUnit [scaling offset dimension stringname]
+;;   Hackable
+;;   (implementation-hook [this] [scaling offset dimension stringname])
+
+;;   Unitlike
+;;   (getDimension [this] dimension)
+;;   (compatible? [this that] (= dimension (getDimension that)))
+;;   (getConverter [this that]
+;;     (if (compatible? this that)
+;;       (let [that-scaling (first (implementation-hook that))
+;;             that-offset  (second (implementation-hook that))]
+;;         (fn [x] (* that-scaling (+ (/ x scaling) offset (- that-offset)))))
+;;       (throw (UnsupportedOperationException. (str "The units `" this "' and `" that "' are not compatible, no conversion exists.")))))
+;;   (from [this]
+;;     (fn [a]
+;;       (if (amount? a)
+;;         (getValue a this)
+;;         (throw (Exception. (str "Expected an amount with dimension " (getDimension this) " (" a " provided)"))))))
+;;   (rescale [this x]
+;;     (if (and (number? x) (not (zero? x)))
+;;       (new IFnUnit (/ scaling x) offset dimension "")
+;;       (throw (IllegalArgumentException. (str "Units can only be rescaled by nonzero-numbers without units (" x " provided)")))))
+;;   (offset [this a]
+;;     (if (and (amount? a) (compatible? this (getUnit a)))
+;;       (let [base (new IFnUnit 1 0 dimension "")
+;;             x (getValue a base)]
+;;         (if (zero? x)
+;;           this
+;;           (new IFnUnit scaling (+ offset x) dimension "")))
+;;       (throw (IllegalArgumentException. (str "Units can only be offset by amounts with compatible units (" a " provided)")))))
+
+;;   clojure.lang.IFn
+;;   (applyTo [this [x]] (cond (satisfies? Dimensionful x) (to x this)
+;;                             (number? x) (new units2.core.amount x this)))
+;;   (invoke [this x] (apply this [x]))
+;;   ;; higher arity invoke/apply should NOT be defined. Use `map' to avoid silly nonsense.
+;;   ;; this is independent of the IFnUnit implementation, but does depend on units2.core.amount.
+
+;;   Object
+;;   (toString [this]
+;;     (if (empty? stringname)
+;;      (str [scaling offset dimension])
+;;       stringname))
+
+;;   Multiplicative
+;;   TODO -- probably requires rethinking the above!!!
+;; )
+
+
+;; ;; The above works now, but isn't "multiplicative" yet... so, it doesn't work with `ops'.
+;; (def K (new IFnUnit 1 0 {(Dimension. \T) 1} "K"))
+;; (def R (rescale K 5/9))
+;; (def C (offset K (K 273.15)))
+;; (def F (offset R (R 459.67)))
+
+;; (R (K 0))
+;; (F (K 0))
+;; (C (K 0))
+
+;; (F (C 37.8))
+;; (C (F 0))
+;; (F (C 0))

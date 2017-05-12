@@ -24,6 +24,12 @@
 (defunit-with-SI-prefixes pc (->IFnUnit NonSI/PARSEC))
 (defunit AU (->IFnUnit NonSI/ASTRONOMICAL_UNIT))
 
+;; Imperial units
+(defunit inch (->IFnUnit NonSI/INCH))
+(defunit foot (->IFnUnit NonSI/FOOT))
+(defunit yard (rescale foot 3))
+(defunit mile (->IFnUnit NonSI/MILE))
+
 ;; ## Time [T]
 
 ;; Seconds are not shortened to `s` as in the SI because `ns` (nanosecond) is already the Clojure namspace macro. The astrophysical unit of angle sec is `arcsec`.
@@ -87,6 +93,41 @@
 ;; full 3-sphere (physically unnecessary but enlightening)
 (defunit glome (rescale (power rad 3) (solidangle 4)))
 
+;; ## Data Amount
+
+(defunit-with-IEC-prefixes b (->IFnUnit SI/BIT))
+(defunit-with-IEC-prefixes o (rescale b 8)) ; octet, not byte.
+; If your byte is 8 bits, you can just `(defunit-with-IEC-prefixes B o)` locally.
+
+;; ## Index
+
+; Etymologically, `first` is a contraction of `foremost` and `second` comes from the latin `sequor` (to follow)...
+; so our beloved zero-based convention is consistent with etymology (if not with common usage)
+
+(defbaseunit zerobased ::index) ; foremost element is "zero" (C/LISP convention)
+(defunit onebased (offset zerobased (zerobased -1))) ; foremost element is "one" (Fortran/naive convention)
+
+; TODO: (define nth [ls i] (clojure-nth ls (if (amount? i) (getValue i zerobased) i))) ; default to LISP convention
+
+
+;; ## Redshifts
+
+;; These can be given as z or as 1+z, both are useful in cosmology. Unitizing the `+1` is probably overkill, but not having to worry about which convention is used in function args is totally worth it.
+(defbaseunit zee ::redshift)
+(defunit onepluszee (offset zee (zee -1)))
+
+
+
+
+
+
+
+
+
+
+
+
+
 ;; ## Velocity [L/T]
 
 (defunit lightspeed (->IFnUnit NonSI/C))
@@ -116,11 +157,6 @@
 (defunit SpectralFlux (unit-from-powers {cm -2 sec -1 GeV -1}))
 (defunit SpectralIntensity (unit-from-powers {cm -2 sec -1 sr -1 GeV -1}))
 
-;; ## Redshifts
-
-;; These can be given as z or as 1+z, both are useful in cosmology. Unitizing the `+1` is probably overkill, but not having to worry about which convention is used in function args is totally worth it.
-(defbaseunit zee ::redshift)
-(defunit onepluszee (offset zee (zee -1)))
 
 ;; ## No units
 

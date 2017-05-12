@@ -20,9 +20,11 @@
 ;;   </code></pre>
 ;;
 
-;; ### TODO: fix docstrings
+;; ### TODO: add/fix docstrings (exp, log, log10, pow)
 
-;; ### TODO: add/fix function specs
+;; ### TODO: add/fix function specs (exp, log, log10, abs, floor, ceil, round)
+
+;; ### TODO: Improve errors (min, max, ...)
 
 (ns units2.ops
   ;redefinitions imminent! `:exclude` turns off some WARNINGS.
@@ -96,7 +98,7 @@
 ;; but the generator only returns numbers (no amounts), so we can't generatively
 ;; test the `unsafe' behaviour. This kind of defeats the purpose of generative
 ;; tests, but turning the safety off isn't something I'd recommend to users.
-;; On the downside,
+;;
 (spec/def ::number-unless-safety-is-off
   (spec/with-gen
     (spec/and ::number-or-amount
@@ -146,18 +148,20 @@
   (let [args (gensym)
         warning "It makes no sense to compare values in incompatible units!"
         docstr (str "Official Clojure doc: " (eval `(:doc (meta (var ~cljcmp))))
-                    "\nUnits2 added doc: " warning)
+                    "\n  Units2 added doc: " warning)
         ]
 `(do
    (spec/fdef ~cmp :args ::some-numbers-or-compatible-amounts
                    :ret boolean?)
    (defn ~cmp ~docstr [& ~args]
       (cond
+        (empty? ~args)
+          (~cljcmp) ;; get the same edge case as regular clojure
         (every? amount? ~args)
           (if (every? #(compatible? (getUnit (first ~args)) %) (map getUnit (rest ~args)))
             (apply ~cljcmp (map (from (getUnit (first ~args))) ~args))
             (throw (UnsupportedOperationException. ~warning)))
-        (every? #(not (amount? %)) ~args) ; includes empty argslist.
+        (every? #(not (amount? %)) ~args) ; empty argslist caught above (to get the same Exception subclass).
           (apply ~cljcmp ~args)
         true
           (throw (UnsupportedOperationException. ~warning)))))))
@@ -175,7 +179,7 @@
   (let [a (gensym)
         warning " interacts nontrivially with rescalings/offsets of units."
         docstr (str "Official Clojure doc: " (eval `(:doc (meta (var ~cljsgn))))
-                    "\nUnits2 added doc:" warning)]
+                    "\n  Units2 added doc:" warning)]
   `(do
     (spec/fdef ~sgn
       :args ::number-unless-safety-is-off
@@ -199,26 +203,35 @@
 ;; We get  `(binding [units2.ops/*unit-warnings-are-errors* false] (spec/valid? (:args (spec/get-spec units2.ops/zero?)) (m 7)))`
 ;; but not `(binding [units2.ops/*unit-warnings-are-errors* false] (gen/sample (spec/gen :units2.ops/number-unless-safety-is-off)))`
 
+
+;; NB: `(min)` and `(max)` cascade down to their clojure.core equivalents, which throw ArityExceptions.
+
 (spec/fdef min :args ::some-numbers-or-compatible-amounts
                :ret  ::number-or-amount)
 
-(defn min
-  [& args]
-  (if (amount? (first args))
-    (let [U (getUnit (first args))]
-      (->amount (apply clojure.core/min (map (from U) args)) U))
-    (apply clojure.core/min args)
+(defn
+  ^{:doc (str "Official Clojure doc: " (:doc (meta (var clojure.core/min)))
+              "\n  Units2 added doc: It works for amounts with compatible units, too.")}
+  min
+  [& nums]
+  (if (amount? (first nums))
+    (let [U (getUnit (first nums))]
+      (->amount (apply clojure.core/min (map (from U) nums)) U))
+    (apply clojure.core/min nums)
     ))
 
 (spec/fdef max :args ::some-numbers-or-compatible-amounts
                :ret  ::number-or-amount)
 
-(defn max
-  [& args]
-  (if (amount? (first args))
-    (let [U (getUnit (first args))]
-      (->amount (apply clojure.core/max (map (from U) args)) U))
-    (apply clojure.core/max args)
+(defn
+  ^{:doc (str "Official Clojure doc: " (:doc (meta (var clojure.core/max)))
+              "\n  Units2 added doc: It works for amounts with compatible units, too.")}
+  max
+  [& nums]
+  (if (amount? (first nums))
+    (let [U (getUnit (first nums))]
+      (->amount (apply clojure.core/max (map (from U) nums)) U))
+    (apply clojure.core/max nums)
     ))
 
 (defmacro with-unit-comparisons
@@ -272,7 +285,10 @@
 
 (spec/fdef + :args ::numbers-or-compatible-amounts :ret ::number-or-amount)
 
-(defn +
+(defn
+  ^{:doc (str "Official Clojure doc: " (:doc (meta (var clojure.core/+)))
+              "\n  Units2 added doc: It works for amounts with units, too.")}
+  +
   ([] (clojure.core/+)) ; same return value as Clojure.
   ([a] a)
   ([a b]
@@ -287,7 +303,10 @@
 (spec/fdef - :args ::some-numbers-or-compatible-amounts
              :ret ::number-or-amount)
 
-(defn -
+(defn
+  ^{:doc (str "Official Clojure doc: " (:doc (meta (var clojure.core/-)))
+              "\n  Units2 added doc: It works for amounts with units, too.")}
+  -
   ([] (clojure.core/-)) ; zero arity explicitly an error, but let Clojure catch this.
   ([a] (if (amount? a) (->amount (clojure.core/- (getValue a (getUnit a))) (getUnit a)) (clojure.core/- a)))
   ([a b]
@@ -313,7 +332,10 @@
   ; :fn (if (every? number? args), returns a number, else an amount)
   )
 
-(defn *
+(defn
+  ^{:doc (str "Official Clojure doc: " (:doc (meta (var clojure.core/*)))
+              "\n  Units2 added doc: It works for amounts with units, too.")}
+  *
   ([] (clojure.core/*)) ; same return value as Clojure.
   ([a] a)
   ([a b] (fourcond [a b]
@@ -334,7 +356,10 @@
   ; :fn (if (every? number? args), returns a number, else an amount)
   )
 
-(defn /
+(defn
+  ^{:doc (str "Official Clojure doc: " (:doc (meta (var clojure.core//)))
+              "\n  Units2 added doc: It works for amounts with units, too.")}
+  /
   ([] (clojure.core//)) ; zero arity explicitly an error, but let Clojure catch this.
   ([a] (if (amount? a)
          (->amount (clojure.core// (getValue a (getUnit a))) (inverse (getUnit a)))
@@ -478,6 +503,7 @@
 ;  (spec/valid? (:args (spec/get-spec `pow)) [(first (first (spec/exercise :units2.core/amount))) 8]))
 
 (defn pow
+  "TODO: docstring"
   ([a b]
     (if (amount? a)
       (do

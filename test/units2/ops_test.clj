@@ -18,6 +18,15 @@
     (is (== 7 (ops/max 5 6 7)))
     (is (ops/== (m 7) (ops/max (m 5) (m 6) (m 7))))
   )
+  (testing "empty-arglist"
+    (is (try (ops/==) (catch clojure.lang.ArityException e true)))
+    (is (try (ops/<)  (catch clojure.lang.ArityException e true)))
+    (is (try (ops/>)  (catch clojure.lang.ArityException e true)))
+    (is (try (ops/<=) (catch clojure.lang.ArityException e true)))
+    (is (try (ops/>=) (catch clojure.lang.ArityException e true)))
+    (is (try (ops/min)(catch clojure.lang.ArityException e true)))
+    (is (try (ops/max)(catch clojure.lang.ArityException e true)))
+    )
   (testing "comparison-macro"
     (ops/with-unit-comparisons
       (is (== 0 0))
