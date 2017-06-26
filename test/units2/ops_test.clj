@@ -13,10 +13,14 @@
   (testing "min"
     (is (== 5 (ops/min 5 6 7)))
     (is (ops/== (m 5) (ops/min (m 5) (m 6) (m 7))))
+    (is (try (ops/min 6 (m 5)) (catch java.lang.UnsupportedOperationException e true)))
+    (is (try (ops/min (kg 6) (m 5)) (catch java.lang.UnsupportedOperationException e true)))
   )
   (testing "max"
     (is (== 7 (ops/max 5 6 7)))
     (is (ops/== (m 7) (ops/max (m 5) (m 6) (m 7))))
+    (is (try (ops/max 6 (m 5)) (catch java.lang.UnsupportedOperationException e true)))
+    (is (try (ops/max (kg 6) (m 5)) (catch java.lang.UnsupportedOperationException e true)))
   )
   (testing "empty-arglist"
     (is (try (ops/==) (catch clojure.lang.ArityException e true)))
@@ -64,7 +68,12 @@
      (is (ops/== (ops/* (sec 6)) (sec 6)))
      (is (ops/== (ops/* (sec 6) (m 2)) ((times sec m) 12)))
      )
-  (testing "/"
+  (testing "/ (functionality)"
+    (is (== 1 (ops// 1 1 1)))
+    (is (== 0.5 (ops// 1 2) (ops// 1 1 2) (ops// 1 1 1 2)))
+    (is (ops/== ((.inverse sec) 0.5) (ops// 1 (sec 2)) (ops// 2 2 (sec 2))))
+    )
+  (testing "/ (exceptions)"
     (is (try (ops//) (catch clojure.lang.ArityException e true)))
     ;; never divide by zero!!!
     (is (try (ops// 1 0) (catch java.lang.ArithmeticException e true)))
@@ -120,10 +129,11 @@
 
 (deftest magnitudes
   (testing "round"
-    (is (= 4 (ops/round (m 8.1) (m 2)))))
+    (is (ops/== (m 8.0) (ops/round (m 8.1) (m 2)))))
   (testing "magnitude-macro"
-    (is (= 4   (ops/with-unit-magnitudes (round (m 8.1) (m 2)))))
-    (is (= 4.0 (ops/with-unit-magnitudes (floor (m 8.1) (m 2))))))
+    (is (ops/== (m 8.0) (ops/with-unit-magnitudes (round (m 8.1) (m 2)))))
+    (is (ops/== (m 8.0) (ops/with-unit-magnitudes (floor (m 8.1) (m 2)))))
+    (is (ops/== (m 10.0) (ops/with-unit-magnitudes (ceil (m 8.1) (m 2))))))
 )
 
 ;(deftest everything-together)

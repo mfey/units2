@@ -4,7 +4,9 @@
 ;;
 ;;   1. that the values in `amount`, and any other numbers, are well-behaved under `clojure.core/fns` and `Math/fns`
 ;;   2. that the units in `amount` both `(satisfies? Unitlike)` and `(satisfies? Multiplicative)`.
-;;   3. that the units in `amount` are all linear rescalings without any `offset`. There are a few offset checks scattered throughout, but no overall guarantees.
+;;   3. that the units in `amount` are all linear rescalings without any `offset`.
+;;        (There are a few offset checks scattered throughout,
+;;         so offsets *usually* work, but no overall guarantees.)
 ;;
 ;; As such, it should be fairly easy to reuse most of this code for other implementations.
 
@@ -12,19 +14,16 @@
 ;;
 ;;   1. The ops we define here are fine with `require :refer :all`, they reduce to their `clojure.core/` and `Math/` counterparts on non-`amount?` quantities.
 ;;   2. When standard functions would give surprising behaviour in combination with units, users might inadvertently write buggy code. We provide a version of the function that issues an Exception whenever it is used on units (to force the user to think about the behaviour they want).
-;;   3. Since most users DO know what they want, and since this is usually <pre><code> (getValue x (getUnit x)) </code></pre> these exceptions can be downgraded to warnings by rebinding `*unit-warnings-are-errors*`. Then `getValue`-`getUnit` is used. These warnings can further be silenced by rebinding `*unit-warnings-are-printed*`.
-;;   4. For exponentiation ops, we also provide a standardised augmented-arity version that uses divide-into-double on the first two args
+;;   3. For many ops, we also provide a standardised augmented-arity version that uses divide-into-double on the first two args
 ;;   <pre><code> ;; these two expressions are equivalent
 ;;   (pow a b c)
 ;;   (Math/pow (divide-into-double a b) c)
 ;;   </code></pre>
 ;;
 
-;; ### TODO: add/fix docstrings (exp, log, log10, pow)
+;; ### TODO: add/fix docstrings
+;; ### TODO: add/fix function specs
 
-;; ### TODO: add/fix function specs (exp, log, log10, abs, floor, ceil, round)
-
-;; ### TODO: Improve errors (min, max, ...)
 
 (ns units2.ops
   ;redefinitions imminent! `:exclude` turns off some WARNINGS.
@@ -33,23 +32,6 @@
             [clojure.spec :as spec]
             [clojure.spec.gen :as gen]) ; TODO: spec these functions!!!
 )
-
-;; ## WARNINGS
-
-;; users who know what they are doing can set this to false at their own risk.
-(def ^:dynamic *unit-warnings-are-errors* true)
-
-;; users who REALLY know what they are doing can prevent warnings from being printed.
-;; this is ONLY provided to prevent the printing I/O from slowing down well-tested, innermost-loop,
-;; speed-critical computations, and should NOT be used lightly.
-(def ^:dynamic *unit-warnings-are-printed* true)
-
-(defn- warn [msg]
-  (cond
-    *unit-warnings-are-errors*
-      (throw (UnsupportedOperationException. (str msg)))
-    *unit-warnings-are-printed*
-     (println (clojure.string/join (concat "WARNING: " msg)))))
 
 ;; ## Specs
 
@@ -71,8 +53,6 @@
   (spec/and ::numbers-or-compatible-amounts
             #(not (empty? (spec/unform ::numbers-or-compatible-amounts %)))))
 
-(declare zero?); this spec uses the unit-aware zero? function.
-
 (spec/def ::linear-units
   (spec/and ::compatible-amounts
             (fn [amountlist] ;; it's really the conformed value here, but for amounts it's the same thing!
@@ -84,197 +64,27 @@
 
 (spec/def ::nonzero-amount
   (spec/and :units2.core/amount
-            #(binding [*unit-warnings-are-errors* false
-                       *unit-warnings-are-printed* false]
-               (not (zero? %)))))
+            #(not (clojure.core/zero? (getValue % (getUnit %))))))
 
 (spec/def ::two-linear-units-second-nonzero
   (spec/and (spec/coll-of :units2.core/amount :count 2)
             ::linear-units
             #(spec/valid? ::nonzero-amount (second %))))
 
-;; this spec correctly sees the safety switch in
-;;   (binding [*...* false] (valid? ...))
-;; but the generator only returns numbers (no amounts), so we can't generatively
-;; test the `unsafe' behaviour. This kind of defeats the purpose of generative
-;; tests, but turning the safety off isn't something I'd recommend to users.
-;;
-(spec/def ::number-unless-safety-is-off
-  (spec/with-gen
-    (spec/and ::number-or-amount
-              #(if *unit-warnings-are-errors*
-                  (do
-                   ; (print "true branch validation")
-                    (number? (spec/unform ::number-or-amount %)))
-                  (do
-                   ; (print "false branch validation")
-                    true)))
-    (fn []
-      (if *unit-warnings-are-errors*
-             (spec/gen number?)
-             (do
-              ; (print "false branch generator")
-               (spec/gen ::number-or-amount))
-             ))))
-;;
-;; the "print statement analysis" shows that we correctly employ the
-;; `false branch' generator when we rebind, but then in the function
-;; `gensub` of `spec.clj` there's a second-pass `(valid? spec %)` that
-;; chooses the true branch for validation (it doesn't see the rebinding!)
-
-;; Now, if we `(alter-var-root #'*unit-warnings-are-errors* (constantly false))
-;; at the repl then we get the generator behaviour we want on rebinding... because
-;; statefulness is magic... but even then (exercise-fn `zero?) fails anyway.
-;; NOT WORTH IT.
-
-;; ## Comparisons
-
-
-;; Defining `==` , `>=`, or `<` seems easy; but the desired behaviour for
-;; comparisons of incompatible units could be either to return false or
-;; throw an exception; we opt for the latter, since strictly speaking
-;; `is 3 meters smaller than 5 seconds?' is a meaningless question and
-;; shouldn't be given a boolean answer; consider for a moment the alternate
-;; behaviour, which violates the excluded-middle-law:
-;; <pre><code> ;; this is ugly!
-;; (not (< (m 4) (celcius 6)) ;; not untruthy
-;; (>= (m 4) (celcius 6)) ;; untruthy
-;; </code></pre>
-;;
-;; The behaviour for `==` could be different than other comparators,
-;; since e.g. 3 meters and 5 seconds are never the same amount; but
-;; consistently throwing exceptions seems like the safer route.
-(defmacro defcmp [cmp cljcmp]
-  (let [args (gensym)
-        warning "It makes no sense to compare values in incompatible units!"
-        docstr (str "Official Clojure doc: " (eval `(:doc (meta (var ~cljcmp))))
-                    "\n  Units2 added doc: " warning)
-        ]
-`(do
-   (spec/fdef ~cmp :args ::some-numbers-or-compatible-amounts
-                   :ret boolean?)
-   (defn ~cmp ~docstr [& ~args]
-      (cond
-        (empty? ~args)
-          (~cljcmp) ;; get the same edge case as regular clojure
-        (every? amount? ~args)
-          (if (every? #(compatible? (getUnit (first ~args)) %) (map getUnit (rest ~args)))
-            (apply ~cljcmp (map (from (getUnit (first ~args))) ~args))
-            (throw (UnsupportedOperationException. ~warning)))
-        (every? #(not (amount? %)) ~args) ; empty argslist caught above (to get the same Exception subclass).
-          (apply ~cljcmp ~args)
-        true
-          (throw (UnsupportedOperationException. ~warning)))))))
-
-
-(defcmp == clojure.core/==)
-(defcmp < clojure.core/<)
-(defcmp > clojure.core/>)
-(defcmp <= clojure.core/<=)
-(defcmp >= clojure.core/>=)
-
-;; `zero?`, `pos?`, and `neg?` can return different answers depending on the input units
-;; (to see why, consider the Farenheit and Celius temperature scales)
-(defmacro defsgn [sgn cljsgn]
-  (let [a (gensym)
-        warning " interacts nontrivially with rescalings/offsets of units."
-        docstr (str "Official Clojure doc: " (eval `(:doc (meta (var ~cljsgn))))
-                    "\n  Units2 added doc:" warning)]
-  `(do
-    (spec/fdef ~sgn
-      :args ::number-unless-safety-is-off
-      :ret boolean?)
-    (defn ~sgn ~docstr [~a]
-      (if (amount? ~a)
-         (do
-           (warn (str ~sgn ~warning))
-           (~cljsgn (getValue ~a (getUnit ~a))))
-         (~cljsgn ~a))))))
-
-(defsgn zero? clojure.core/zero?)
-(defsgn pos? clojure.core/pos?)
-(defsgn neg? clojure.core/neg?)
-
-;(zero? 0)
-
-
-;(spec/exercise (:args (spec/get-spec `units2.ops/pos?)))
-
-;; We get  `(binding [units2.ops/*unit-warnings-are-errors* false] (spec/valid? (:args (spec/get-spec units2.ops/zero?)) (m 7)))`
-;; but not `(binding [units2.ops/*unit-warnings-are-errors* false] (gen/sample (spec/gen :units2.ops/number-unless-safety-is-off)))`
-
-
-;; NB: `(min)` and `(max)` cascade down to their clojure.core equivalents, which throw ArityExceptions.
-
-(spec/fdef min :args ::some-numbers-or-compatible-amounts
-               :ret  ::number-or-amount)
-
-(defn
-  ^{:doc (str "Official Clojure doc: " (:doc (meta (var clojure.core/min)))
-              "\n  Units2 added doc: It works for amounts with compatible units, too.")}
-  min
-  [& nums]
-  (if (amount? (first nums))
-    (let [U (getUnit (first nums))]
-      (->amount (apply clojure.core/min (map (from U) nums)) U))
-    (apply clojure.core/min nums)
-    ))
-
-(spec/fdef max :args ::some-numbers-or-compatible-amounts
-               :ret  ::number-or-amount)
-
-(defn
-  ^{:doc (str "Official Clojure doc: " (:doc (meta (var clojure.core/max)))
-              "\n  Units2 added doc: It works for amounts with compatible units, too.")}
-  max
-  [& nums]
-  (if (amount? (first nums))
-    (let [U (getUnit (first nums))]
-      (->amount (apply clojure.core/max (map (from U) nums)) U))
-    (apply clojure.core/max nums)
-    ))
-
-(defmacro with-unit-comparisons
-  "Locally rebind `==`, `>=`, `<`, `zero?`, `pos?`, `min`, ... to unit-aware equivalents."
-  [& body]
-  (clojure.core/conj body '[== units2.ops/==
-         >  units2.ops/>
-         <  units2.ops/<
-         >= units2.ops/>=
-         <= units2.ops/<=
-         zero? units2.ops/zero?
-         pos?  units2.ops/pos?
-         neg?  units2.ops/neg?
-         min units2.ops/min
-         max units2.ops/max
-        ]
-     'clojure.core/let))
-
-;; Other `with-unit-...` macros will share the same `(conj body '[bindings] 'let)` hack.
-;; I'm only 99.5% sure it's correct, and need to do more testing.
-;; Once I'm 100% sure, I'll use a macro to refactor these macros:
-;; <pre><code>
-;; (defmacro defhack [macroname docstring bindings]
-;;   `(defmacro ~namcroname ~docstring [& body]
-;;   (clojure.core/conj body '~bindings
-;;      'clojure.core/let))) ;; maybe ????
-;; </code></pre>
-;; but until testing is done I'll avoid macro-inception for the sake of sanity.
-
-;; 14/03/16: Thanks to the `Amsterdam Clojurians` for noticing that `conj` should be `clojure.core/conj` in these macros,
-;; with the comment "If you're willing to do that, you should be prepared for users willing to define their own `conj`."
 
 
 ;; ## Arithmetic
 
-;; dispatch for +,-
+;;; ### Dispatch helper macros (possible code smell... use multimethods instead?)
+
+;; dispatch for + and -
 (defmacro threecond [[a b] both one neither]
   `(cond
     (and (amount? ~a) (amount? ~b))  ~both
     (or  (amount? ~a) (amount? ~b))  ~one
     true                             ~neither))
 
-;; dispatch for +,- with a check that the conversion is linear
+;; dispatch for + and - with a check that the conversion is linear
 (defmacro lincond [[a b] lin nonlin one neither]
   `(threecond [~a ~b]
       (if (linear? (getConverter (getUnit ~a) (getUnit ~b)))
@@ -283,42 +93,7 @@
       ~one
       ~neither))
 
-(spec/fdef + :args ::numbers-or-compatible-amounts :ret ::number-or-amount)
-
-(defn
-  ^{:doc (str "Official Clojure doc: " (:doc (meta (var clojure.core/+)))
-              "\n  Units2 added doc: It works for amounts with units, too.")}
-  +
-  ([] (clojure.core/+)) ; same return value as Clojure.
-  ([a] a)
-  ([a b]
-    (lincond [a b]
-      (->amount (clojure.core/+ (getValue a (getUnit a)) (getValue b (getUnit a))) (getUnit a))
-      (throw (UnsupportedOperationException. (str "Nonlinear conversion between `" (getUnit a) "' and `" (getUnit b)"'!")))
-      (throw (UnsupportedOperationException. (str "It's meaningless to add numbers with and without units! (`" a "' and `" b "' provided)")))
-      (clojure.core/+ a b)))
-    ([a b & rest] (reduce + (conj rest a b))))
-
-
-(spec/fdef - :args ::some-numbers-or-compatible-amounts
-             :ret ::number-or-amount)
-
-(defn
-  ^{:doc (str "Official Clojure doc: " (:doc (meta (var clojure.core/-)))
-              "\n  Units2 added doc: It works for amounts with units, too.")}
-  -
-  ([] (clojure.core/-)) ; zero arity explicitly an error, but let Clojure catch this.
-  ([a] (if (amount? a) (->amount (clojure.core/- (getValue a (getUnit a))) (getUnit a)) (clojure.core/- a)))
-  ([a b]
-    (lincond [a b]
-      (->amount (clojure.core/- (getValue a (getUnit a)) (getValue b (getUnit a))) (getUnit a))
-      (throw (UnsupportedOperationException. (str "Nonlinear conversion between `" (getUnit a) "' and `" (getUnit b)"'!")))
-      (throw (UnsupportedOperationException. (str "It's meaningless to subtract numbers with and without units! (`" a "' and `" b "' provided)")))
-      (clojure.core/- a b)))
-    ([a b & rest] (- a (apply + b rest))))
-
-
-;; dispatch for *,/
+;; dispatch for * and /
 (defmacro fourcond [[a b] one two three four]
   `(cond
     (and (amount? ~a) (amount? ~b))       ~one
@@ -326,50 +101,102 @@
     (and (amount? ~b) (not (amount? ~a))) ~three
     (not (or (amount? ~a) (amount? ~b)))  ~four))
 
-(spec/fdef *
-  :args (spec/* (spec/or :amount :units2.core/amount :number number?))
-  :ret (spec/or :amount :units2.core/amount :number number?)
-  ; :fn (if (every? number? args), returns a number, else an amount)
+
+;; ### Abstract Algebra of Units in Arithmetic
+
+(defn decorate-adder [adder]
+  (fn decorated-adder
+    ([] (adder))     ; same return value as the original
+    ([a] (if (amount? a)
+           (->amount (adder (getValue a (getUnit a))) (getUnit a))
+           (adder a)))
+    ([a b]
+      (lincond [a b]
+        (->amount (adder (getValue a (getUnit a)) (getValue b (getUnit a))) (getUnit a))
+        (throw (UnsupportedOperationException. (str "Nonlinear conversion between `" (getUnit a) "' and `" (getUnit b)"'!")))
+        (throw (UnsupportedOperationException. (str "It's meaningless to apply" (str adder) " to numbers with and without units! (`" a "' and `" b "' provided)")))
+        (adder a b)))
+    ([a b & rest] (reduce decorated-adder a (conj rest b)))
+  )
+)
+
+(defn decorate-productor [productor]
+  (fn decorated-productor
+    ([] (productor)) ; same return value as the original
+    ([a] (if (amount? a)
+           (->amount (productor (getValue a (getUnit a))) (getUnit a))
+           (productor a)))
+    ([a b] (fourcond [a b]
+      (->amount (productor (getValue a (getUnit a)) (getValue b (getUnit b))) (times (getUnit a) (getUnit b)))
+      (->amount (productor (getValue a (getUnit a)) (double b)) (getUnit a))
+      (->amount (productor (getValue b (getUnit b)) (double a)) (getUnit b))
+      (productor a b)))
+    ([a b & rest] (reduce decorated-productor a (conj rest b)))
+  )
+)
+
+(defn decorate-divider [divider]
+  (fn decorated-divider
+    ([] (divider)) ; zero arity explicitly an error, but let the original catch this.
+    ([a] (if (amount? a)
+         (->amount (divider (getValue a (getUnit a))) (inverse (getUnit a)))
+         (divider a)))
+    ([a b] (fourcond [a b]
+      (->amount (divider (getValue a (getUnit a)) (getValue b (getUnit b))) (divide (getUnit a) (getUnit b)))
+      (->amount (divider (getValue a (getUnit a)) (double b)) (getUnit a))
+      (->amount (divider (double a) (getValue b (getUnit b))) (inverse (getUnit b)))
+      (divider a b)))
+    ([a b & rest] (reduce decorated-divider a (conj rest b)))
+  )
+)
+
+
+;; ### Concrete Arithmetic Ops (with Specs and old docstrings)
+
+(def ^{:doc (:doc (meta (var clojure.core/+)))} + (decorate-adder clojure.core/+))
+(def ^{:doc (:doc (meta (var clojure.core/-)))} - (decorate-adder clojure.core/-))
+(def ^{:doc (:doc (meta (var clojure.core/*)))} * (decorate-productor clojure.core/*))
+(def ^{:doc (:doc (meta (var clojure.core//)))} / (decorate-divider clojure.core//))
+
+
+(spec/fdef +
+  :args ::numbers-or-compatible-amounts
+  :ret  ::number-or-amount
+  :fn   #(if (every? number? (:args %))
+           (number? (:ret %))
+           (:units2.core/amount (:ret %)))
   )
 
-(defn
-  ^{:doc (str "Official Clojure doc: " (:doc (meta (var clojure.core/*)))
-              "\n  Units2 added doc: It works for amounts with units, too.")}
-  *
-  ([] (clojure.core/*)) ; same return value as Clojure.
-  ([a] a)
-  ([a b] (fourcond [a b]
-    (->amount (clojure.core/* (getValue a (getUnit a)) (getValue b (getUnit b))) (times (getUnit a) (getUnit b)))
-    (->amount (clojure.core/* (getValue a (getUnit a)) (double b)) (getUnit a))
-    (->amount (clojure.core/* (getValue b (getUnit b)) (double a)) (getUnit b))
-    (clojure.core/* a b)))
-  ([a b & rest] (* a (apply * b rest))))
+(spec/fdef -
+  :args ::some-numbers-or-compatible-amounts
+  :ret  ::number-or-amount
+  :fn   #(if (every? number? (:args %))
+           (number? (:ret %))
+           (:units2.core/amount (:ret %)))
+  )
+
+(spec/fdef *
+  :args (spec/* (spec/or :amount :units2.core/amount :number number?))
+  :ret  (spec/or :amount :units2.core/amount :number number?)
+  :fn   #(if (every? number? (:args %))
+           (number? (:ret %))
+           (:units2.core/amount (:ret %)))
+  )
 
 (spec/fdef /
   :args (spec/and (spec/+ ::number-or-amount)
                   (fn [x] ; also: don't divide by zero!!!
-                    (binding [*unit-warnings-are-errors* false]
+                    (let [unsafe-zero? (fn [a] (clojure.core/zero? (if amount? (getValue a (getUnit a)) a)))] ;; this is an unsafe version of zero?
                       (if (empty? (rest x))
-                        (not (zero? (spec/unform ::number-or-amount (first x))))
-                        (every? #(not (zero? (spec/unform ::number-or-amount %))) (rest x))))))
-  :ret (spec/or :amount :units2.core/amount :number number?)
-  ; :fn (if (every? number? args), returns a number, else an amount)
+                        (not (unsafe-zero? (spec/unform ::number-or-amount (first x))))
+                        (every? #(not (unsafe-zero? (spec/unform ::number-or-amount %))) (rest x))))))
+  :ret  (spec/or :amount :units2.core/amount :number number?)
+  :fn   #(if (every? number? (:args %))
+           (number? (:ret %))
+           (:units2.core/amount (:ret %)))
   )
 
-(defn
-  ^{:doc (str "Official Clojure doc: " (:doc (meta (var clojure.core//)))
-              "\n  Units2 added doc: It works for amounts with units, too.")}
-  /
-  ([] (clojure.core//)) ; zero arity explicitly an error, but let Clojure catch this.
-  ([a] (if (amount? a)
-         (->amount (clojure.core// (getValue a (getUnit a))) (inverse (getUnit a)))
-         (clojure.core// a)))
-  ([a b] (fourcond [a b]
-    (->amount (clojure.core// (getValue a (getUnit a)) (getValue b (getUnit b))) (divide (getUnit a) (getUnit b)))
-    (->amount (clojure.core// (getValue a (getUnit a)) (double b)) (getUnit a))
-    (* (/ b) (double a))
-    (clojure.core// a b)))
-  ([a b & rest] (/ a (apply * b rest))))
+
 
 (spec/fdef divide-into-double :args ::two-linear-units-second-nonzero
                               :ret double?)
@@ -385,55 +212,167 @@
       (getValue a (AsUnit b))
       (throw (IllegalArgumentException. (str "divide-into-double requires two amounts with linearly related units! (`" a "' and `" b "' provided)")))))
 
-;;   Modular arithmetic interacts nontrivially with rescalings of units.
-;;   Consider the following:
-;;   <pre><code>
-;; (let [a (->amount 2.5 meter)
-;;       b (->amount 5   (/ meter 2))
-;;       c (->amount 3   second)]
-;;   (list
-;;     (== a b)  ; true
-;;     (rem a c) ; 2.5 m/s
-;;     (rem b c) ; 2 (m/2)/s
-;;     (== (rem a c)
-;;         (rem b c)))) ; FALSE
-;;   </code></pre>
-(defmacro defratio [ratio clojureratio]
-  (let [a (gensym) b (gensym)
-        warning "Modular arithmetic interacts nontrivially with rescalings of units."
-        docstr (str "Official Clojure doc: " (eval `(:doc (meta (var ~clojureratio))))
-                    "\nUnits2 added doc: " warning)
-        ]
- `(do
-    (spec/fdef ~ratio :args ::two-linear-units-second-nonzero :ret (spec/or :units2.core/amount number?))
-    (defn ~ratio ~docstr [~a ~b]
-    (if (amount? ~a)
-      (do
-        (warn ~warning)
-        (if (amount? ~b)
-          (->amount (~clojureratio (getValue ~a (getUnit ~a)) (getValue ~b (getUnit ~b))) (divide (getUnit ~a) (getUnit ~b)))
-          (->amount (~clojureratio (getValue ~a (getUnit ~a)) ~b) (getUnit ~a))))
-      (if (amount? ~b)
-        (do
-          (warn ~warning)
-          (->amount (~clojureratio ~a (getValue ~b (getUnit ~b))) (inverse (getUnit ~b))))
-        (~clojureratio ~a ~b)))))))
 
-(defratio rem clojure.core/rem)
-(defratio quot clojure.core/quot)
+;; ## Modular Arithmetic
 
-(defmacro with-unit-arithmetic
-  "Locally rebinds arithmetic operators like `+`, and `/` to unit-aware equivalents."
-  [& body]
-  (clojure.core/conj body
-        '[+ units2.ops/+
-         - units2.ops/-
-         * units2.ops/*
-         / units2.ops//
-         quot units2.ops/quot
-         rem  units2.ops/rem
-        ]
-    'clojure.core/let))
+(let [PSA "Modular arithmetic interacts nontrivially with offsets of units."]
+  ;;   Modular arithmetic interacts nontrivially with rescalings of units.
+  ;;   Consider the following:
+  ;;   <pre><code>
+  ;; (let [a (->amount 2.5 meter)
+  ;;       b (->amount 5   (/ meter 2))
+  ;;       c (->amount 3   second)]
+  ;;   (list
+  ;;     (== a b)  ; true
+  ;;     (rem a c) ; 2.5 m/s
+  ;;     (rem b c) ; 2 (m/2)/s
+  ;;     (== (rem a c)
+  ;;         (rem b c)))) ; FALSE
+  ;;   </code></pre>
+
+  (defn decorate-ratio [ratio]
+    (fn
+      ([a b]
+        (if (or (amount? a) (amount? b))
+          (throw (UnsupportedOperationException. PSA))
+          (ratio a b)))
+      ([a b c] 42) ;; treat third as the `unity' quantity... COMING SOON!
+    )
+  )
+
+  (defn decorate-entier [entier]
+    (fn
+      ([a]
+        (if (amount? a)
+          (throw (UnsupportedOperationException. PSA))
+          (entier a)))
+      ([a b] ;; treat second amount as the `unity' quantity, e.g. (round ... 10) rounds to the nearest 10.
+       (* (entier (divide-into-double a b)) b))
+    )
+  )
+
+  (def ^{:doc (str "Official Clojure doc: " (:doc (meta (var clojure.core/rem)))
+                     "\n  Units2 added doc: " PSA)}
+    rem (decorate-ratio clojure.core/rem))
+  (def ^{:doc (str "Official Clojure doc: " (:doc (meta (var clojure.core/quot)))
+                     "\n  Units2 added doc: " PSA)}
+    quot (decorate-ratio clojure.core/quot))
+
+  (def ^{:doc PSA} ceil  (decorate-entier #(Math/ceil %)))
+  (def ^{:doc PSA} floor (decorate-entier #(Math/floor %)))
+  (def ^{:doc PSA} round (decorate-entier #(Math/round %)))
+  (def ^{:doc PSA} abs   (decorate-entier #(Math/abs %)))
+
+)
+
+; specs here!
+
+
+
+;; ## Comparisons
+
+;; Defining `==` , `>=`, or `<` seems easy; but the desired behaviour for
+;; comparisons of incompatible units could be either to return false or
+;; throw an exception; we opt for the latter, since strictly speaking
+;; `is 3 meters smaller than 5 seconds?' is a meaningless question and
+;; shouldn't be given a boolean answer; consider for a moment the alternate
+;; behaviour, which violates the excluded-middle-law:
+;; <pre><code> ;; this is ugly!
+;; (not (< (m 4) (celcius 6)) ;; not untruthy
+;; (>= (m 4) (celcius 6)) ;; untruthy
+;; </code></pre>
+;;
+;; The behaviour for `==` could be different than other comparators,
+;; since e.g. 3 meters and 5 seconds are never the same amount; but
+;; consistently throwing exceptions seems like the safer route.
+
+(defn decorate-comparator [cmp]
+  (fn decorated-comparator [& args]
+    (cond
+      (empty? args) (cmp)
+      (every? #(not (amount? %)) args)
+        (apply cmp args)
+      (every? amount? args)
+        (if (every? #(compatible? (getUnit (first args)) %) (map getUnit (rest args)))
+            (apply cmp (map (from (getUnit (first args))) args))
+            (throw (UnsupportedOperationException. "Can't compare quantities in incompatible units")))
+      :else
+        (throw (UnsupportedOperationException. "Can't compare quantities with and without units!") )
+     )
+  )
+)
+
+(def ^{:doc (:doc (meta (var clojure.core/==)))} == (decorate-comparator clojure.core/==))
+(def ^{:doc (:doc (meta (var clojure.core/< )))} <  (decorate-comparator clojure.core/<))
+(def ^{:doc (:doc (meta (var clojure.core/> )))} >  (decorate-comparator clojure.core/>))
+(def ^{:doc (:doc (meta (var clojure.core/<=)))} <= (decorate-comparator clojure.core/<=))
+(def ^{:doc (:doc (meta (var clojure.core/>=)))} >= (decorate-comparator clojure.core/>=))
+
+(spec/fdef == :args ::some-numbers-or-compatible-amounts :ret boolean?)
+(spec/fdef <  :args ::some-numbers-or-compatible-amounts :ret boolean?)
+(spec/fdef >  :args ::some-numbers-or-compatible-amounts :ret boolean?)
+(spec/fdef <= :args ::some-numbers-or-compatible-amounts :ret boolean?)
+(spec/fdef >= :args ::some-numbers-or-compatible-amounts :ret boolean?)
+
+
+
+(let [PSA "Sign checks interact nontrivially with offsets of units.\n Please use explicit `==`,`>`,`<` checks against a zero-valued quantity."]
+  ;; `zero?`, `pos?`, and `neg?` can return different answers depending on the input units
+  ;; (to see why, consider the Farenheit and Celius temperature scales)
+
+  (defn decorate-sign-predicate [pred]
+    (fn [a]
+      (if (amount? a)
+           (throw (UnsupportedOperationException. PSA))
+           (pred a))))
+
+  (def ^{:doc (str "Official Clojure doc: " (:doc (meta (var clojure.core/zero?)))
+                   "\n  Units2 added doc: " PSA)}
+    zero? (decorate-sign-predicate clojure.core/zero?))
+  (def ^{:doc (str "Official Clojure doc: " (:doc (meta (var clojure.core/pos?)))
+                   "\n  Units2 added doc: " PSA)}
+    pos? (decorate-sign-predicate clojure.core/pos?))
+  (def ^{:doc (str "Official Clojure doc: " (:doc (meta (var clojure.core/neg?)))
+                   "\n  Units2 added doc: " PSA)}
+    neg? (decorate-sign-predicate clojure.core/neg?))
+)
+
+(spec/fdef zero? :args number? :ret boolean?)
+(spec/fdef pos?  :args number? :ret boolean?)
+(spec/fdef neg?  :args number? :ret boolean?)
+
+
+
+(defn decorate-order-statistic [ord]
+  (fn decorated-order-statistic [& nums]
+    (cond
+      (empty? nums)
+        (ord)
+      (every? #(not (amount? %)) nums)
+        (apply ord nums)
+      (every? amount? nums)
+        (if (every? #(compatible? (getUnit (first nums)) (getUnit %)) (rest nums))
+          (let [U (getUnit (first nums))]
+            (->amount (apply ord (map (from U) nums)) U))
+          (throw (UnsupportedOperationException. "Can't order dimensionally incompatible quantities!")))
+      :else
+        (throw (UnsupportedOperationException. "Can't order quantities with and without units!"))
+    )
+  )
+)
+
+(def ^{:doc (:doc (meta (var clojure.core/min)))} min (decorate-order-statistic clojure.core/min))
+(def ^{:doc (:doc (meta (var clojure.core/max)))} max (decorate-order-statistic clojure.core/max))
+
+(spec/fdef max :args ::some-numbers-or-compatible-amounts
+               :ret  ::number-or-amount)
+
+(spec/fdef min :args ::some-numbers-or-compatible-amounts
+               :ret  ::number-or-amount)
+
+
+
+
 
 ;; ## Powers and Exponentiation
 
@@ -454,116 +393,111 @@
     (apply / (repeat (+ 2 (- n)) b)) ; ugly hack, but it works fine. It even (correctly) throws a divide by zero exception when b is zero!
     (apply * (repeat n b))))
 
-;; The exponential functions below should only be defined on dimensionless quantities
-;; (to see why, just imagine Maclaurin-expanding the `exp` or `ln` functions)
-;; so we define them over ratios of amounts: exp(a/b), log(a/b), etc.
-(defmacro defexpt [expt cljexpt]
-  (let [a (gensym) b (gensym)
-        docstr (str "`" (str expt) "` is only sensible for dimensionless quanities.")
-        ]
-    `(defn ~expt ~docstr
-       ([~a]
-         (if (amount? ~a)
-           (do
-             (warn "Exponentiation interacts nontrivially with rescalings of units.")
-             (~cljexpt (getValue ~a (getUnit ~a))))
-           (~cljexpt ~a)))
-       ([~a ~b]
-        (if (every? amount? [~a ~b])
-          (~cljexpt (divide-into-double ~a ~b))
-          (throw (IllegalArgumentException. (str "Arity-2 `" ~expt "` requires two amounts! (" ~a " and " ~b " provided)"))))))))
 
-; def specs separately (for function ranges!)
+(let [PSA "Exponentiation interacts nontrivially with rescalings of units."]
+  ;; The exponential functions below should only be defined on dimensionless quantities
+  ;; (to see why, just imagine Maclaurin-expanding the `exp` or `ln` functions)
+  ;; so we define them over ratios of amounts: exp(a/b), log(a/b), etc.
 
-(defexpt exp   Math/exp)
-(defexpt log   Math/log)
-(defexpt log10 Math/log10)
 
-(spec/fdef pow :args (spec/or :bin (spec/tuple ::number-unless-safety-is-off number?) ;; safety can be off!!
+  (defn decorate-expt [expt]
+    (fn
+      ([a]
+        (if (amount? a)
+            (throw (UnsupportedOperationException. PSA))
+             (expt a)))
+      ([a b]
+        (if (every? amount? [a b])
+          (expt (divide-into-double a b))
+          (throw (IllegalArgumentException. (str "Arity-2 exponentiation requires two amounts! (" a " and " b " provided)")))
+          ))))
+
+  (def ^{:doc PSA} exp  (decorate-expt #(Math/exp %)))
+  (def ^{:doc PSA} log  (decorate-expt #(Math/log %)))
+  (def ^{:doc PSA} log10 (decorate-expt #(Math/log10 %)))
+
+)
+
+; specs separately (function ranges)
+
+(spec/fdef pow :args (spec/or :bin (spec/tuple number? number?)
                               :tri ;(spec/with-gen
                                      (spec/and (spec/tuple :units2.core/amount :units2.core/amount number?)
                                                (fn [[a b _]] (spec/valid? ::two-linear-units-second-nonzero [a b])))
                                    ; (fn [] (gen/cat (spec/gen ::two-linear-units-second-nonzero)
                                    ;                 (gen/fmap list (gen/gen-for-pred number?)))))
                           )
-
                :ret double?)
-
-;; ??? (let [a (into (first (spec/exercise ::nonzero-amount)) [0.8])]
-;; ??? [(spec/valid? (:args (spec/get-spec `pow)) a) a])
-
-;; (spec/exercise (:args (spec/get-spec `pow))) ; works seldomly, but sometimes
-
-;; ??? (into [] (gen/generate (gen/cat (spec/gen ::two-linear-units-second-nonzero)
-;; ???         (gen/fmap list (gen/gen-for-pred number?)))))
-
-
-;; toggle true/false to check that amounts are valid when the safety is off (even if not autogenerated)
-;(binding [*unit-warnings-are-errors* false]
-;  (spec/valid? (:args (spec/get-spec `pow)) [(first (first (spec/exercise :units2.core/amount))) 8]))
 
 (defn pow
   "TODO: docstring"
   ([a b]
-    (if (amount? a)
-      (do
-        (warn "pow interacts nontrivially with rescalings of units.")
-        (Math/pow (getValue a (getUnit a)) b))
+    (if (or (amount? a) (amount? b))
+      (throw (Exception. "!!!!"))
       (Math/pow a b)))
   ([a b c]
-     (if (and (amount? a) (amount? b))
+     (if (and (amount? a) (amount? b) (compatible? (getUnit a) (getUnit b)) (not (amount? c)))
        (Math/pow (divide-into-double a b) c)
-       (throw (IllegalArgumentException. (str "Arity-2 `pow` requires two amounts! (" a " and " b " provided)"))))))
+       (throw (IllegalArgumentException. (str "Arity-3 `pow` requires two compatible amounts and a number! (" a ", " b ", and " c " provided)"))))))
 
-(defmacro with-unit-expts
-"Locally rebinds exponentiation functions to unit-aware equivalents."
-  [& body]
-  (clojure.core/conj body
-        '[expt units2.ops/expt
-          exp units2.ops/exp
-          pow units2.ops/pow
-          log units2.ops/log
-          log10 units2.ops/log10
-        ]
-      'clojure.core/let))
 
-;; ## Magnitudes
-
-(defmacro defmgn [mgn javamgn]
-  (let [a (gensym) b (gensym)
-        docstr (str "`" mgn "` is only sensible for dimensionless quantities.")
-        ]
-    `(do
-       ;(spec/fdef ~mgn :args :ret :fn)
-       (defn ~mgn ~docstr
-       ([~a]
-         (if (amount? ~a)
-           (do
-             (warn "Magnitudes interact nontrivially with rescalings of units.")
-             (~javamgn (double (getValue ~a (getUnit ~a)))))
-           (~javamgn (double ~a))))
-       ([~a ~b]
-        (if (every? amount? [~a ~b])
-          (~javamgn (double (divide-into-double ~a ~b)))
-          (throw (IllegalArgumentException. (str "Arity-2 " ~expt " requires two amounts! ("~a" and "~b" provided)")))))))))
-
-(defmgn abs Math/abs)
-(defmgn floor Math/floor)
-(defmgn ceil Math/ceil)
-(defmgn round Math/round)
-
-(defmacro with-unit-magnitudes
-"Locally rebinds magnitude functions to unit-aware equivalents."
-  [& body]
-  (clojure.core/conj body
-        '[abs units2.ops/abs
-          floor units2.ops/floor
-          ceil units2.ops/ceil
-          round units2.ops/round
-        ]
-      'clojure.core/let))
 
 ;; ## EVERYTHING TOGETHER
+
+(defmacro defmacro-without-hygiene
+  "Expands into a `defmacro` with a `(let [bindings] body)` that gets
+  around Clojure's automatic namespacing in syntax-quote by building
+  the `let` form explicitly. Macros can be dangerous. Have fun!!!!"
+  [macroname docstring bindings]
+  (let [body (gensym)]
+  `(defmacro ~macroname ~docstring [& ~body]
+     (clojure.core/conj ~body '~bindings 'clojure.core/let))))
+
+
+;; 14/03/16: Thanks to the `Amsterdam Clojurians` for noticing that `conj` should be `clojure.core/conj` in the above,
+;; with the comment "If you're willing to do that, you should be prepared for users willing to define their own `conj`."
+
+(defmacro-without-hygiene with-unit-arithmetic
+  "Locally rebind arithmetic operators like `+`, and `/` to unit-aware equivalents."
+  [+ units2.ops/+
+   - units2.ops/-
+   * units2.ops/*
+   / units2.ops//
+   quot units2.ops/quot
+   rem  units2.ops/rem
+   ])
+
+(defmacro-without-hygiene with-unit-comparisons
+  "Locally rebind `==`, `>=`, `<`, `zero?`, `pos?`, `min`, ... to unit-aware equivalents."
+   [== units2.ops/==
+     >  units2.ops/>
+     <  units2.ops/<
+     >= units2.ops/>=
+     <= units2.ops/<=
+     zero? units2.ops/zero?
+     pos?  units2.ops/pos?
+     neg?  units2.ops/neg?
+     min units2.ops/min
+     max units2.ops/max
+    ])
+
+
+(defmacro-without-hygiene with-unit-expts
+  "Locally bind exponentiation functions to unit-aware equivalents."
+  [expt units2.ops/expt
+    exp units2.ops/exp
+    pow units2.ops/pow
+    log units2.ops/log
+    log10 units2.ops/log10
+   ])
+
+(defmacro-without-hygiene with-unit-magnitudes ;; THIS IS A BAD NAME. FIND A BETTER NAME.
+  "Locally bind magnitude functions to unit-aware equivalents."
+  [abs units2.ops/abs
+    floor units2.ops/floor
+    ceil units2.ops/ceil
+    round units2.ops/round
+   ])
 
 (defmacro with-unit-
   [labels & body]

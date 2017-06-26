@@ -81,7 +81,7 @@
 )
 
 ;; the amount type and the amount spec don't overlap exactly.
-;; I can create (->amount 8 "hi") which will fail at unit conversions but exist as an object...
+;; I can create (->amount 8 "hi") which will fail at unit conversions but exist as an object... is this a feature or a bug?
 
 
 (defmethod print-method amount [a ^java.io.Writer w]

@@ -86,7 +86,7 @@ A `defunit` that also defunits all SI-prefixed units.
 
 Macros
 
-Rebind various clojure.core and java.lang.Math functions to unit-aware equivalents within the macro-scope.
+Rebind various clojure.core and java.lang.Math functions to unit-aware equivalents within the macro's scope.
 
 ### ==, <, >, <=, >=
 
@@ -96,31 +96,35 @@ Functions
 
 Functions
 
-### +, -, \*, /, rem, quot
+### +, -, *, /, rem, quot
 
 Functions
 
-#### divide-into-double
+### divide-into-double
 
 Function
 
 Returns the ratio of two compatible units as a double (if possible).
 
-#### exp, log , log10
+### exp, log , log10
 
 Functions
 
-#### pow
+### pow
 
 Function
 
-#### expt
+### expt
 
 Function
 
 Returns the given amount raised to the given integer power.
 
-#### abs, floor, ceil, round
+### abs, floor, ceil, round
+
+Functions
+
+### decorate-[...]
 
 Functions
 

@@ -27,7 +27,7 @@
   Unitlike
   (getDimension [this] (.getDimension ^Unit javax-unit))
   (compatible? [this that]
-    (.isCompatible javax-unit (to-javax IFnUnit that))) ;; this is a performance bottleneck!?!?
+    (.isCompatible javax-unit (to-javax IFnUnit that)))
   (getConverter [this that]
     (if (compatible? this that)
       (fn [x] (try (.convert ^UnitConverter (.getConverterTo javax-unit (to-javax IFnUnit that)) (double x))

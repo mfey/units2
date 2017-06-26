@@ -90,7 +90,7 @@ Besides `expt` (a new function we'll discuss soon), the usual `java.lang.math` f
 
     (== 12.0 (op/log10 (km 1) (nm 1))) ; true since 1km = 1000000000000 nm (twelve zeros)
 
-They still accept arity-one definitions over regular numbers to behave nicely in `with-unit-expts`; and intrepid users can read the source to learn about `*unit-warnings-are-errors*` and arity-one exponentiation with units.
+They still accept arity-one definitions over regular numbers to behave nicely in `with-unit-expts`.
 
 The `expt` function (borrowing the name of `pow` in the LISP language Scheme) is a `pow` for amounts with units:
 
@@ -158,11 +158,6 @@ This exception is meant to trigger some thought about the meaning one wants to a
     (op/> (fahrenheit 14) (celsius 0))
     (clojure.core/pos? (getValue (fahrenheit 14) celsius))
 
-Dauntless users can once again access a more advanced version of `pos?`, `neg?`, etc., by turning off these warnings:
-
-    (binding [units2.ops/*unit-warnings-are-errors* false]
-      (op/neg? (celsius (fahrenheit 14)))) ;; true
-
 However, operations like `pos?` and `zero?` are not the end of our worries. When all conversions between units are linear rescalings, arithmetic works fine; but when offsets are involved, even basic arithmetic may become ill-defined. There are checks that `+`, `-`, and `divide-into-double` don't give nonsense, e.g.
 
     (+ (fahrenheit 1) (celsius 1)) ;; --> Helpful Exception
@@ -218,12 +213,12 @@ If you're not too picky about which numerical algorithms are being used behind t
 
 The extra `[]` are for sending extra arguments to the default algorithms (from `Incanter.optimize`).
 
-If you want to use a different algorithm, it's easy to wrap the algebra of units around existing implementations using the functions `decorate-differentiator` and `decorate-integrator`. Examples are provided in the source of `units2.calc`.
+If you want to use a different algorithm for differentiation or integration, it's easy to wrap the algebra of units around existing implementations using the functions `decorate-differentiator` and `decorate-integrator`. Examples are provided in the source of `units2.calc`.
 
 
 ## Extending the protocols
 
-The `IFnUnit` implementation of the `Unitlike` protocol is meant to cover most use cases; however some users may require higher numerical precision or speed than offered by the underlying `javax.measure` implementation. The functions in `ops` and `calc` were written with such user extensions in mind, and should work with other implementations of `Unitlike` with little to no changes.
+The `IFnUnit` implementation of the `Unitlike` protocol is meant to cover most use cases; however some users may require higher numerical precision or speed than offered by the underlying `javax.measure` implementation. The functions in `ops` and `calc` were written with such user extensions in mind, and should work with other implementations of `Unitlike` with little to no changes. For inctance, it's possible to wrap the algebra of units around your own definitions of `+`, `*`, `==`, `>`, using the many `decorate-` functions in the source of `units2.ops`.
 
 # Closing Thoughts
 
