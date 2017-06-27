@@ -36,6 +36,8 @@
 
 (defunit-with-SI-prefixes sec (->IFnUnit SI/SECOND))
 (mk-spec ::time sec)
+(defunit minute (rescale sec 60))
+(defunit hour   (rescale minute 60))
 
 (defunit-with-SI-prefixes yr (->IFnUnit NonSI/YEAR_SIDEREAL))
 

@@ -217,7 +217,7 @@
 
 (let [PSA "Modular arithmetic interacts nontrivially with offsets of units."]
   ;;   Modular arithmetic interacts nontrivially with rescalings of units.
-  ;;   Consider the following:
+  ;;   Consider the following (incorrect) implementation:
   ;;   <pre><code>
   ;; (let [a (->amount 2.5 meter)
   ;;       b (->amount 5   (/ meter 2))
@@ -229,6 +229,8 @@
   ;;     (== (rem a c)
   ;;         (rem b c)))) ; FALSE
   ;;   </code></pre>
+  ;;    To avoid this, we also need to say how big the number `one' is
+  ;;    in order that these *integer* operations be well-defined.
 
   (defn decorate-ratio [ratio]
     (fn
@@ -236,7 +238,12 @@
         (if (or (amount? a) (amount? b))
           (throw (UnsupportedOperationException. PSA))
           (ratio a b)))
-      ([a b c] 42) ;; treat third as the `unity' quantity... COMING SOON!
+      ([a b c]
+       ;; a is the numerator of the ratio
+       ;; b is the modulus of the congruence (the denominator of the ratio)
+       ;; c is the quantity that defines the size of `one' in this congruence
+       (let [U (AsUnit c)]
+         (->amount (ratio (getValue a U) (getValue b U)) U)))
     )
   )
 

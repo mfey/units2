@@ -192,7 +192,7 @@ These specs automatically `derive` into `:units2.core/amount` and, are used in i
     (descendants :units2.core/amount)
     (repeatedly 5 #(gen/generate (spec/gen :units2.core/amount)))
 
-This feature is relevant for generatively testing functions with specs that are unit-aware:
+This feature is relevant for generatively testing functions that are unit-aware and have specs:
 
     (spec/exercise-fn 'units2.ops/*)
 
@@ -218,7 +218,7 @@ If you want to use a different algorithm for differentiation or integration, it'
 
 ## Extending the protocols
 
-The `IFnUnit` implementation of the `Unitlike` protocol is meant to cover most use cases; however some users may require higher numerical precision or speed than offered by the underlying `javax.measure` implementation. The functions in `ops` and `calc` were written with such user extensions in mind, and should work with other implementations of `Unitlike` with little to no changes. For inctance, it's possible to wrap the algebra of units around your own definitions of `+`, `*`, `==`, `>`, using the many `decorate-` functions in the source of `units2.ops`.
+The `IFnUnit` implementation of the `Unitlike` protocol is meant to cover most use cases; however some users may require higher numerical precision or speed than offered by the underlying `javax.measure` implementation. The functions in `ops` and `calc` were written with such user extensions in mind, and should work with other implementations of `Unitlike` with little to no changes. For instance, it's possible to wrap the algebra of units around your own definitions of `+`, `*`, `==`, `>`, using the many `decorate-` functions in the source of `units2.ops`.
 
 # Closing Thoughts
 

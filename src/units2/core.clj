@@ -16,7 +16,7 @@
   (getConverter [this that] "Returns a function that describes the unit transformation, as it acts on normal Clojure values... mostly for internal use.")
   (from [this] "Returns a function that converts a quantity to the given unit and returns a nondimensionful (normal Clojure) value.")
   ; Not 100% necessary, but nice to have
-  (rescale [this number] "Returns a unit linearly rescaled by the given factor.")
+  (rescale [this number] "Returns a unit linearly rescaled by the given factor, e.g. `(rescale minute 60)` ==> `hour`.")
   (offset [this amount] "Returns a unit offset by the given amount.")
 )
 
