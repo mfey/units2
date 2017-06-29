@@ -77,7 +77,13 @@
    (divide [this] (inverse this))
    (divide [this that] (new IFnUnit (.divide  javax-unit (to-javax IFnUnit that))))
    (divide [this that the-other] (new IFnUnit (.divide  javax-unit (.times (to-javax IFnUnit that) (to-javax IFnUnit the-other)))))
-   (power [this N] (new IFnUnit (.pow javax-unit N)))
+   (power [this N]
+      (cond
+       (integer? N) (new IFnUnit (.pow javax-unit N))
+       (rational? N) (new IFnUnit (.pow (.root javax-unit (denominator N)) (numerator N)))
+       :else (throw (IllegalArgumentException. (str "Expected a `rational?` number (" N " provided)")))
+       ))
+   (root [this N] (power this (/ N)))
   )
 
 

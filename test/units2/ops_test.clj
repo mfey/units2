@@ -48,26 +48,36 @@
 )
 
 (deftest arithmetic
-   (testing "+"
-     (is (clojure.core/zero? (ops/+)))
-     (is (clojure.core/== (ops/+ 2 2) 4))
-     (is (ops/== (ops/+ (m 2) (m 2)) (m 4)))
+   (testing "+ (functionality)"
+     (is (every? clojure.core/zero? [(ops/+) (ops/+ 0) (ops/+ 0 0) (ops/+ 0 0 0)]))
+     (is (clojure.core/== (ops/+ 2 2) (ops/+ 1 1 2) 4))
+     (is (ops/== (ops/+ (m 2) (m 2)) (ops/+ (m 1) (m 1) (m 2)) (m 4)))
+    )
+   (testing "+ (exceptions)"
      (is (try (ops/+ (m 4) 5) (catch java.lang.UnsupportedOperationException e true)))
      (is (try (ops/+ 4 (m 5)) (catch java.lang.UnsupportedOperationException e true)))
      (is (try (ops/+ (fahrenheit 1) (celsius 1)) (catch java.lang.UnsupportedOperationException e true)))
      )
-   (testing "-"
+   (testing "- (functionality)"
+     (is (every? clojure.core/zero? [(ops/- 2 2) (ops/- 0) (ops/- 2 1 1)]))
+     (is (clojure.core/== 3 (ops/- 5 2) (ops/- 5 1 1) (ops/- -3)))
+     (is (ops/== (m 0) (ops/- (m 2) (m 2)) (ops/- (m 0)) (ops/- (m 2) (m 1) (m 1))))
+     (is (ops/== (sec 3) (ops/- (sec 5) (sec 2)) (ops/- (sec 5) (sec 1) (sec 1)) (ops/- (sec -3))))
+     )
+   (testing "- (exceptions)"
      (is (try (ops/-) (catch clojure.lang.ArityException e true)))
-     (is (== 3 (ops/- 5 2)))
      (is (try (ops/- (m 4) 5) (catch java.lang.UnsupportedOperationException e true)))
      (is (try (ops/- 4 (m 5)) (catch java.lang.UnsupportedOperationException e true)))
      (is (try (ops/- (fahrenheit 1) (celsius 1)) (catch java.lang.UnsupportedOperationException e true)))
      )
-   (testing "*"
-     (is (clojure.core/== 1 (ops/*)))
+   (testing "* (functionality)"
+     (is (clojure.core/== 1 (ops/*) (ops/* 1) (ops/* 1 1) (ops/* 1 1 1)))
      (is (ops/== (ops/* (sec 6)) (sec 6)))
-     (is (ops/== (ops/* (sec 6) (m 2)) ((times sec m) 12)))
+     (is (ops/== (ops/* (sec 6) (m 2)) (ops/* (sec 3) 2 (m 2)) ((times sec m) 12)))
      )
+  (testing "* (exceptions)"
+    ;; ops/* should not generate exceptions, unless you're TRYING to break it.
+    )
   (testing "/ (functionality)"
     (is (== 1 (ops// 1 1 1)))
     (is (== 0.5 (ops// 1 2) (ops// 1 1 2) (ops// 1 1 1 2)))
@@ -81,17 +91,22 @@
     (is (try (ops// 1 (m 0)) (catch java.lang.ArithmeticException e true)))
     (is (try (ops// (sec 1) (m 0)) (catch java.lang.ArithmeticException e true)))
   )
-  (testing "div-into-double"
-    (is (number? (ops/divide-into-double (m 1) (m 1)))) ; does it do what's advertised?
-    ;(is (ops/divide-into-double (m 1) (m 0)))
+  (testing "div-into-double (functionality)"
+    (is (number? (ops/divide-into-double (m 1) (m 1)))) ; does it do what's advertised and produce a double?
     (is (== (/ 3 9) (ops/divide-into-double (m 3) (m 9))))
+    (is (== 1.0 (ops/divide-into-double (celsius 6) (celsius 6))
+                (ops/divide-into-double (fahrenheit 1)(fahrenheit 1))))
+  )
+  (testing "div-into-double (exceptions)"
     (is (try (ops/divide-into-double 4 5) (catch java.lang.IllegalArgumentException e true)))
     (is (try (ops/divide-into-double (m 4) 5) (catch java.lang.IllegalArgumentException e true)))
     (is (try (ops/divide-into-double 4 (sec 5)) (catch java.lang.IllegalArgumentException e true)))
-    (is (== 1.0 (ops/divide-into-double (celsius 6) (celsius 6))))
     (is (try (ops/divide-into-double (celsius 6) (fahrenheit (celsius 6))) (catch java.lang.IllegalArgumentException e true)))
+    (is (try (ops/divide-into-double (m 1) (m 0)) (catch java.lang.Exception e true)))
     )
-  ;(testing "rem")
+  (testing "rem"
+    (is (ops/== (minute 30) (ops/rem (hour 1.5) (hour 1) (hour 1))))
+  )
   ;(testing "quot")
   (testing "arithmetic-macro"
     (ops/with-unit-arithmetic
@@ -117,6 +132,9 @@
     (is (= 1.0 (ops/pow (m 1) (m 4) 0)))
     (is (= 1.0 (ops/pow (m 1) (m 1) 1) (ops/pow (m 1) (m 1) 6)))
     (is (= 4.0 (ops/pow (m 1) (cm 50) 2))))
+  (testing "sqrt"
+    (is (= 2.0 (ops/sqrt (m 4) (m 1)) (ops/sqrt (m 8) (m 2))))
+    )
   (testing "exponentiation-macro"
     (ops/with-unit-expts
       (is (= 0.0 (log 1) (log10 1)))

@@ -69,7 +69,9 @@ There's a **tutorial** to help get started with the library, and some example co
 
 No Clojure library is complete without a bit of etymology.
 
-*Unit* is an alteration of *unity*, from Old French *unite* ("uniqueness, oneness", c. 1200), from the Latin *unitas* (cf. below), itself derived from *unus* ("one"). *Unit* was popularized by the English translation of Euclid's Elements (1570), to express the Greek *monos* ("unique, solitary"). Extended sense of "a quantity adopted as a standard of measure" is from 1738.
+*Unit* is an alteration of *unity*, from Old French *unite* ("uniqueness, oneness", c. 1200), from the Latin *unitas* (cf. below), itself derived from *unus* ("one"). *Unit* was popularized by the English commented translation of Euclid's Elements (J. Dee and H. Billingsey, 1570), to express the Greek *monos* ("unique, solitary").
+
+Extended sense of "a quantity adopted as a standard of measure" is from 1738 (!).
 
 Originally *unitas*, *unitatis*, (f), "oneness, sameness, agreement". More explicitly:
 
@@ -77,3 +79,5 @@ Originally *unitas*, *unitatis*, (f), "oneness, sameness, agreement". More expli
 2. quantity considered as an elementary piece for constructing all others
 3. quantity chosen as a term of comparison, to evaluate others of the same sort
 4. conformity of sentiment, accord, harmony
+
+(The material above was adapted from etymonline.com; claim (!) has not been independently verified.)

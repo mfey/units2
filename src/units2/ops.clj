@@ -393,18 +393,16 @@
 (defn expt
   "`(expt b n) == b^n`
 
-  where `n` is an integer and `b` is an amount.
+  where `n` is a rational number and `b` is an amount. Also includes functionality of a root function since (root x N) <=> (expt x (/ N))
   "
   [b n]
-  (if (clojure.core/neg? n)
-    (apply / (repeat (+ 2 (- n)) b)) ; ugly hack, but it works fine. It even (correctly) throws a divide by zero exception when b is zero!
-    (apply * (repeat n b))))
+  (->amount (Math/pow (getValue b (getUnit b)) n) (power (getUnit b) n)))
 
 
 (let [PSA "Exponentiation interacts nontrivially with rescalings of units."]
   ;; The exponential functions below should only be defined on dimensionless quantities
   ;; (to see why, just imagine Maclaurin-expanding the `exp` or `ln` functions)
-  ;; so we define them over ratios of amounts: exp(a/b), log(a/b), etc.
+  ;; so we define them over ratios of amounts: exp(a/b), sqrt(a/b), etc.
 
 
   (defn decorate-expt [expt]
@@ -422,6 +420,7 @@
   (def ^{:doc PSA} exp  (decorate-expt #(Math/exp %)))
   (def ^{:doc PSA} log  (decorate-expt #(Math/log %)))
   (def ^{:doc PSA} log10 (decorate-expt #(Math/log10 %)))
+  (def ^{:doc PSA} sqrt  (decorate-expt #(Math/sqrt %)))
 
 )
 
@@ -437,7 +436,7 @@
                :ret double?)
 
 (defn pow
-  "TODO: docstring"
+  "Also includes functionality of a root function since (root x N) <=> (pow x (/ N))"
   ([a b]
     (if (or (amount? a) (amount? b))
       (throw (Exception. "!!!!"))
@@ -492,10 +491,11 @@
 (defmacro-without-hygiene with-unit-expts
   "Locally bind exponentiation functions to unit-aware equivalents."
   [expt units2.ops/expt
-    exp units2.ops/exp
-    pow units2.ops/pow
-    log units2.ops/log
-    log10 units2.ops/log10
+   exp units2.ops/exp
+   sqrt units2.ops/sqrt
+   pow units2.ops/pow
+   log units2.ops/log
+   log10 units2.ops/log10
    ])
 
 (defmacro-without-hygiene with-unit-magnitudes ;; THIS IS A BAD NAME. FIND A BETTER NAME.

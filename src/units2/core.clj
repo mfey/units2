@@ -30,7 +30,8 @@
          [this that the-other]) ;Seinfeld reference
   (divide [this] [this that] [this that the-other])
   (inverse [this] "syntactic sugar for arity-1 `divide`")
-  (power [this N] "syntactic sugar merging `times` and `divide`")
+  (power [this N])
+  (root  [this N])
 )
 
 

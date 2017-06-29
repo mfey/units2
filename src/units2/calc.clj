@@ -11,8 +11,8 @@
 
 (ns units2.calc
   (:require [units2.core :refer :all]
-            [incanter.optimize :as optim])
-)
+           ;; [incanter.optimize :only [derivative integrate]]
+            ))
 
 ;; ## Abstract Algebra of Units in Calculus
 
@@ -64,54 +64,59 @@
                      uf)
        ))))
 
-;; ## Concrete Differentiation
-
-;; (using Incanter)
-
-(def differentiate
-  (decorate-differentiator
-    (fn [f x args]
-      ((optim/derivative (fn [x] (apply f x args))) x))))
-
-(defn derivative [f]
-  (fn [x] (differentiate f x)))
-
-;; ## Concrete Integration
+;; ## Concrete Differentiation and Integration routines
 
 ;; (naive)
 
-(def naive-integrate
+(def ^:private naive-differentiate
+  (decorate-differentiator
+    (fn [f x [dx]]
+        (/ (- (f (+ x dx)) (f x)) dx))))
+
+(def ^:private naive-integrate
   (decorate-integrator
     (fn [f [xmin xmax] [maxeval]]
       (let [step (/ (- xmax xmin) maxeval)]
         (* (apply + (map f (range xmin xmax step))) step)))))
 
-;(naive-integrate #(* % 2) [1 2] [1e3])
 
-;; (using Incanter)
+;; ;; (using Incanter, which internally is basically the same as the above)
+;;
+;; (def incanter-differentiate
+;;   (decorate-differentiator
+;;     (fn [f x args]
+;;       ((incanter.optimize/derivative (fn [x] (apply f x args))) x))))
+;;
+;; (def incanter-integrate
+;;   (decorate-integrator
+;;     (fn [f [xmin xmax] args]
+;;       (incanter.optimize/integrate (fn [x] (apply f x args)) xmin xmax))))
+;;
 
-(def incanter-integrate
-  (decorate-integrator
-    (fn [f [xmin xmax] args]
-      (optim/integrate (fn [x] (apply f x args)) xmin xmax))))
 
-;(incanter-integrate #(* % 2) [1 2] [])
+;; ;; (using Apache Commons)
+;;
+;; (def apache-integrate
+;;   (decorate-integrator
+;;     (fn [f [xmin xmax] [integrator-object maxeval more-args]]
+;;       (.integrate integrator-object maxeval
+;;                   (proxy
+;;                     [org.apache.commons.math3.analysis.UnivariateFunction]
+;;                     []
+;;                     (value [x] (apply f x more-args)))
+;;                   xmin xmax))))
 
-;; (using Apache Commons)
-
-(def apache-integrate
-  (decorate-integrator
-    (fn [f [xmin xmax] [integrator-object maxeval more-args]]
-      (.integrate integrator-object maxeval
-                  (proxy
-                    [org.apache.commons.math3.analysis.UnivariateFunction]
-                    []
-                    (value [x] (apply f x more-args)))
-                  xmin xmax))))
-
+; e.g.
 ;(apache-integrate #(* % 2) [1 2]
 ;                  [(org.apache.commons.math3.analysis.integration.RombergIntegrator.)
 ;                   1e4
 ;                   []])
 
-(def integrate incanter-integrate)
+
+
+
+(defn derivative [f]
+  (fn [x] (naive-differentiate f x 1e-4)))
+
+(def differentiate naive-differentiate)
+(def integrate naive-integrate)
