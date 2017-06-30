@@ -15,7 +15,6 @@
   (compatible? [this that] "Do two units have the same dimension? If so, they are `compatible?'")
   (getConverter [this that] "Returns a function that describes the unit transformation, as it acts on normal Clojure values... mostly for internal use.")
   (from [this] "Returns a function that converts a quantity to the given unit and returns a nondimensionful (normal Clojure) value.")
-  ; Not 100% necessary, but nice to have
   (rescale [this number] "Returns a unit linearly rescaled by the given factor, e.g. `(rescale minute 60)` ==> `hour`.")
   (offset [this amount] "Returns a unit offset by the given amount.")
 )
@@ -52,9 +51,9 @@
                     (empty? pfs)       (throw (IllegalArgumentException. "Can't generate a unit from an empty association-list!"))
                     (odd? (count pfs)) (throw (IllegalArgumentException. "Odd number of elements in the association-list!"))
                     true               (partition 2 pfs))
-               true (throw (IllegalArgumentException. "Mis-specified map or association-list!")))]
+               true (throw (IllegalArgumentException. (str "Mis-specified map or association-list! (" pfs " provided)"))))]
       (when (not (every? (comp integer? second) pairs))
-        (throw (IllegalArgumentException. "All powers must be integers!")))
+        (throw (IllegalArgumentException. "All exponents must be integers!"))) ; I could generalise this to `rational?` exponents, but the restriction to integers here seems justifiable.
       (when (not (every? (comp #(and (satisfies? Unitlike %) (satisfies? Multiplicative %)) first) pairs))
         (throw (IllegalArgumentException. "All units must be `Multiplicative`!")))
       (let [mapped (map (fn [[a b]] (power a b)) pairs)]; generate ((power unit exponent) ... (power unit exponent))
@@ -79,6 +78,10 @@
 
   Object
   (toString [this] (str "(" unit " " value ")"))
+  ; You might think `(str "#=(->amount " value " " unit ")")` is better.
+  ; Or maybe `(str "#units2.core.amount[" value " " unit "]")`?
+  ; Fooling around with the reader breaks referential transparency
+  ; Don't do it.
 )
 
 ;; the amount type and the amount spec don't overlap exactly.

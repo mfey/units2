@@ -302,9 +302,9 @@
       (every? amount? args)
         (if (every? #(compatible? (getUnit (first args)) %) (map getUnit (rest args)))
             (apply cmp (map (from (getUnit (first args))) args))
-            (throw (UnsupportedOperationException. "Can't compare quantities in incompatible units")))
+            (throw (UnsupportedOperationException. (str "Can't compare quantities in incompatible units! (" args " provided)"))))
       :else
-        (throw (UnsupportedOperationException. "Can't compare quantities with and without units!") )
+        (throw (UnsupportedOperationException. (str "Can't compare quantities with and without units! (" args " provided)")))
      )
   )
 )
@@ -361,9 +361,9 @@
         (if (every? #(compatible? (getUnit (first nums)) (getUnit %)) (rest nums))
           (let [U (getUnit (first nums))]
             (->amount (apply ord (map (from U) nums)) U))
-          (throw (UnsupportedOperationException. "Can't order dimensionally incompatible quantities!")))
+          (throw (UnsupportedOperationException. (str "Can't order dimensionally incompatible quantities! (" nums " provided)"))))
       :else
-        (throw (UnsupportedOperationException. "Can't order quantities with and without units!"))
+        (throw (UnsupportedOperationException. (str "Can't order quantities with and without units! (" nums " provided)")))
     )
   )
 )

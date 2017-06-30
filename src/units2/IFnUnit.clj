@@ -44,7 +44,7 @@
     (fn [a]
       (if (amount? a)
         (getValue a this)
-        (throw (Exception. (str "Expected an amount with dimension " (getDimension this) " (" a " provided)"))))))
+        (throw (IllegalArgumentException. (str "Expected an amount with dimension " (getDimension this) " (" a " provided)"))))))
   (rescale [this x]
     (if (amount? x)
       (throw (IllegalArgumentException. (str "Units can only be rescaled by numbers without units (" x " provided)")))
