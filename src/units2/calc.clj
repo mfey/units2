@@ -75,8 +75,8 @@
 
 (def ^:private naive-integrate
   (decorate-integrator
-    (fn [f [xmin xmax] [maxeval]]
-      (let [step (/ (- xmax xmin) maxeval)]
+    (fn [f [xmin xmax] [Neval]]
+      (let [step (/ (- xmax xmin) Neval)]
         (* (apply + (map f (range xmin xmax step))) step)))))
 
 

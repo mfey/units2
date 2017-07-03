@@ -32,9 +32,7 @@ So, why not print `#=(m 7)`? Firstly, this doesn't work, it'd have to be `#=(->a
 While trying to justify why rational exponents weren't supported (in favour of just integers), I convinced myself it's probably OK to have them as long as these are only accessible through `(ops/expt ... [rational?])` and explicit construction via the `power` and `root`. Basically, LISP languages are good because
 
 <center>
-```
 LISP == Freedom == Good
-```
 </center>
 
 That said, there are usually *conceptual* reasons to try to stick to integer exponents, tied to the details of whatever domain-specific problem one might be trying to solve.

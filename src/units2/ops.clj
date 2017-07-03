@@ -267,8 +267,9 @@
 
   (def ^{:doc PSA} ceil  (decorate-entier #(Math/ceil %)))
   (def ^{:doc PSA} floor (decorate-entier #(Math/floor %)))
-  (def ^{:doc PSA} round (decorate-entier #(Math/round %)))
-  (def ^{:doc PSA} abs   (decorate-entier #(Math/abs %)))
+  (def ^{:doc PSA} round (decorate-entier #(Math/round (double %)))) ; type hint
+  (def ^{:doc PSA} abs   (decorate-entier #(cond (int? %) (Math/abs (int %))
+                                                 (double? %) (Math/abs (double %))))) ; funny type hint
 
 )
 

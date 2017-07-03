@@ -53,6 +53,9 @@ There's a **tutorial** to help get started with the library, and some example co
 ((comp hour average vals) self-reported-half-marathon-times) ; --> 1.24 hours
 
 ;; Wait a minute... let's exclude Chuck Norris from the average
+
+(Thread/sleep (getValue (minute 1) msec)) ; literally wait one minute
+
 (let [realistic (fn [x] (filter #(ops/> % (minute 0)) x))]
     ((comp hour average realistic vals)
       self-reported-half-marathon-times)) ; --> 2.65 hours

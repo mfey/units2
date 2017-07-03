@@ -53,7 +53,7 @@ The usual operations (`+`,`-`,`*`,`/`,`<`,`>`,`==`,`exp`,`log`, etc.) are define
 
     (op/== (kg 1) (g 1000)) ; true
 
-It's recommended to namespace-qualify these operations; however they fall back to the usual ops from `clojure.core` when acting on regular numbers, so `[units2.ops :refer :all]` would be safe too (unless another namespace also redefines `+-*/`).
+It's recommended to namespace-qualify these operations; however they fall back to the usual ops from `clojure.core` when acting on regular numbers, so `[units2.ops :refer :all]` is safe too.
 
 ## Macros
 
@@ -81,7 +81,6 @@ These are joined together into the super-macro `(with-unit- [keywords] body)`, w
 
 Of course, you'd reach the same level of abstraction with `[units2.ops :refer [...]]`, but limiting redefinitions of the core language operations and explicitly mentioning them where they are necessary is probably a good idea.
 
-
 ## Exponentiation
 
 Exponentials and logarithms can be a bit subtle; but given how often they occur in code with units, using them should not require re-inventing the wheel.
@@ -96,6 +95,12 @@ The `expt` function (borrowing the name of `pow` in the LISP language Scheme) is
 
     (op/expt (km 1) 3) ; --> large volume
     (op/expt (m 1) -2) ; --> small surface density
+
+## Decorating your own ops
+
+`units2` provides you with decorated versions of `clojure.core` and `java.lang.Math` ops out of the box; but it's also easy to add unit-awareness to ops from other namespaces/libraries.
+
+TODO: Discuss decorators
 
 # Defining Custom IFnUnits
 
@@ -113,6 +118,9 @@ IFnUnits are also `Multiplicative`, so you can combine existing units with `time
     (unit-from-powers {kg 1 m 2 sec -2}) ; Joule (from map)
     (unit-from-powers [kg 1 m 2 sec -2]) ; Joule (from alist)
 
+Note that these new units are first-class and anonymous. For work at the REPL, or for units you'll want to use throughout your entire code, units can also be convenietnly bound to symbols with the `defunit` macro, so that the printed representation of a unit matches the symbol it's bound to.
+
+
 ## `SI` and `NonSI`
 
 If the unit you want to define is a commonly used unit, then it might be a member of the `SI` or `NonSI` classes of `javax.measure.unit`. In that case, you can simply `import` these and call the `deftype`-constructor for `IFnUnit`:
@@ -122,9 +130,6 @@ If the unit you want to define is a commonly used unit, then it might be a membe
 
     (->IFnUnit SI/WATT)
     ;; or (new units2.IFnUnit.IFnUnit SI/METER)
-
-
-For work at the REPL, units can also be bound to symbols with the `defunit` macro, so that the printed representation of a unit matches the symbol it's bound to.
 
 ## `makebaseunit`
 
@@ -136,15 +141,8 @@ When the units you care about have no relation to any existing unit, it's necess
 
     (let [fullnight (op// (hedon 10) (nap 8))
           powernap  (op// (hedon 1)  (nap 0.5))]
-      (map restfulness [fullnight powernap])) ;; which is more restful?
+      (map restfulness [fullnight powernap])) ;; inspect: which is more restful?
 
-There's also experimental support for a more advanced `defbaseunit`, which automatically connects dimensional analysis to `clojure.spec`:
-
-    (defbaseunit U ::dim)
-    (require [clojure.spec :as s])
-    (s/exercise ::dim)
-
-However, these features are still relatively incomplete and unsafe.
 
 # Offset Pitfalls
 
@@ -162,13 +160,37 @@ However, operations like `pos?` and `zero?` are not the end of our worries. When
 
     (+ (fahrenheit 1) (celsius 1)) ;; --> Helpful Exception
 
-but there are still plenty of ways to combine units and make the underlying `javax.measure` implementation of unit conversions throw a `ConversionException`. Without even using `ops`, one could engineer the following:
+but there are still plenty of ways to combine units and make the underlying `javax.measure` implementation of unit conversions throw an `Exception`. Without even using `ops`, one could engineer the following:
 
     ;; temperature gradient conversions
     ((divide celsius mm) ((divide celsius m) 1)) ;; successful conversion (linear)
     ((divide fahrenheit m) ((divide celsius m) 1)) ;; unsuccessful conversion (nonlinear)
 
+
 # Advanced Features
+
+## Calculus
+
+The functions in `units2.calc` handle numerical univariate calculus (differentiation and integration) for any combination of regular/dimensionful quantities in the domain/range of the function.
+
+If you're not too picky about which numerical algorithms are being used behind the scenes, just use `differentiate` and `integrate`:
+
+    (require '[units2.calc :refer :all])
+
+    (integrate (fn [x] (* x 2)) [0 1] [1e3]) ;; 1
+    (integrate (fn [x] (op/* x (sec 2))) [0 1] [1e3]) ;; 1 second
+    (integrate (fn [x] (op/* x 2)) (map m [0 1]) [1e3]) ;; 1 square-meter
+
+    (differentiate (fn [x] (op/* x x (m 2))) 1 [1e-4]) ;; 4 meters
+
+The extra `[]` are for sending extra arguments to the underlying algorithms.
+
+If you want to use a different algorithm for differentiation or integration, it's easy to wrap the algebra of units around existing implementations using the functions `decorate-differentiator` and `decorate-integrator`. Examples are provided in the source of `units2.calc`.
+
+
+## Extending the protocols
+
+The `IFnUnit` implementation of the `Unitlike` protocol is meant to cover most use cases; however some users may require higher numerical precision or speed than offered by the underlying `javax.measure` implementation. The functions in `ops` and `calc` were written with such user extensions in mind, and should work with other implementations of `Unitlike` with little to no changes. For instance, it's possible to wrap the algebra of units around your own definitions of `+`, `*`, `==`, `>`, using the many `decorate-` functions in the source of `units2.ops`.
 
 ## Spec Interop
 
@@ -185,7 +207,7 @@ These can also be used to generate amounts of the given dimension(s):
     (gen/generate (spec/gen (spec/or :l :units2.astro/length
                                      :t :units2.astro/time)))
 
-Note that the generated amounts are all in the base unit of the given dimension.
+Note that the generated amounts are (for the moment?) all in the base unit of the given dimension.
 
 These specs automatically `derive` into `:units2.core/amount` and, are used in its generator:
 
@@ -196,29 +218,12 @@ This feature is relevant for generatively testing functions that are unit-aware 
 
     (spec/exercise-fn 'units2.ops/*)
 
+There's also support for a more advanced `defbaseunit`, which automatically connects dimensional analysis to `clojure.spec`:
 
-## Calculus
+    (defbaseunit U ::dim)
+    (spec/exercise ::dim)
 
-The functions in `units2.calc` handle numerical univariate calculus (differentiation and integration) for any combination of regular/dimensionful quantities in the domain/range of the function.
-
-If you're not too picky about which numerical algorithms are being used behind the scenes, just use `differentiate` and `integrate`:
-
-    (require '[units2.calc :refer :all])
-
-    (integrate (fn [x] (* x 2)) [0 1] []) ;; 1
-    (integrate (fn [x] (op/* x (sec 2))) [0 1] []) ;; 1 second
-    (integrate (fn [x] (op/* x 2)) (map m [0 1]) []) ;; 1 square-meter
-
-    (differentiate (fn [x] (op/* x x (m 2))) 1 []) ;; 4 meters
-
-The extra `[]` are for sending extra arguments to the default algorithms (from `Incanter.optimize`).
-
-If you want to use a different algorithm for differentiation or integration, it's easy to wrap the algebra of units around existing implementations using the functions `decorate-differentiator` and `decorate-integrator`. Examples are provided in the source of `units2.calc`.
-
-
-## Extending the protocols
-
-The `IFnUnit` implementation of the `Unitlike` protocol is meant to cover most use cases; however some users may require higher numerical precision or speed than offered by the underlying `javax.measure` implementation. The functions in `ops` and `calc` were written with such user extensions in mind, and should work with other implementations of `Unitlike` with little to no changes. For instance, it's possible to wrap the algebra of units around your own definitions of `+`, `*`, `==`, `>`, using the many `decorate-` functions in the source of `units2.ops`.
+However, these features are still relatively incomplete and unsafe.
 
 # Closing Thoughts
 

@@ -86,7 +86,7 @@ A `defunit` that also defunits all SI-prefixed units.
 
 Macros
 
-Rebind various clojure.core and java.lang.Math functions to unit-aware equivalents within the macro's scope.
+Rebind (lexically shadow) various clojure.core and java.lang.Math functions to unit-aware equivalents within the macro's scope.
 
 ### ==, <, >, <=, >=
 
@@ -96,7 +96,7 @@ Functions
 
 Functions
 
-### +, -, *, /, rem, quot
+### +, -, *, /
 
 Functions
 
@@ -104,15 +104,26 @@ Functions
 
 Function
 
+ arguments | output |
+------: | ---- |
+amount, amount | double |
+
 Returns the ratio of two compatible units as a double (if possible).
 
-### exp, log , log10
+### exp, log , log10, sqrt, pow
 
 Functions
 
-### pow
+These exponentiation functions are inspired by methods of `java.lang.Math`. They should only be defined on dimensionless quantities (to see why, just imagine Maclaurin-expanding the `exp` or `ln` functions).
 
-Function
+We define them over ratios of amounts using the ages-old "`atan2`" convention `atan2(a,b) == atan(a/b)`. For instance,
+
+```clojure
+(exp a) ; ==> (Math/exp a)
+(exp a b) ; ==> (Math/exp (divide-into-double a b))
+(pow a n) ; ==> (Math/pow a n)
+(pow a b n) ; ==> (Math/pow (divide-into-double a b) n)
+```
 
 ### expt
 
@@ -120,9 +131,11 @@ Function
 
 Returns the given amount raised to the given integer power.
 
-### abs, floor, ceil, round
+### abs, floor, ceil, round, rem, quot
 
 Functions
+
+These modular arithmetic functions are inspired by methods of `java.lang.Math`.
 
 ### decorate-[...]
 
@@ -132,8 +145,32 @@ Functions
 
 ### decorate-differentiator, decorate-integrator
 
+Functions
+
 Higher-order functions for wrapping the algebra of units around pre-existing differentiation and integration schemes.
+
+Name    | arguments | output | description |
+------: | ---- | ---- | ---- |
+decorate-differentiator | fn : f(number), number , arglist -> number | fn\* | Decorate a differentiation scheme|
+decorate-integrator | fn : f(number), [number number] , arglist -> number | fn\* | Decorate an integration scheme|
+
+where the shape of a decorated fn\* is illustrated below.
 
 ### differentiate, integrate
 
-Decorated versions of Incanter's derivatives and integrals that can deal with units.
+Functions
+
+Decorated versions of naive differentiation and integration schemes that can deal with units. These are provided for convenience/prototyping, and should be replaced by better (user-provided) schemes in production.
+
+In what follows, let "amount(X)" denote "an `amount` carrying units of `X`".
+
+Name    | arguments | output | description |
+------: | ---- | ---- | ---- |
+differentiate | fn: amount(A) -> amount(B), amount(A) , [amount(A)] | amount(B/A) | Returns the (first-order-forward) derivative of a function |
+ || fn: amount(A) -> number, amount(A) , [amount(A)] | amount(1/A) | Returns the (first-order-forward) derivative of a function |
+|| fn: number -> amount(A), number , [number] | amount(A) | Returns the (first-order-forward) derivative of a function |
+ || fn: number -> number, number , [number] | number | Returns the (first-order-forward) derivative of a function |
+integrate | fn: amount(A) -> amount(B), [amount(A) amount(A)] , [number] | amount(BA) | Returns the definite integral of a function over an interval|
+| | fn: amount(A) -> number, [amount(A) amount(A)] , [number] | amount(A) | Returns the definite integral of a function over an interval|
+| | fn: number -> amount(A), [number number] , [number] | amount(A) | Returns the definite integral of a function over an interval|
+| | fn: number -> number, [number number], [number] | number | Returns the definite integral of a function over an interval|

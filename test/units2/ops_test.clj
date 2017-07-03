@@ -81,7 +81,7 @@
   (testing "/ (functionality)"
     (is (== 1 (ops// 1 1 1)))
     (is (== 0.5 (ops// 1 2) (ops// 1 1 2) (ops// 1 1 1 2)))
-    (is (ops/== ((.inverse sec) 0.5) (ops// 1 (sec 2)) (ops// 2 2 (sec 2))))
+    (is (ops/== ((inverse sec) 0.5) (ops// 1 (sec 2)) (ops// 2 2 (sec 2))))
     )
   (testing "/ (exceptions)"
     (is (try (ops//) (catch clojure.lang.ArityException e true)))

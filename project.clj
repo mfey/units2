@@ -11,4 +11,5 @@
                 ]
   :plugins [[lein-marginalia "0.9.0"]
             ]
+  :global-vars {*warn-on-reflection* true} ; I'm too forgetful for regular `lein check`
 )
