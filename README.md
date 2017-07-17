@@ -1,6 +1,6 @@
 # units2
 
-A Clojure library for quantities with units.
+A Clojure library for units of measurement.
 
 
 ## Rationale

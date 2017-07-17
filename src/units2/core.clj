@@ -34,30 +34,45 @@
 )
 
 
-(defn unit-from-powers
+(defn parse-unit
 "Returns a composite unit from a map or association-list of `Multiplicative` units and integer powers.
 
     `(this {kg 1 m -3})` -> a unit for density
     `(this [cm 2])` -> a small area unit
+    `(this \"{m 1 sec -2}\")` -> an acceleration
   "
 [pfs]
-	(let [pairs (cond
-               (map? pfs)
-                  (if (empty? (keys pfs))
+  (letfn [(parse [input]
+            (cond
+               (map? input)
+                  (if (empty? (keys input))
                     (throw (IllegalArgumentException. "Can't generate a unit from an empty map!"))
-                    (map list (keys pfs) (vals pfs)))
-               (sequential? pfs)
+                    (into [] (map list (keys input) (vals input))))
+               (sequential? input)
                   (cond
-                    (empty? pfs)       (throw (IllegalArgumentException. "Can't generate a unit from an empty association-list!"))
-                    (odd? (count pfs)) (throw (IllegalArgumentException. "Odd number of elements in the association-list!"))
-                    true               (partition 2 pfs))
-               true (throw (IllegalArgumentException. (str "Mis-specified map or association-list! (" pfs " provided)"))))]
-      (when (not (every? (comp integer? second) pairs))
-        (throw (IllegalArgumentException. "All exponents must be integers!"))) ; I could generalise this to `rational?` exponents, but the restriction to integers here seems justifiable.
-      (when (not (every? (comp #(and (satisfies? Unitlike %) (satisfies? Multiplicative %)) first) pairs))
-        (throw (IllegalArgumentException. "All units must be `Multiplicative`!")))
-      (let [mapped (map (fn [[a b]] (power a b)) pairs)]; generate ((power unit exponent) ... (power unit exponent))
-        (reduce (fn [x y] (times x y)) mapped))))
+                    (empty? input)       (throw (IllegalArgumentException. "Can't generate a unit from an empty association-list!"))
+                    (odd? (count input)) (throw (IllegalArgumentException. "Odd number of elements in the association-list!"))
+                    true               (into [] (partition 2 input)))
+               (string? input)
+                  (parse (eval (read-string input)))
+               true (throw (IllegalArgumentException. (str "Mis-specified map or association-list! (" input " provided)")))))
+           (validate [parsed-input]
+              (cond
+                (not (every? (comp integer? second) parsed-input))
+                  (throw (IllegalArgumentException. (str "All exponents must be integers! (" (into [] (map second parsed-input)) " provided)"))) ; I could generalise this to `rational?` exponents, but the restriction to integers here seems justifiable.
+                (not (every? (comp #(instance? units2.core.Unitlike %) first) parsed-input))
+                  (throw (IllegalArgumentException. (str "All units must be `Unitlike`! (" (into [] (map first parsed-input)) " provided)")))
+                (not (every? (comp #(instance? units2.core.Multiplicative %) first) parsed-input))
+                  (throw (IllegalArgumentException. (str "All units must be `Multiplicative`! (" (into [] (map first parsed-input)) " provided)")))
+                :else
+                  parsed-input))
+          ]
+	  (let [pairs (validate (parse pfs))]
+        ;; do the work
+        (let [mapped (map (fn [[a b]] (power a b)) pairs)]; generate ((power unit exponent) ... (power unit exponent))
+          (reduce (fn [x y] (times x y)) mapped)))))
+
+(def unit-from-powers parse-unit) ;; both names make sense in different contexts
 
 (spec/def ::amount
   (spec/with-gen

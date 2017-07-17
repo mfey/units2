@@ -1,7 +1,7 @@
 (ns units2.core-test
   (:require [clojure.test :refer :all]
             [units2.core :refer :all]
-            [units2.astro :refer [m]]))
+            [units2.astro :refer [m sec]]))
 
 (deftest amount-p
   (testing "amount?"
@@ -19,3 +19,13 @@
     (is (not (linear? #(+ 3 %))))
   )
 )
+
+(deftest parser
+  (testing "parse-unit"
+    (instance? units2.core.Unitlike (parse-unit {m 1}))
+    (instance? units2.core.Unitlike (parse-unit [m 1]))
+    (instance? units2.core.Unitlike (parse-unit {m 1 sec -2}))
+    (instance? units2.core.Unitlike (parse-unit [m 1 sec -2]))
+    ;(instance? units2.core.Unitlike (parse-unit "{m 1}")) ;; these do work
+    ;(instance? units2.core.Unitlike (parse-unit "[m 1]")) ;; at the REPL...
+  ))

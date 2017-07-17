@@ -32,10 +32,16 @@ So, why not print `#=(m 7)`? Firstly, this doesn't work, it'd have to be `#=(->a
 While trying to justify why rational exponents weren't supported (in favour of just integers), I convinced myself it's probably OK to have them as long as these are only accessible through `(ops/expt ... [rational?])` and explicit construction via the `power` and `root`. Basically, LISP languages are good because
 
 <center>
+```
 LISP == Freedom == Good
+```
 </center>
 
 That said, there are usually *conceptual* reasons to try to stick to integer exponents, tied to the details of whatever domain-specific problem one might be trying to solve.
+
+### Unit Parsing
+
+`units2` sticks to the Clojure idiom of using EDN for representing the data you want to parse.
 
 ### This smells like a Type System...
 A lot of this library, and maybe all of it, could be done with static types. Just look at how units are handled in F#. However, having units as a first-class citizen of the language makes programming a lot more expressive (i.e. easier). Having a bunch of first-class types (rather than one new type for a bunch of first-class units as in `units2`) somehow seems immoral and silly at the same time.

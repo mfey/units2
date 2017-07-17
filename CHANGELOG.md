@@ -3,18 +3,19 @@ All notable changes to this project should be documented in this file. They prob
 
 As of v.2.7, the API of `units2` should be stable enough to adopt a ["no-breaking-changes" policy](https://www.youtube.com/watch?v=oyLBGkS5ICk). You should *never* have any reason *not* to use the most recent version of `units2`.
 
-## [2.7 unreleased] - some date in the (near?) future
+## [2.7 unreleased] - some date in the (near) future
 ### Added
 - This changelog. This and previous log entries will be disappointing.
 - IEC binary prefixes and bit/octet units.
 - Support for rational exponents in dimensional analysis (via `root` in Multiplicative protocol)
 - ops/sqrt
 ### Changed
-- ops are now (re)defined with decorator functions instead of macros to allow more generality.
+- the brand slogan is now "a Clojure library for units of measurement", this improves searchability / SEO.
+- ops are now (re)defined with decorator functions instead of macros to allow more generality / expose this functionality to the user.
 - the way modular arithmetic with units is done in `ceil`, `floor`, `round`, has improved.
 ### Removed
 - A dynamic boolean allowing unsafe, surprising behaviour was removed. Unsurprising behaviour is now mandatory rather than default. Removed for sanity.
-- units2 no longer depends on incanter/apache for calculus. If the naive builtins aren't good enough, users probably want to decorate their own functions anyway. Removed to prevent feature creep.
+- units2 no longer depends on incanter/apache for calculus. If the naive builtins aren't good enough, users probably want to decorate their own functions anyway. Removed to prevent feature creep and unnecessary dependency on other libraries.
 
 ## [2.6] - 17th Feb 2017
 ### Added
