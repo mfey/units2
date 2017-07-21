@@ -51,11 +51,11 @@
                (sequential? input)
                   (cond
                     (empty? input)       (throw (IllegalArgumentException. "Can't generate a unit from an empty association-list!"))
-                    (odd? (count input)) (throw (IllegalArgumentException. "Odd number of elements in the association-list!"))
+                    (odd? (count input)) (throw (IllegalArgumentException. (str "Odd number of elements in the association-list! (" input " provided)")))
                     true               (into [] (partition 2 input)))
                (string? input)
                   (parse (eval (read-string input)))
-               true (throw (IllegalArgumentException. (str "Mis-specified map or association-list! (" input " provided)")))))
+               true (throw (IllegalArgumentException. (str "Mis-specified map, EDN string, or association-list! (" input " provided)")))))
            (validate [parsed-input]
               (cond
                 (not (every? (comp integer? second) parsed-input))
@@ -72,7 +72,8 @@
         (let [mapped (map (fn [[a b]] (power a b)) pairs)]; generate ((power unit exponent) ... (power unit exponent))
           (reduce (fn [x y] (times x y)) mapped)))))
 
-(def unit-from-powers parse-unit) ;; both names make sense in different contexts
+;; both names make sense in different contexts
+(def unit-from-powers parse-unit)
 
 (spec/def ::amount
   (spec/with-gen
@@ -93,24 +94,16 @@
 
   Object
   (toString [this] (str "(" unit " " value ")"))
-  ; You might think `(str "#=(->amount " value " " unit ")")` is better.
-  ; Or maybe `(str "#units2.core.amount[" value " " unit "]")`?
-  ; Fooling around with the reader breaks referential transparency
-  ; Don't do it.
 )
-
-;; the amount type and the amount spec don't overlap exactly.
-;; I can create (->amount 8 "hi") which will fail at unit conversions but exist as an object... is this a feature or a bug?
-
 
 (defmethod print-method amount [a ^java.io.Writer w]
   (.write w (str a))) ; human and (almost) computer readable.
 
 
 (defn amount?
-  "Returns true if x is an instance of units2.core.amount."
-  [x] (instance? amount x)) ; TODO: think about whether we want this or (spec/valid? ::amount %) or both.
-
+  "Returns true if x is an instance of `units2.core.amount`, and carries a unit that `(satisfies? Unitlike)`."
+  [x] (and (instance? amount x)
+           (satisfies? Unitlike (getUnit x))))
 
 
 ;; This is NOT a safe way to check for linearity!

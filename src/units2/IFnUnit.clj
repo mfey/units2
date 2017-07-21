@@ -86,6 +86,8 @@
    (root [this N] (power this (/ N)))
   )
 
+(defmethod print-method IFnUnit [U ^java.io.Writer w]
+  (.write w (str U))) ; human and (almost) computer readable.
 
 (defmacro defunit
 "`def` a var to hold a unit, and change that unit's printed representation to that var."

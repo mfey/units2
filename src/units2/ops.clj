@@ -3,12 +3,13 @@
 ;; This implementation assumes:
 ;;
 ;;   1. that the values in `amount`, and any other numbers, are well-behaved under `clojure.core/fns` and `Math/fns`
-;;   2. that the units in `amount` both `(satisfies? Unitlike)` and `(satisfies? Multiplicative)`.
+;;   2. that the units in `amount` are `Multiplicative`.
 ;;   3. that the units in `amount` are all linear rescalings without any `offset`.
 ;;        (There are a few offset checks scattered throughout,
 ;;         so offsets *usually* work, but no overall guarantees.)
 ;;
-;; As such, it should be fairly easy to reuse most of this code for other implementations.
+;; As such, it should be fairly easy to reuse most of this code for other implementations if
+;; the provided decorators aren't good enough.
 
 ;; ## Nota Bene
 ;;
@@ -19,10 +20,7 @@
 ;;   (pow a b c)
 ;;   (Math/pow (divide-into-double a b) c)
 ;;   </code></pre>
-;;
-
-;; ### TODO: add/fix docstrings
-;; ### TODO: add/fix function specs
+;;   4. The spec'd functions below have been *generatively tested*.
 
 
 (ns units2.ops
@@ -273,7 +271,17 @@
 
 )
 
-; specs here!
+; specs here can probably be a bit "tighter", but I'm happy with this.
+
+(spec/fdef rem  :args (spec/or :one number? :bin ::two-linear-units-second-nonzero) :ret number?)
+(spec/fdef quot :args (spec/or :one number? :bin ::two-linear-units-second-nonzero) :ret number?)
+
+(spec/fdef ceil  :args (spec/or :one number? :bin ::two-linear-units-second-nonzero) :ret double?)
+(spec/fdef floor :args (spec/or :one number? :bin ::two-linear-units-second-nonzero) :ret double?)
+(spec/fdef round :args (spec/or :one number? :bin ::two-linear-units-second-nonzero) :ret int?)
+
+(spec/fdef abs :args (spec/or :one number? :bin ::two-linear-units-second-nonzero)
+               :ret (spec/and clojure.core/pos? (spec/or :int int? :double double?)))
 
 
 
@@ -394,7 +402,7 @@
 (defn expt
   "`(expt b n) == b^n`
 
-  where `n` is a rational number and `b` is an amount. Also includes functionality of a root function since (root x N) <=> (expt x (/ N))
+  where `n` is a rational number and `b` is an amount. Also includes functionality of a root function since `(root x N)` <=> `(expt x (/ N))`
   "
   [b n]
   (->amount (Math/pow (getValue b (getUnit b)) n) (power (getUnit b) n)))
@@ -427,6 +435,25 @@
 
 ; specs separately (function ranges)
 
+(spec/fdef exp :args (spec/or :one number?
+                              :bin ::two-linear-units-second-nonzero)
+               :ret (spec/and clojure.core/pos? double?))
+
+(spec/fdef log :args (spec/or :one (spec/and clojure.core/pos? number?)
+                              :bin (spec/and ::two-linear-units-second-nonzero
+                                             #(clojure.core/pos? (divide-into-double (first %) (second %)))))
+               :ret double?)
+
+(spec/fdef log10 :args (spec/or :one (spec/and clojure.core/pos? number?)
+                                :bin (spec/and ::two-linear-units-second-nonzero
+                                               #(clojure.core/pos? (divide-into-double (first %) (second %)))))
+                 :ret double?)
+
+(spec/fdef sqrt  :args (spec/or :one (spec/and clojure.core/pos? number?)
+                                :bin (spec/and ::two-linear-units-second-nonzero
+                                               #(clojure.core/pos? (divide-into-double (first %) (second %)))))
+                 :ret (spec/and clojure.core/pos? double?))
+
 (spec/fdef pow :args (spec/or :bin (spec/tuple number? number?)
                               :tri ;(spec/with-gen
                                      (spec/and (spec/tuple :units2.core/amount :units2.core/amount number?)
@@ -437,7 +464,7 @@
                :ret double?)
 
 (defn pow
-  "Also includes functionality of a root function since (root x N) <=> (pow x (/ N))"
+  "Also includes functionality of a root function since `(root x N)` <=> `(pow x (/ N))`"
   ([a b]
     (if (or (amount? a) (amount? b))
       (throw (Exception. "!!!!"))

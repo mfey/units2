@@ -12,6 +12,15 @@
   (is (try (to-javax units2.IFnUnit.IFnUnit 42) (catch Exception e true)))
   )
 
+(deftest printing
+  (testing "printing"
+    (is (= 'm (read-string (pr-str m))))
+    (is (= '(m 7) (read-string (pr-str (list m 7)))))
+    (is (= '[m 7] (read-string (pr-str (vector m 7)))))
+    (is (= '{m 7} (read-string (pr-str {m 7}))))
+    (is (= '{:a [m {m 7}]} (read-string (pr-str {:a [m {m 7}]}))))
+  ))
+
 (deftest protocoladherence
   (is (satisfies? Unitlike m))
   (is (instance? clojure.lang.IFn m))

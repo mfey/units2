@@ -113,12 +113,12 @@ Sticking to the `units2.core` protocols, you can `rescale` or `offset` existing 
     (rescale (offset celsius (celsius -17.777)) (/ 5 9)) ;; fahrenheit
     (let [foot (AsUnit (cm 30))] (foot (m 1))) ;; how many feet in a meter?
 
-IFnUnits are also `Multiplicative`, so you can combine existing units with `times` and `divide`. However, the recommended way to combine `Multiplicative` units is to use the `unit-from-powers` function:
+IFnUnits are also `Multiplicative`, so you can combine existing units with `times` and `divide`. However, the recommended way to combine `Multiplicative` units is to use the `parse-unit` (alias `unit-from-powers`) function:
 
-    (unit-from-powers {kg 1 m 2 sec -2}) ; Joule (from map)
-    (unit-from-powers [kg 1 m 2 sec -2]) ; Joule (from alist)
+    (parse-unit {kg 1 m 2 sec -2}) ; Joule from an EDN specification
+    (let [dimension 3] (parse-unit [m dimension sec 1])) ; a spacetime 4-volume
 
-Note that these new units are first-class and anonymous. For work at the REPL, or for units you'll want to use throughout your entire code, units can also be convenietnly bound to symbols with the `defunit` macro, so that the printed representation of a unit matches the symbol it's bound to.
+Note that these new units are first-class and anonymous. For work at the REPL, or for units you'll want to use throughout your entire code, units can also be conveniently bound to symbols with the `defunit` macro, so that the printed representation of a unit matches the symbol it's bound to.
 
 
 ## `SI` and `NonSI`

@@ -5,12 +5,16 @@
 
 (deftest amount-p
   (testing "amount?"
-    (is (amount? (->amount 0 "meter"))) ; constructor is agnostic to actual units
-    (is (amount? (->amount 1 m)))))
+    (is (amount? (->amount 1 m)))
+    (is (not (amount? (->amount 0 "meter"))))
+    (is (amount? (->amount "six" m))) ; I'm not sure if this should be allowed or excluded... more freedom to the user I guess.
+  ))
 
 (deftest printing
   (testing "machine-readable (if IFn)"
-    (is (= '(m 0) (read-string (pr-str (->amount 0 m)))))))
+    (is (= '(m 0) (read-string (pr-str (->amount 0 m)))))
+    (is (= '(m 5) (read-string (pr-str (m 5)))))
+    ))
 
 (deftest linear
   (testing "linear?"
@@ -21,11 +25,19 @@
 )
 
 (deftest parser
-  (testing "parse-unit"
-    (instance? units2.core.Unitlike (parse-unit {m 1}))
-    (instance? units2.core.Unitlike (parse-unit [m 1]))
-    (instance? units2.core.Unitlike (parse-unit {m 1 sec -2}))
-    (instance? units2.core.Unitlike (parse-unit [m 1 sec -2]))
-    ;(instance? units2.core.Unitlike (parse-unit "{m 1}")) ;; these do work
-    ;(instance? units2.core.Unitlike (parse-unit "[m 1]")) ;; at the REPL...
-  ))
+  (testing "parse-unit (functionality)"
+    (is (instance? units2.core.Unitlike (parse-unit {m 1})))
+    (is (instance? units2.core.Unitlike (parse-unit [m 1])))
+    (is (instance? units2.core.Unitlike (parse-unit {m 1 sec -2})))
+    (is (instance? units2.core.Unitlike (parse-unit [m 1 sec -2])))
+   ; (is (instance? units2.core.Unitlike (parse-unit "{units2.astro/m 1}"))) ;; these work unqualified
+   ; (is (instance? units2.core.Unitlike (parse-unit "[units2.astro/m 1]"))) ;; at the REPL... why???
+  )
+  (testing "parse-unit (exceptions)"
+    (is (thrown? IllegalArgumentException (parse-unit {})))
+    (is (thrown? IllegalArgumentException (parse-unit [])))
+    (is (thrown? IllegalArgumentException (parse-unit {m 1.2}))) ; integer exponents
+    (is (thrown? IllegalArgumentException (parse-unit {+ 7})))   ; Unitlike units
+    ; TODO: test the validation for "multiplicative"
+  )
+  )

@@ -22,14 +22,14 @@
     (is (try (ops/max 6 (m 5)) (catch java.lang.UnsupportedOperationException e true)))
     (is (try (ops/max (kg 6) (m 5)) (catch java.lang.UnsupportedOperationException e true)))
   )
-  (testing "empty-arglist"
-    (is (try (ops/==) (catch clojure.lang.ArityException e true)))
-    (is (try (ops/<)  (catch clojure.lang.ArityException e true)))
-    (is (try (ops/>)  (catch clojure.lang.ArityException e true)))
-    (is (try (ops/<=) (catch clojure.lang.ArityException e true)))
-    (is (try (ops/>=) (catch clojure.lang.ArityException e true)))
-    (is (try (ops/min)(catch clojure.lang.ArityException e true)))
-    (is (try (ops/max)(catch clojure.lang.ArityException e true)))
+  (testing "empty-arglist" ; should reduce to the clojure function's behaviour
+    (is (thrown? clojure.lang.ArityException (ops/==)))
+    (is (thrown? clojure.lang.ArityException (ops/<)))
+    (is (thrown? clojure.lang.ArityException (ops/>)))
+    (is (thrown? clojure.lang.ArityException (ops/<=)))
+    (is (thrown? clojure.lang.ArityException (ops/>=)))
+    (is (thrown? clojure.lang.ArityException (ops/min)))
+    (is (thrown? clojure.lang.ArityException (ops/max)))
     )
   (testing "comparison-macro"
     (ops/with-unit-comparisons
@@ -54,12 +54,12 @@
      (is (ops/== (ops/+ (m 2) (m 2)) (ops/+ (m 1) (m 1) (m 2)) (m 4)))
     )
    (testing "+ (exceptions)"
-     (is (try (ops/+ (m 4) 5) (catch java.lang.UnsupportedOperationException e true)))
-     (is (try (ops/+ 4 (m 5)) (catch java.lang.UnsupportedOperationException e true)))
-     (is (try (ops/+ (fahrenheit 1) (celsius 1)) (catch java.lang.UnsupportedOperationException e true)))
+     (is (thrown? java.lang.UnsupportedOperationException (ops/+ (m 4) 5)))
+     (is (thrown? java.lang.UnsupportedOperationException (ops/+ 4 (m 5))))
+     (is (thrown? java.lang.UnsupportedOperationException (ops/+ (fahrenheit 1) (celsius 1))))
      )
    (testing "- (functionality)"
-     (is (every? clojure.core/zero? [(ops/- 2 2) (ops/- 0) (ops/- 2 1 1)]))
+     (is (every? clojure.core/zero? [(ops/- 2 2) (ops/- 2 1 1)  (ops/- 0) (ops/- 0 0) (ops/- 0 0 0)]))
      (is (clojure.core/== 3 (ops/- 5 2) (ops/- 5 1 1) (ops/- -3)))
      (is (ops/== (m 0) (ops/- (m 2) (m 2)) (ops/- (m 0)) (ops/- (m 2) (m 1) (m 1))))
      (is (ops/== (sec 3) (ops/- (sec 5) (sec 2)) (ops/- (sec 5) (sec 1) (sec 1)) (ops/- (sec -3))))
@@ -79,7 +79,7 @@
     ;; ops/* should not generate exceptions, unless you're TRYING to break it.
     )
   (testing "/ (functionality)"
-    (is (== 1 (ops// 1 1 1)))
+    (is (== 1 (ops// 1) (ops// 1 1) (ops// 1 1 1)))
     (is (== 0.5 (ops// 1 2) (ops// 1 1 2) (ops// 1 1 1 2)))
     (is (ops/== ((inverse sec) 0.5) (ops// 1 (sec 2)) (ops// 2 2 (sec 2))))
     )
