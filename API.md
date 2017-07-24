@@ -36,7 +36,7 @@ Type
 
 Implementation of `Dimensionful`. See also `IFnUnit`.
 
-### unit-from-powers
+### parse-unit
 
 Function
 
@@ -46,7 +46,7 @@ Returns a composite unit from a map of units and integer powers.
 
 Function (Predicate)
 
-Returns `true` when given an `units2.core.amount` object, and `false` otherwise.
+Returns `true` when given an `units2.core.amount` object carrying a unit that is `Unitlike`, and `false` otherwise.
 
 ## units2.IFnUnit
 

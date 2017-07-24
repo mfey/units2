@@ -30,8 +30,9 @@
     (is (instance? units2.core.Unitlike (parse-unit [m 1])))
     (is (instance? units2.core.Unitlike (parse-unit {m 1 sec -2})))
     (is (instance? units2.core.Unitlike (parse-unit [m 1 sec -2])))
-   ; (is (instance? units2.core.Unitlike (parse-unit "{units2.astro/m 1}"))) ;; these work unqualified
-   ; (is (instance? units2.core.Unitlike (parse-unit "[units2.astro/m 1]"))) ;; at the REPL... why???
+    (is (instance? units2.core.Unitlike (parse-unit "{units2.astro/m 1}"))) ;; these work unqualified
+    (is (instance? units2.core.Unitlike (parse-unit "[units2.astro/m 1]"))) ;; at the REPL... why not here?
+    (is (thrown? IllegalArgumentException (parse-unit true)))
   )
   (testing "parse-unit (exceptions)"
     (is (thrown? IllegalArgumentException (parse-unit {})))

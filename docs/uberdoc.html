@@ -3734,8 +3734,10 @@ consistently throwing exceptions seems like the safer route.</p>
                :ret double?)</pre></td></tr><tr><td class="docs"><p>Also includes functionality of a root function since <code>(root x N)</code> &lt;=> <code>(pow x (/ N))</code></p>
 </td><td class="codes"><pre class="brush: clojure">(defn pow
   ([a b]
-    (if (or (amount? a) (amount? b))
-      (throw (Exception. &quot;!!!!&quot;))
+    (fourcond [a b]
+      (throw (IllegalArgumentException. (str &quot;`pow` can't deal with the provided arguments (&quot; a &quot; and &quot; b &quot; provided). Maybe you want to provide a third number without units?&quot;)))
+      (throw (IllegalArgumentException. (str &quot;`pow` can't deal with the provided arguments (&quot; a &quot; and &quot; b &quot; provided). Maybe you want to call the `expt` function instead?&quot;)))
+      (throw (IllegalArgumentException. (str &quot;Can't use a dimensionful quantity as an exponent (&quot; b &quot; provided).&quot;)))
       (Math/pow a b)))
   ([a b c]
      (if (and (amount? a) (amount? b) (compatible? (getUnit a) (getUnit b)) (not (amount? c)))

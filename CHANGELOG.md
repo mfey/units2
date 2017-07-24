@@ -12,6 +12,7 @@ As of v.2.7, the API of `units2` should be stable enough to adopt a ["no-breakin
 ### Changed
 - the brand slogan is now "a Clojure library for units of measurement", this improves searchability / SEO.
 - ops are now (re)defined with decorator functions instead of macros to allow more generality / expose this functionality to the user.
+- the preferred name for `unit-from-powers` is now `parse-unit`, though the old name is still provided.
 - the way modular arithmetic with units is done in `ceil`, `floor`, `round`, has improved.
 ### Removed
 - A dynamic boolean allowing unsafe, surprising behaviour was removed. Unsurprising behaviour is now mandatory rather than default. Removed for sanity.

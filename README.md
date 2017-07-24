@@ -5,7 +5,7 @@ A Clojure library for units of measurement.
 
 ## Rationale
 
-Few languages have built-in support for numerical quantities in a system of units. This library brings Clojure into the world of unit-aware computing (https://xkcd.com/1643/); in fact, it abstracts away as much of the unit bookkeeping as possible in a functional, lispy way.
+Few languages have built-in support for numerical quantities in a system of units. This library brings Clojure into the world of [unit-aware computing](https://xkcd.com/1643/); in fact, it abstracts away as much of the unit bookkeeping as possible in a functional, lispy way.
 
 ## Features
 
@@ -25,7 +25,7 @@ This library also respects the distinction between the algebra on quantities wit
 
 ## Tutorial / Sample Code / Documentation
 
-There's a **tutorial** to help get started with the library, and some example code in `spice.clj`. There's also a summary of the API (more of a cheatsheet really). Some effort was put into writing readable, well-commented code, so please read the Marginalia (html) output in `docs/`! But if you're impatient, here's the executive summary:
+There's a **tutorial** to help get started with the library, and some example code in `spice.clj`. There's also a summary of the API (more of a cheatsheet really). Some effort was put into writing readable, well-commented code, but if you're impatient, here's the executive summary:
 
 ```clojure
 ;; core utilities, a collection of units (for astronomy) and math ops
@@ -83,4 +83,4 @@ Originally *unitas*, *unitatis*, (f), "oneness, sameness, agreement". More expli
 3. quantity chosen as a term of comparison, to evaluate others of the same sort
 4. conformity of sentiment, accord, harmony
 
-(The material above was adapted from etymonline.com; claim (!) has not been independently verified.)
+(The material above was adapted from [etymonline.com](http://www.etymonline.com/index.php?term=unit); claim (!) has not been independently verified.)

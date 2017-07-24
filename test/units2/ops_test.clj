@@ -5,6 +5,9 @@
             [units2.astro :refer :all]
             [units2.ops :as ops]))
 
+(defn almost-equal [a b]
+  (< 0.999 (if (amount? a) (ops/divide-into-double a b) (/ a b)) 1.001))
+
 (deftest comparisons
   (testing "=="
     (is (ops/== 0 0))
@@ -81,7 +84,7 @@
   (testing "/ (functionality)"
     (is (== 1 (ops// 1) (ops// 1 1) (ops// 1 1 1)))
     (is (== 0.5 (ops// 1 2) (ops// 1 1 2) (ops// 1 1 1 2)))
-    (is (ops/== ((inverse sec) 0.5) (ops// 1 (sec 2)) (ops// 2 2 (sec 2))))
+    (is (ops/== ((inverse sec) 0.5) (ops// (sec 2)) (ops// 1 (sec 2)) (ops// 2 2 (sec 2))))
     )
   (testing "/ (exceptions)"
     (is (try (ops//) (catch clojure.lang.ArityException e true)))
@@ -129,9 +132,17 @@
   (testing "expt"
     (is (ops/== (ops/expt (m 2) 3) ((power m 3) 8))))
   (testing "pow"
+    (is (= 1.0 (ops/pow 1 (rand))))
     (is (= 1.0 (ops/pow (m 1) (m 4) 0)))
     (is (= 1.0 (ops/pow (m 1) (m 1) 1) (ops/pow (m 1) (m 1) 6)))
-    (is (= 4.0 (ops/pow (m 1) (cm 50) 2))))
+    (is (= 4.0 (ops/pow (m 1) (cm 50) 2)))
+    (is (thrown? java.lang.IllegalArgumentException (ops/pow (m 1) (m 1))))
+    (is (thrown? java.lang.IllegalArgumentException (ops/pow (m 1) 1)))
+    (is (thrown? java.lang.IllegalArgumentException (ops/pow 1 (m 1))))
+    (is (thrown? java.lang.IllegalArgumentException (ops/pow 1 (m 1) 1)))
+    (is (thrown? java.lang.IllegalArgumentException (ops/pow (m 1) 1 1)))
+    (is (thrown? java.lang.IllegalArgumentException (ops/pow (m 1) (m 1) (m 1))))
+  )
   (testing "sqrt"
     (is (= 2.0 (ops/sqrt (m 4) (m 1)) (ops/sqrt (m 8) (m 2))))
     )
@@ -145,10 +156,33 @@
   )
 )
 
-(deftest magnitudes
+(deftest sign-functions
+  (testing "sign-functions (functionality)"
+    (is (ops/zero? 0))
+    (is (not (ops/zero? 1)))
+  )
+  (testing "sign-functions (exceptions)"
+    (is (thrown? java.lang.UnsupportedOperationException (ops/pos? (m (rand)))))
+    (is (thrown? java.lang.UnsupportedOperationException (ops/neg? (m (rand)))))
+    (is (thrown? java.lang.UnsupportedOperationException (ops/zero? (m (rand)))))
+  )
+)
+
+(deftest modular-arithmetic
   (testing "round"
-    (is (ops/== (m 8.0) (ops/round (m 8.1) (m 2)))))
-  (testing "magnitude-macro"
+    (is (== 1 (ops/round 1.2)))
+    (is (ops/== (m 100) (ops/round (m 124) (m 100)))) ; round to the nearest 100
+    (is (ops/== (m 8.0) (ops/round (m 8.1) (m 2)))))  ; round to the nearest "2"
+  (testing "abs"
+    (is (integer? (ops/abs 1)))   ; checking
+    (is (double? (ops/abs 1.0)))  ; types...
+    (is (== 2 (ops/abs 2) (ops/abs -2)))
+    (let [a (rand)
+          b (rand)]
+      (is (almost-equal (m a) (ops/abs (m a) (m b))))
+      (is (almost-equal (m a) (ops/abs (m (- a)) (m b)))))
+    )
+  (testing "macro"
     (is (ops/== (m 8.0) (ops/with-unit-magnitudes (round (m 8.1) (m 2)))))
     (is (ops/== (m 8.0) (ops/with-unit-magnitudes (floor (m 8.1) (m 2)))))
     (is (ops/== (m 10.0) (ops/with-unit-magnitudes (ceil (m 8.1) (m 2))))))

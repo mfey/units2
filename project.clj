@@ -10,6 +10,7 @@
                ; [incanter "1.5.6"] ; optional: for derivatives/integrals
                 ]
   :plugins [[lein-marginalia "0.9.0"]
+          ; [lein-cloverage "1.0.9"]
             ]
   :global-vars {*warn-on-reflection* true} ; I'm too forgetful for regular `lein check`
 )

@@ -466,8 +466,10 @@
 (defn pow
   "Also includes functionality of a root function since `(root x N)` <=> `(pow x (/ N))`"
   ([a b]
-    (if (or (amount? a) (amount? b))
-      (throw (Exception. "!!!!"))
+    (fourcond [a b]
+      (throw (IllegalArgumentException. (str "`pow` can't deal with the provided arguments (" a " and " b " provided). Maybe you want to provide a third number without units?")))
+      (throw (IllegalArgumentException. (str "`pow` can't deal with the provided arguments (" a " and " b " provided). Maybe you want to call the `expt` function instead?")))
+      (throw (IllegalArgumentException. (str "Can't use a dimensionful quantity as an exponent (" b " provided).")))
       (Math/pow a b)))
   ([a b c]
      (if (and (amount? a) (amount? b) (compatible? (getUnit a) (getUnit b)) (not (amount? c)))
