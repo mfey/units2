@@ -60,11 +60,19 @@ Implementation of `Unitlike` and of `IFn`. Applying an `IFnUnit` on a regular cl
 
 Macro
 
-`def` the given var to hold the given unit, and change that unit's printed representation to that var.
+arguments | output |
+------: | ---- |
+var, unit | var |
+
+`def` the given var to hold the given unit, and change that unit's printed representation to that var. Returns the given var for consistency with `def`, `defn`, `defmacro`.
 
 ### makebaseunit
 
 Function (Constructor)
+
+arguments | output |
+------: | ---- |
+string | unit |
 
 Returns a new (anonymous) unit at the base of a new dimension. See also `defbaseunit`.
 
@@ -74,11 +82,15 @@ Macro
 
 A hybrid between `defunit` and `makebaseunit`.
 
-### defunit-with-SI-prefixes
+### defunit-with-SI-prefixes, defunit-with-IEC-prefixes
 
 Macro
 
-A `defunit` that also defunits all SI-prefixed units.
+arguments | output |
+------: | ---- |
+var, unit | var |
+
+A `defunit` that also defunits all SI/IEC prefixed units. Returns the given var for consistency with `def`, `defn`, `defmacro`.
 
 ## units2.ops
 

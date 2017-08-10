@@ -91,11 +91,11 @@
 
 (defmacro defunit
 "`def` a var to hold a unit, and change that unit's printed representation to that var."
-[name value]
+[varname value]
     `(do
-      (def ~name ~value)
-      (.. UnitFormat getInstance (label (implementation-hook ~name) (str '~name)))
-      #'~name) ; return like the regular `def`/`defn`/`defmacro`
+      (def ~varname ~value)
+      (.. UnitFormat getInstance (label (implementation-hook ~varname) (str '~varname)))
+      #'~varname) ; return like the regular `def`/`defn`/`defmacro`
 )
 
 (defn makebaseunit
@@ -122,12 +122,12 @@
 ;; This is implementation-independent, please reuse!!!
 (defmacro defunit-with-SI-prefixes
   "A `defunit` that also defines all SI-prefixed units."
-  [name value]
+  [varname value]
   `(do
-     (defunit ~name ~value) ;; Don't forget the base unit!!
+     (defunit ~varname ~value) ;; Don't forget the base unit!!
      ~@(map (fn [pre] `(defunit
-                         ~(symbol (str (first pre) name))
-                         (rescale ~name ~(second pre))))
+                         ~(symbol (str (first pre) varname))
+                         (rescale ~varname ~(second pre))))
             (partition 2 '[y 1e-24
                            z 1e-21
                            a 1e-18
@@ -150,16 +150,16 @@
                            Z 1e21
                            Y 1e24
                            ]))
-     #'~name))
+     #'~varname))
 
 (defmacro defunit-with-IEC-prefixes
   "A `defunit` that also defines all IEC-prefixed units."
-  [name value]
+  [varname value]
   `(do
-     (defunit ~name ~value) ;; Don't forget the base unit!!
+     (defunit ~varname ~value) ;; Don't forget the base unit!!
      ~@(map (fn [pre] `(defunit
-                         ~(symbol (str (first pre) name))
-                         (rescale ~name ~(second pre))))
+                         ~(symbol (str (first pre) varname))
+                         (rescale ~varname ~(second pre))))
             (partition 2 '[Ki (Math/pow 1024 1)
                            Mi (Math/pow 1024 2)
                            Gi (Math/pow 1024 3)
@@ -169,7 +169,7 @@
                            Zi (Math/pow 1024 7)
                            Yi (Math/pow 1024 8)
                            ]))
-     #'~name))
+     #'~varname))
 
 ;; FUTURE:
 ;; ; Define U = (* a (- U0 b)) so that rescalings are trivial.

@@ -32,11 +32,7 @@ The units in `units2` implement `IFn`. Even though the s-expression `(m 7)` is n
 So, why not print `#=(m 7)`? Firstly, this doesn't work, it'd have to be `#=(->amount 7 m)`. Secondly, `#=` isn't an officially supported feature of the Clojure reader, so it'd have to be `#units2.core.amount[7 m]`. But even that doesn't really work, because fooling with the reader always seems to break easy things related to referential transparency that are trivially solved with `(<unit> <value>)`.
 
 ### Rational exponents in dimensional analysis
-While trying to justify why rational exponents weren't supported (in favour of just integers), I convinced myself it's probably OK to have them as long as these are only accessible through `(ops/expt ... [rational?])` and explicit construction via the `power` and `root`. Basically, LISP languages are good because
-
-<center>
-`LISP == Freedom == Good`
-</center>
+While trying to justify why rational exponents weren't supported (in favour of just integers), I convinced myself it's probably OK to have them as long as these are only accessible through `(ops/expt ... [rational?])` and explicit construction via the `power` and `root`. Basically, LISP languages are good because LISP == Freedom == Good.
 
 That said, there are usually *conceptual* reasons to try to stick to integer exponents, tied to the details of whatever domain-specific problem one might be trying to solve.
 

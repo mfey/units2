@@ -30,6 +30,11 @@
 (defunit yard (rescale foot 3))
 (defunit mile (->IFnUnit NonSI/MILE))
 
+;; Typography
+
+;(defunit point (rescale inch (/ 1 72)))
+;(defunit pica (rescale inch (/ 1 6)))
+
 ;; ## Time [T]
 
 ;; Seconds are not shortened to `s` as in the SI because `ns` (nanosecond) is already the Clojure namspace macro. The astrophysical unit of angle sec is `arcsec`.
@@ -95,6 +100,11 @@
 ;; full 3-sphere (physically unnecessary but enlightening)
 (defunit glome (rescale (power rad 3) (solidangle 4)))
 
+
+
+
+
+
 ;; ## Data Amount
 
 (defunit-with-IEC-prefixes b (->IFnUnit SI/BIT))
@@ -135,6 +145,8 @@
 (defunit lightspeed (->IFnUnit NonSI/C))
 (mk-spec ::speed lightspeed)
 (spec/def ::velocity ::speed)
+
+(defunit mph (divide mile hour))
 
 ;; ## Energy [E] = [M L^2 / T^2]
 

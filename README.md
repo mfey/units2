@@ -25,7 +25,7 @@ This library also respects the distinction between the algebra on quantities wit
 
 ## Tutorial / Sample Code / Documentation
 
-There's a **tutorial** to help get started with the library, and some example code in `spice.clj`. There's also a summary of the API (more of a cheatsheet really). Some effort was put into writing readable, well-commented code, but if you're impatient, here's the executive summary:
+There's a [tutorial](https://github.com/mfey/units2/blob/master/tutorial.md) to help get started with the library, and some example code in `spice.clj`. There's also a summary of the API (more of a cheatsheet really). Some effort was put into writing readable, well-commented code, but if you're impatient, here's the executive summary:
 
 ```clojure
 ;; core utilities, a collection of units (for astronomy) and math ops
@@ -60,7 +60,7 @@ There's a **tutorial** to help get started with the library, and some example co
     ((comp hour average realistic vals)
       self-reported-half-marathon-times)) ; --> 2.65 hours
 
-;; 2.65 hours still hard to read because clocks still use sexagesimals.
+;; 2.65 hours still hard to read because our clocks use sexagesimals.
 ;; Let's split this into hours and minutes (by hand, just for illustration)
 ((juxt ops/quot (comp minute ops/rem))
  (hour 2.65) (hour 1) (hour 1)) ; --> [(hour 2.0) (minute 39)]

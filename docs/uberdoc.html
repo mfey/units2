@@ -2888,7 +2888,10 @@ net.brehaut.ClojureTools = (function (SH) {
 </td><td class="codes"><pre class="brush: clojure">(defunit inch (-&gt;IFnUnit NonSI/INCH))
 (defunit foot (-&gt;IFnUnit NonSI/FOOT))
 (defunit yard (rescale foot 3))
-(defunit mile (-&gt;IFnUnit NonSI/MILE))</pre></td></tr><tr><td class="docs"><h2>Time [T]</h2>
+(defunit mile (-&gt;IFnUnit NonSI/MILE))</pre></td></tr><tr><td class="docs"><p>Typography</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>(defunit point (rescale inch (/ 1 72)))
+(defunit pica (rescale inch (/ 1 6)))</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><h2>Time [T]</h2>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>Seconds are not shortened to <code>s</code> as in the SI because <code>ns</code> (nanosecond) is already the Clojure namspace macro. The astrophysical unit of angle sec is <code>arcsec</code>.</p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes sec (-&gt;IFnUnit SI/SECOND))
@@ -2938,7 +2941,8 @@ net.brehaut.ClojureTools = (function (SH) {
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defunit lightspeed (-&gt;IFnUnit NonSI/C))
 (mk-spec ::speed lightspeed)
-(spec/def ::velocity ::speed)</pre></td></tr><tr><td class="docs"><h2>Energy [E] = [M L^2 / T^2]</h2>
+(spec/def ::velocity ::speed)</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defunit mph (divide mile hour))</pre></td></tr><tr><td class="docs"><h2>Energy [E] = [M L^2 / T^2]</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes J (-&gt;IFnUnit SI/JOULE))
 (mk-spec ::energy J)</pre></td></tr><tr><td class="docs">
@@ -3236,11 +3240,11 @@ and protocol dispatch (nice, fast) rather than java interop and reflection (ugly
 </td><td class="codes"><pre class="brush: clojure">(defmethod print-method IFnUnit [U ^java.io.Writer w]
   (.write w (str U))) ; human and (almost) computer readable.</pre></td></tr><tr><td class="docs"><p><code>def</code> a var to hold a unit, and change that unit's printed representation to that var.</p>
 </td><td class="codes"><pre class="brush: clojure">(defmacro defunit
-[name value]
+[varname value]
     `(do
-      (def ~name ~value)
-      (.. UnitFormat getInstance (label (implementation-hook ~name) (str '~name)))
-      #'~name) ; return like the regular `def`/`defn`/`defmacro`)</pre></td></tr><tr><td class="docs"><p>Returns a new (anonymous) unit at the base of a new dimension. See also <code>defbaseunit</code>.</p>
+      (def ~varname ~value)
+      (.. UnitFormat getInstance (label (implementation-hook ~varname) (str '~varname)))
+      #'~varname) ; return like the regular `def`/`defn`/`defmacro`)</pre></td></tr><tr><td class="docs"><p>Returns a new (anonymous) unit at the base of a new dimension. See also <code>defbaseunit</code>.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn makebaseunit
   [^String newdimension]
    (-&gt;IFnUnit (BaseUnit. newdimension)))</pre></td></tr><tr><td class="docs"><p>Creates a new unit at the base of a new dimension. This function allows dimensional analysis to be extended by the user.</p>
@@ -3260,12 +3264,12 @@ and protocol dispatch (nice, fast) rather than java interop and reflection (ugly
 
 <p>This is implementation-independent, please reuse!!!</p>
 </td><td class="codes"><pre class="brush: clojure">(defmacro defunit-with-SI-prefixes
-  [name value]
+  [varname value]
   `(do
-     (defunit ~name ~value) ;; Don't forget the base unit!!
+     (defunit ~varname ~value) ;; Don't forget the base unit!!
      ~@(map (fn [pre] `(defunit
-                         ~(symbol (str (first pre) name))
-                         (rescale ~name ~(second pre))))
+                         ~(symbol (str (first pre) varname))
+                         (rescale ~varname ~(second pre))))
             (partition 2 '[y 1e-24
                            z 1e-21
                            a 1e-18
@@ -3288,14 +3292,14 @@ and protocol dispatch (nice, fast) rather than java interop and reflection (ugly
                            Z 1e21
                            Y 1e24
                            ]))
-     #'~name))</pre></td></tr><tr><td class="docs"><p>A <code>defunit</code> that also defines all IEC-prefixed units.</p>
+     #'~varname))</pre></td></tr><tr><td class="docs"><p>A <code>defunit</code> that also defines all IEC-prefixed units.</p>
 </td><td class="codes"><pre class="brush: clojure">(defmacro defunit-with-IEC-prefixes
-  [name value]
+  [varname value]
   `(do
-     (defunit ~name ~value) ;; Don't forget the base unit!!
+     (defunit ~varname ~value) ;; Don't forget the base unit!!
      ~@(map (fn [pre] `(defunit
-                         ~(symbol (str (first pre) name))
-                         (rescale ~name ~(second pre))))
+                         ~(symbol (str (first pre) varname))
+                         (rescale ~varname ~(second pre))))
             (partition 2 '[Ki (Math/pow 1024 1)
                            Mi (Math/pow 1024 2)
                            Gi (Math/pow 1024 3)
@@ -3305,7 +3309,7 @@ and protocol dispatch (nice, fast) rather than java interop and reflection (ugly
                            Zi (Math/pow 1024 7)
                            Yi (Math/pow 1024 8)
                            ]))
-     #'~name))</pre></td></tr><tr><td class="docs"><p>FUTURE:
+     #'~varname))</pre></td></tr><tr><td class="docs"><p>FUTURE:
  Define U = (* a (- U0 b)) so that rescalings are trivial.</p>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>(deftype IFnUnit [scaling offset dimension stringname]
   Hackable
