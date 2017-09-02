@@ -40,6 +40,12 @@ Implementation of `Dimensionful`. See also `IFnUnit`.
 
 Function
 
+arguments | output |
+------: | ---- |
+map     | unit |
+alist   | unit |
+string  | unit |
+
 Returns a composite unit from a map of units and integer powers.
 
 ### amount?
@@ -54,7 +60,14 @@ Returns `true` when given an `units2.core.amount` object carrying a unit that is
 
 Type
 
-Implementation of `Unitlike` and of `IFn`. Applying an `IFnUnit` on a regular clojure number returns an `units2.core.amount` with this unit. Applying an `IFnUnit` on such an amount returns that amount converted into this unit.
+Implementation of `Unitlike` and of `IFn`.
+
+arguments | output |
+------: | ---- |
+number  | amount |
+amount  | amount |
+
+Applying an `IFnUnit` on a regular clojure number returns an `units2.core.amount` with this unit. Applying an `IFnUnit` on such an amount returns that amount converted into this unit.
 
 ### defunit
 

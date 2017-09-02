@@ -2889,9 +2889,9 @@ net.brehaut.ClojureTools = (function (SH) {
 (defunit foot (-&gt;IFnUnit NonSI/FOOT))
 (defunit yard (rescale foot 3))
 (defunit mile (-&gt;IFnUnit NonSI/MILE))</pre></td></tr><tr><td class="docs"><p>Typography</p>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>(defunit point (rescale inch (/ 1 72)))
-(defunit pica (rescale inch (/ 1 6)))</p>
-</td><td class="codes"></td></tr><tr><td class="docs"><h2>Time [T]</h2>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defunit point (rescale inch (/ 1 72)))
+(defunit pica (rescale inch (/ 1 6)))</pre></td></tr><tr><td class="docs"><h2>Time [T]</h2>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>Seconds are not shortened to <code>s</code> as in the SI because <code>ns</code> (nanosecond) is already the Clojure namspace macro. The astrophysical unit of angle sec is <code>arcsec</code>.</p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes sec (-&gt;IFnUnit SI/SECOND))
@@ -3024,20 +3024,20 @@ integrals is left to external libraries and/or user-defined schemes.</p>
   (decorate-integrator
     (fn [f [xmin xmax] [Neval]]
       (let [step (/ (- xmax xmin) Neval)]
-        (* (apply + (map f (range xmin xmax step))) step)))))</pre></td></tr><tr><td class="docs"><p> (using Incanter, which internally is basically the same as the above)</p>
-
-<p>(def incanter-differentiate
+        (* (apply + (map f (range xmin xmax step))) step)))))</pre></td></tr><tr><td class="docs"><p>(using Incanter, which internally is basically the same as the above)</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(comment
+(def incanter-differentiate
   (decorate-differentiator
     (fn [f x args]
-      ((incanter.optimize/derivative (fn [x] (apply f x args))) x))))</p>
-
-<p>(def incanter-integrate
+      ((incanter.optimize/derivative (fn [x] (apply f x args))) x))))
+(def incanter-integrate
   (decorate-integrator
     (fn [f [xmin xmax] args]
-      (incanter.optimize/integrate (fn [x] (apply f x args)) xmin xmax))))</p>
-</td><td class="codes"></td></tr><tr><td class="docs"><p> (using Apache Commons)</p>
-
-<p>(def apache-integrate
+      (incanter.optimize/integrate (fn [x] (apply f x args)) xmin xmax)))))</pre></td></tr><tr><td class="docs"><p>(using Apache Commons)</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(comment
+(def apache-integrate
   (decorate-integrator
     (fn [f [xmin xmax] [integrator-object maxeval more-args]]
       (.integrate integrator-object maxeval
@@ -3045,8 +3045,8 @@ integrals is left to external libraries and/or user-defined schemes.</p>
                     [org.apache.commons.math3.analysis.UnivariateFunction]
                     []
                     (value [x] (apply f x more-args)))
-                  xmin xmax))))</p>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>(apache-integrate #(* % 2) [1 2]
+                  xmin xmax)))))</pre></td></tr><tr><td class="docs"><p>e.g.
+(apache-integrate #(* % 2) [1 2]
                  [(org.apache.commons.math3.analysis.integration.RombergIntegrator.)
                   1e4
                   []])</p>
@@ -3068,12 +3068,35 @@ integrals is left to external libraries and/or user-defined schemes.</p>
   (getConverter [this that] &quot;Returns a function that describes the unit transformation, as it acts on normal Clojure values... mostly for internal use.&quot;)
   (from [this] &quot;Returns a function that converts a quantity to the given unit and returns a nondimensionful (normal Clojure) value.&quot;)
   (rescale [this number] &quot;Returns a unit linearly rescaled by the given factor, e.g. `(rescale minute 60)` ==&gt; `hour`.&quot;)
-  (offset [this amount] &quot;Returns a unit offset by the given amount.&quot;))</pre></td></tr><tr><td class="docs"><p>this should be hidden from users somehow... right?</p>
+  (offset [this amount] &quot;Returns a unit offset by the given amount.&quot;))</pre></td></tr><tr><td class="docs"><p>Below: "Read-only" restriction of the above
+that can be used to work with pre-existing
+Dimensionful or Unitlike things, but NOT to
+create new ones automatically. Maybe useful
+if doing so would be expensive or insecure?
+((cf eg http://wiki.c2.com/?FacetPattern))</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(comment
+(defprotocol RestrictedDimensionful
+  (getUnit [this])
+  (getValue [this Unit]))
+(defprotocol RestrictedUnitlike
+  (getDimension [this])
+  (compatible? [this that])
+  (getConverter [this that])
+  (from [this])))</pre></td></tr><tr><td class="docs"><p>If you're even remotely tempted to use this,
+I'd like to know what your use case is. I
+cannot think of a plausible reason to want it.</p>
+
+<p>That said, notice that these are the functions
+you will encounter at the outgoing boundary
+between your unit-aware code and all the other
+code that doesn't need to know about units.</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>this should be hidden from users somehow... right?</p>
 </td><td class="codes"><pre class="brush: clojure">(defprotocol Hackable
   (implementation-hook [this] &quot;this may be useful for implementors, but should NOT be used in applications.&quot;))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defprotocol Multiplicative
   (times [this] [this that]
-         [this that the-other]) ;Seinfeld reference
+         [this that the-other]) ; Seinfeld reference
   (divide [this] [this that] [this that the-other])
   (inverse [this] &quot;syntactic sugar for arity-1 `divide`&quot;)
   (power [this N])
@@ -3192,8 +3215,8 @@ and protocol dispatch (nice, fast) rather than java interop and reflection (ugly
                   ;; let's try to divide the two units and work dimensionlessly...
                   ;; maybe the offsets/nonlinearities of our two units cancel exactly?
                   (if (not (compatible? this Unit/ONE)) ;; getValue calls getConverter, without this we might loop until the stack overflows!
-                    (let [dimensionless-rescale (new IFnUnit (.divide javax-unit (to-javax IFnUnit that)))]
-                      (getValue (dimensionless-rescale x) Unit/ONE))
+                    (let [dimensionless-rescale (.divide javax-unit (to-javax IFnUnit that))]
+                      (.convert ^UnitConverter (.getConverterTo dimensionless-rescale Unit/ONE) (double x)))
                     (throw e))))) ;; give up!
       ;; still fails for e.g. ((divide (rescale celsius 2) m) ((divide celsius m) 1))
       (throw (UnsupportedOperationException. (str &quot;The units `&quot; this &quot;' and `&quot; that &quot;' are not compatible, no conversion exists.&quot;)))))
@@ -3373,7 +3396,7 @@ and protocol dispatch (nice, fast) rather than java interop and reflection (ugly
 <li>that the units in <code>amount</code> are <code>Multiplicative</code>.</li>
 <li>that the units in <code>amount</code> are all linear rescalings without any <code>offset</code>.
    (There are a few offset checks scattered throughout,
-    so offsets <em>usually</em> work, but no overall guarantees.)</li>
+    so offsets <em>usually</em> work, but there are no overall guarantees.)</li>
 </ol>
 
 <p>As such, it should be fairly easy to reuse most of this code for other implementations if
@@ -3396,7 +3419,7 @@ the provided decorators aren't good enough.</p>
   (:refer-clojure :exclude [+ - * / rem quot == &gt; &gt;= &lt; &lt;= zero? pos? neg? min max])
   (:require [units2.core :refer :all]
             [clojure.spec :as spec]
-            [clojure.spec.gen :as gen]) ; TODO: spec these functions!!!)</pre></td></tr><tr><td class="docs"><h2>Specs</h2>
+            [clojure.spec.gen :as gen]))</pre></td></tr><tr><td class="docs"><h2>Specs</h2>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(spec/def ::number-or-amount (spec/or :number number? :amount :units2.core/amount))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(spec/def ::compatible-amounts

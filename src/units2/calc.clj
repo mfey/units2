@@ -80,38 +80,44 @@
         (* (apply + (map f (range xmin xmax step))) step)))))
 
 
-;; ;; (using Incanter, which internally is basically the same as the above)
-;;
-;; (def incanter-differentiate
-;;   (decorate-differentiator
-;;     (fn [f x args]
-;;       ((incanter.optimize/derivative (fn [x] (apply f x args))) x))))
-;;
-;; (def incanter-integrate
-;;   (decorate-integrator
-;;     (fn [f [xmin xmax] args]
-;;       (incanter.optimize/integrate (fn [x] (apply f x args)) xmin xmax))))
-;;
+;; (using Incanter, which internally is basically the same as the above)
 
 
-;; ;; (using Apache Commons)
-;;
-;; (def apache-integrate
-;;   (decorate-integrator
-;;     (fn [f [xmin xmax] [integrator-object maxeval more-args]]
-;;       (.integrate integrator-object maxeval
-;;                   (proxy
-;;                     [org.apache.commons.math3.analysis.UnivariateFunction]
-;;                     []
-;;                     (value [x] (apply f x more-args)))
-;;                   xmin xmax))))
+(comment
 
-; e.g.
-;(apache-integrate #(* % 2) [1 2]
-;                  [(org.apache.commons.math3.analysis.integration.RombergIntegrator.)
-;                   1e4
-;                   []])
+(def incanter-differentiate
+  (decorate-differentiator
+    (fn [f x args]
+      ((incanter.optimize/derivative (fn [x] (apply f x args))) x))))
 
+(def incanter-integrate
+  (decorate-integrator
+    (fn [f [xmin xmax] args]
+      (incanter.optimize/integrate (fn [x] (apply f x args)) xmin xmax))))
+
+)
+
+;; (using Apache Commons)
+
+(comment
+
+(def apache-integrate
+  (decorate-integrator
+    (fn [f [xmin xmax] [integrator-object maxeval more-args]]
+      (.integrate integrator-object maxeval
+                  (proxy
+                    [org.apache.commons.math3.analysis.UnivariateFunction]
+                    []
+                    (value [x] (apply f x more-args)))
+                  xmin xmax))))
+
+)
+
+;; e.g.
+;; (apache-integrate #(* % 2) [1 2]
+;;                  [(org.apache.commons.math3.analysis.integration.RombergIntegrator.)
+;;                   1e4
+;;                   []])
 
 
 

@@ -6,7 +6,7 @@
 ;;   2. that the units in `amount` are `Multiplicative`.
 ;;   3. that the units in `amount` are all linear rescalings without any `offset`.
 ;;        (There are a few offset checks scattered throughout,
-;;         so offsets *usually* work, but no overall guarantees.)
+;;         so offsets *usually* work, but there are no overall guarantees.)
 ;;
 ;; As such, it should be fairly easy to reuse most of this code for other implementations if
 ;; the provided decorators aren't good enough.
@@ -28,7 +28,7 @@
   (:refer-clojure :exclude [+ - * / rem quot == > >= < <= zero? pos? neg? min max])
   (:require [units2.core :refer :all]
             [clojure.spec :as spec]
-            [clojure.spec.gen :as gen]) ; TODO: spec these functions!!!
+            [clojure.spec.gen :as gen])
 )
 
 ;; ## Specs

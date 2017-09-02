@@ -21,9 +21,26 @@ Note that ArithmeticExceptions and ArityExceptions may occur when using the deco
 
 
 ### IFnUnits with `deftype` instead of Clojure's builtin data structures.
-There are two obvious ways to add units to clojure: use some builtin data structure (representing units as data) or use vars' metadata. TODO: discuss why neither of these.
+There are two obvious ways to add units to clojure: use some builtin data structure (representing units as data) or use vars' metadata.
 
-Once we've decided we need a new kind of thing to represent units and dimensionful quantities, it's easy to argue for `deftype` rather than `defrecord`: We're defining new programming constructs, not new domain-specific persistent maps. Particularly, we don't want value-based equality for `amount`s (we want to define their equality *up to conversions* with `==`), and we want to hide the Javaworld `javax.measure.unit.Unit` our implementation relies on (it would be publicly exposed with `defrecord`).
+#### Not map
+The obvious approach for amounts with units is to have a map, like
+
+    {meter-unit 40, centimeter-unit 4000, ...}
+
+In this case, one would simply use `get` instead of `getValue`, and conversions would `assoc` new representations of the amount to the map.
+
+Unfortunately, in Clojure one often finds keywords as keys in a map, and this means that with maps the syntax `(unit amount)` and `(amount unit)` are naively expected to both mean `(get amount unit)`, while we'd like the former to mean something like `(assoc amount (to unit amount))`. This violates the principle of least surprise (even though the surprise is based on an inadequate understanding of the language).
+
+More problematically, and more generally, maps have a behaviour under functions of collections like `conj` and `seq` that isn't necessarily meaningful; what should we make of the object `{meter-unit 2, :name "Sally"}`? `{:height (meter 2), :name "John"}` seems both more informative and more idomatic. Why do `(seq amount)` and `(seq (new-unit amount))` return different sequences, even though the two maps being `seq`'d are supposed to represent the same physical quantity? If you want to explicitly manipulate a sequence of different representations of the same amount it is probably clearer to `((juxt unit1 ... unitN) amount)`.
+
+Similarly, the non-collection nature of units themselves weighs against the implementation of units as collections.
+
+Once we've decided we need a non-map data structure to represent units and dimensionful quantities, it's easy to argue for `deftype` rather than `defrecord`: We're defining new programming constructs, not new domain-specific persistent maps. Particularly, we don't want value-based equality for `amount`s (we want to define their equality *up to conversions* with `==`), and we want to hide the Javaworld `javax.measure.unit.Unit` our implementation relies on (it would be publicly exposed with `defrecord`).
+
+#### Not metadata
+
+We want to create anonymous objects, so being tied to vars is no good. Also, the unit is somehow part of the value we're trying to capture, not a description of the value.
 
 
 ### Printing Dimensionful Quantities

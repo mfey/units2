@@ -19,6 +19,37 @@
   (offset [this amount] "Returns a unit offset by the given amount.")
 )
 
+;; Below: "Read-only" restriction of the above
+;; that can be used to work with pre-existing
+;; Dimensionful or Unitlike things, but NOT to
+;; create new ones automatically. Maybe useful
+;; if doing so would be expensive or insecure?
+;; ((cf eg http://wiki.c2.com/?FacetPattern))
+
+(comment
+
+(defprotocol RestrictedDimensionful
+  (getUnit [this])
+  (getValue [this Unit]))
+
+(defprotocol RestrictedUnitlike
+  (getDimension [this])
+  (compatible? [this that])
+  (getConverter [this that])
+  (from [this]))
+
+)
+
+;; If you're even remotely tempted to use this,
+;; I'd like to know what your use case is. I
+;; cannot think of a plausible reason to want it.
+;;
+;; That said, notice that these are the functions
+;; you will encounter at the outgoing boundary
+;; between your unit-aware code and all the other
+;; code that doesn't need to know about units.
+
+
 ;; this should be hidden from users somehow... right?
 (defprotocol Hackable
   (implementation-hook [this] "this may be useful for implementors, but should NOT be used in applications.")
@@ -26,7 +57,7 @@
 
 (defprotocol Multiplicative
   (times [this] [this that]
-         [this that the-other]) ;Seinfeld reference
+         [this that the-other]) ; Seinfeld reference
   (divide [this] [this that] [this that the-other])
   (inverse [this] "syntactic sugar for arity-1 `divide`")
   (power [this N])

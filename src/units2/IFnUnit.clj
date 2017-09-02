@@ -35,8 +35,8 @@
                   ;; let's try to divide the two units and work dimensionlessly...
                   ;; maybe the offsets/nonlinearities of our two units cancel exactly?
                   (if (not (compatible? this Unit/ONE)) ;; getValue calls getConverter, without this we might loop until the stack overflows!
-                    (let [dimensionless-rescale (new IFnUnit (.divide javax-unit (to-javax IFnUnit that)))]
-                      (getValue (dimensionless-rescale x) Unit/ONE))
+                    (let [dimensionless-rescale (.divide javax-unit (to-javax IFnUnit that))]
+                      (.convert ^UnitConverter (.getConverterTo dimensionless-rescale Unit/ONE) (double x)))
                     (throw e))))) ;; give up!
       ;; still fails for e.g. ((divide (rescale celsius 2) m) ((divide celsius m) 1))
       (throw (UnsupportedOperationException. (str "The units `" this "' and `" that "' are not compatible, no conversion exists.")))))

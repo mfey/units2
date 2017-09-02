@@ -32,8 +32,8 @@
 
 ;; Typography
 
-;(defunit point (rescale inch (/ 1 72)))
-;(defunit pica (rescale inch (/ 1 6)))
+(defunit point (rescale inch (/ 1 72)))
+(defunit pica (rescale inch (/ 1 6)))
 
 ;; ## Time [T]
 
