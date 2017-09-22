@@ -2866,98 +2866,7 @@ net.brehaut.ClojureTools = (function (SH) {
   };
 })(SyntaxHighlighter);
 </script><title>units2 -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name"><a href="https://github.com/mfey/units2">units2</a></h1><h2 class="project-version">2.6</h2><br /><p>A Clojure library units of measurement.</p>
-</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.9.0-alpha10</td></tr><tr><td class="dep-name">clj-science/jscience</td><td class="dotted"><hr /></td><td class="dep-version">4.3.1</td></tr><tr><td class="dep-name">org.clojure/test.check</td><td class="dotted"><hr /></td><td class="dep-version">0.9.0</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#units2.astro">units2.astro</a></li><li><a href="#units2.calc">units2.calc</a></li><li><a href="#units2.core">units2.core</a></li><li><a href="#units2.IFnUnit">units2.IFnUnit</a></li><li><a href="#units2.ops">units2.ops</a></li><li><a href="#units2.spice">units2.spice</a></li><li><a href="#units2.trig">units2.trig</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#units2.astro" name="units2.astro"><h1 class="project-name">units2.astro</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(ns units2.astro
-  (:require [units2.core :refer :all]
-            [units2.IFnUnit :refer :all]
-            [clojure.spec :as spec]
-            [clojure.spec.gen :as gen])
-  (:import (javax.measure.unit Unit SI NonSI)))</pre></td></tr><tr><td class="docs"><p>In order to define SI prefixes and maintain compatibility with imports from the javax library, we don't use <code>defbaseunit</code> as often as I'd like... so we need to generate specs manually.</p>
-</td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defmacro mk-spec [kw baseunit]
-  `(do
-    (spec/def ~kw (spec/with-gen
-      (spec/and :units2.core/amount #(compatible? (getUnit %) ~baseunit))
-      (fn [] (gen/fmap ~baseunit (gen/gen-for-pred number?)))))
-     (derive ~kw :units2.core/amount) ; useful for autogenerating amounts.))</pre></td></tr><tr><td class="docs"><h2>Length [L]</h2>
-</td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes m (-&gt;IFnUnit SI/METER))
-(mk-spec ::length m)</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes pc (-&gt;IFnUnit NonSI/PARSEC))
-(defunit AU (-&gt;IFnUnit NonSI/ASTRONOMICAL_UNIT))</pre></td></tr><tr><td class="docs"><p>Imperial units</p>
-</td><td class="codes"><pre class="brush: clojure">(defunit inch (-&gt;IFnUnit NonSI/INCH))
-(defunit foot (-&gt;IFnUnit NonSI/FOOT))
-(defunit yard (rescale foot 3))
-(defunit mile (-&gt;IFnUnit NonSI/MILE))</pre></td></tr><tr><td class="docs"><p>Typography</p>
-</td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit point (rescale inch (/ 1 72)))
-(defunit pica (rescale inch (/ 1 6)))</pre></td></tr><tr><td class="docs"><h2>Time [T]</h2>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>Seconds are not shortened to <code>s</code> as in the SI because <code>ns</code> (nanosecond) is already the Clojure namspace macro. The astrophysical unit of angle sec is <code>arcsec</code>.</p>
-</td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes sec (-&gt;IFnUnit SI/SECOND))
-(mk-spec ::time sec)
-(defunit minute (rescale sec 60))
-(defunit hour   (rescale minute 60))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes yr (-&gt;IFnUnit NonSI/YEAR_SIDEREAL))</pre></td></tr><tr><td class="docs"><h2>Mass [M]</h2>
-</td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes g (-&gt;IFnUnit SI/GRAM))
-(mk-spec ::mass kg)</pre></td></tr><tr><td class="docs"><p>Solar Mass</p>
-</td><td class="codes"><pre class="brush: clojure">(defunit Msol (AsUnit (kg 1.98855E30)))</pre></td></tr><tr><td class="docs"><h2>Charge [Q]</h2>
-</td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit coulomb (-&gt;IFnUnit SI/COULOMB))
-(mk-spec ::charge coulomb)</pre></td></tr><tr><td class="docs"><p>fundamental unit of charge in Quantum Electrodynamics.</p>
-</td><td class="codes"><pre class="brush: clojure">(defunit positroncharge (AsUnit (coulomb 1.6022e-19)))</pre></td></tr><tr><td class="docs"><h2>Temperature [K]</h2>
-</td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes K (-&gt;IFnUnit SI/KELVIN))
-(mk-spec ::temperature K)</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit celsius (offset K (K 273.15)))
-(defunit fahrenheit (rescale (offset celsius (celsius -17.777)) (/ 5 9))) ; for pedagogical purposes only.</pre></td></tr><tr><td class="docs"><h2>(Solid) Angle [a]</h2>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>Solid angle of a unit sphere in D dimensions. The full formula involves fractional powers of Pi and Gamma functions, the first few are precomuted and tabulated here for convenience.</p>
-</td><td class="codes"><pre class="brush: clojure">(def solidangle 
-  {1 2
-   2 (* 2 Math/PI)
-   3 (* 4 Math/PI)
-   4 (* 2 Math/PI Math/PI)
-   5 (* (/ 8 3) Math/PI Math/PI)
-   6 (* Math/PI Math/PI Math/PI)})</pre></td></tr><tr><td class="docs"><h3>Angles</h3>
-</td><td class="codes"><pre class="brush: clojure">(defbaseunit rad ::angle)</pre></td></tr><tr><td class="docs"><p>full circle</p>
-</td><td class="codes"><pre class="brush: clojure">(defunit rot (rescale rad (solidangle 2))) ; aka revolution/turn</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit deg (rescale rot (/ 1 360))) ; 360 degrees in a circle</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit arcsec (rescale deg (/ 1 60))); 60 arcsec in a degree</pre></td></tr><tr><td class="docs"><h3>Solid Angles</h3>
-</td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit sr (power rad 2))
-(mk-spec ::solidangle sr)</pre></td></tr><tr><td class="docs"><p>full 2-sphere</p>
-</td><td class="codes"><pre class="brush: clojure">(defunit sky (rescale sr (solidangle 3))) ; aka spat</pre></td></tr><tr><td class="docs"><p>full 3-sphere (physically unnecessary but enlightening)</p>
-</td><td class="codes"><pre class="brush: clojure">(defunit glome (rescale (power rad 3) (solidangle 4)))</pre></td></tr><tr><td class="docs"><h2>Data Amount</h2>
-</td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit-with-IEC-prefixes b (-&gt;IFnUnit SI/BIT))
-(defunit-with-IEC-prefixes o (rescale b 8)) ; octet, not byte.</pre></td></tr><tr><td class="docs"><h2>Index</h2>
-</td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defbaseunit zerobased ::index) ; foremost element is &quot;zero&quot; (C/LISP convention)</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit onebased (offset zerobased (zerobased -1))) ; foremost element is &quot;one&quot; (Fortran/naive convention)</pre></td></tr><tr><td class="docs"><h2>Redshifts</h2>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>These can be given as z or as 1+z, both are useful in cosmology. Unitizing the <code>+1</code> is probably overkill, but not having to worry about which convention is used in function args is totally worth it.</p>
-</td><td class="codes"><pre class="brush: clojure">(defbaseunit zee ::redshift)
-(defunit onepluszee (offset zee (zee -1)))</pre></td></tr><tr><td class="docs"><h2>Velocity [L/T]</h2>
-</td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit lightspeed (-&gt;IFnUnit NonSI/C))
-(mk-spec ::speed lightspeed)
-(spec/def ::velocity ::speed)</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit mph (divide mile hour))</pre></td></tr><tr><td class="docs"><h2>Energy [E] = [M L^2 / T^2]</h2>
-</td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes J (-&gt;IFnUnit SI/JOULE))
-(mk-spec ::energy J)</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes eV (-&gt;IFnUnit NonSI/ELECTRON_VOLT))
-(defunit erg (-&gt;IFnUnit NonSI/ERG))</pre></td></tr><tr><td class="docs"><h2>Luminosity (radiant flux)</h2>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>Solar Luminosity</p>
-</td><td class="codes"><pre class="brush: clojure">(defunit Lsol (AsUnit (-&gt;amount 3.846E26 (-&gt;IFnUnit SI/WATT))))</pre></td></tr><tr><td class="docs"><h2>Flux [L^-2 T^-1]</h2>
-</td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit Flux (unit-from-powers {cm -2 sec -1}))
-(defunit Intensity (unit-from-powers {cm -2 sec -1 sr -1}))</pre></td></tr><tr><td class="docs"><h2>Spectral Flux [L^-2 T^-1 E^-1]</h2>
-</td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit SpectralFlux (unit-from-powers {cm -2 sec -1 GeV -1}))
-(defunit SpectralIntensity (unit-from-powers {cm -2 sec -1 sr -1 GeV -1}))</pre></td></tr><tr><td class="docs"><h2>No units</h2>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>define this last, just in case</p>
-</td><td class="codes"><pre class="brush: clojure">(defunit dimensionless (unit-from-powers {m 0}))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#units2.calc" name="units2.calc"><h1 class="project-name">units2.calc</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Calculus on functions using the (generically defined) <code>units2.core.amount</code> type.</p>
+</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.9.0-alpha10</td></tr><tr><td class="dep-name">clj-science/jscience</td><td class="dotted"><hr /></td><td class="dep-version">4.3.1</td></tr><tr><td class="dep-name">org.clojure/test.check</td><td class="dotted"><hr /></td><td class="dep-version">0.9.0</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#units2.calc">units2.calc</a></li><li><a href="#units2.core">units2.core</a></li><li><a href="#units2.IFnUnit">units2.IFnUnit</a></li><li><a href="#units2.ops">units2.ops</a></li><li><a href="#units2.spice">units2.spice</a></li><li><a href="#units2.stdlib">units2.stdlib</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#units2.calc" name="units2.calc"><h1 class="project-name">units2.calc</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Calculus on functions using the (generically defined) <code>units2.core.amount</code> type.</p>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>This implementation assumes:</p>
 
 <ol>
@@ -3259,7 +3168,33 @@ and protocol dispatch (nice, fast) rather than java interop and reflection (ugly
        (integer? N) (new IFnUnit (.pow javax-unit N))
        (rational? N) (new IFnUnit (.pow (.root javax-unit (denominator N)) (numerator N)))
        :else (throw (IllegalArgumentException. (str &quot;Expected a `rational?` number (&quot; N &quot; provided)&quot;)))))
-   (root [this N] (power this (/ N))))</pre></td></tr><tr><td class="docs">
+   (root [this N] (power this (/ N))))</pre></td></tr><tr><td class="docs"><p>(def d (.compound (implementation-hook km) (.compound (implementation-hook m) (implementation-hook mm)))
+The <code>.compound</code> method is basically a <code>cons</code> for compatible units.</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>(.getHigher d) ; Basically <code>(first compound-unit)</code></p>
+
+<h1>object[javax.measure.unit.TransformedUnit 0x7586ad77 "km"]</h1>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>(.getLower d) ; Basically <code>(rest compound-unit)</code></p>
+
+<h1>object[javax.measure.unit.CompoundUnit 0x47077afc "m:mm"]</h1>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Units in the .compound do not need to be <code>distinct</code> or sorted in any way.
+Basically, Compound units are <code>seq</code>able collections of (compatible) units.
+It's probably better to implement this in clojure... that way we can drop
+the requirement that units be compatible and make the move to cljs easier.</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>What would compound units look like in a LISP? More importantly,
+what are the advantages of having compound IFnUnits in amounts?</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>(def amnt (m:mm [1 57])) ???
+(apply vector amnt) --> [amnt], not ([m 1] [mm 57])!
+(km:m (m:m [100 10])) --> (km:m [0.1 10]) ???
+  vs (map apply [km m] (map vector [(m 100) (m 10)])) --> ((km 0.1) (m 10))
+((cons cm cm) amnt) --> (cm:cm [100 5.7]) ???
+  vs (map apply [cm cm] (map vector [(m 1) (mm 57)])) --> ((cm 100) (cm 5.7))</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>So this behaviour could just be subsumed into a regular function
+(defn mapply [fns args] (map apply fns (map vector args)))
+(mapply [inc dec] [7 7]); --> (8 6)
+which feels like it's hidden in the stdlib somewhere...</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Overall, the best thing to do is to keep the data structures
+separate from the data being structured: no compound units.</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defmethod print-method IFnUnit [U ^java.io.Writer w]
   (.write w (str U))) ; human and (almost) computer readable.</pre></td></tr><tr><td class="docs"><p><code>def</code> a var to hold a unit, and change that unit's printed representation to that var.</p>
 </td><td class="codes"><pre class="brush: clojure">(defmacro defunit
@@ -3270,7 +3205,13 @@ and protocol dispatch (nice, fast) rather than java interop and reflection (ugly
       #'~varname) ; return like the regular `def`/`defn`/`defmacro`)</pre></td></tr><tr><td class="docs"><p>Returns a new (anonymous) unit at the base of a new dimension. See also <code>defbaseunit</code>.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn makebaseunit
   [^String newdimension]
-   (-&gt;IFnUnit (BaseUnit. newdimension)))</pre></td></tr><tr><td class="docs"><p>Creates a new unit at the base of a new dimension. This function allows dimensional analysis to be extended by the user.</p>
+   (-&gt;IFnUnit (BaseUnit. newdimension)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defmacro make-dimensional-spec [kw unit]
+  `(do
+    (spec/def ~kw (spec/with-gen
+      (spec/and :units2.core/amount #(compatible? (getUnit %) ~unit))
+      (fn [] (gen/fmap ~unit (gen/gen-for-pred number?)))))
+     (derive ~kw :units2.core/amount) ; useful for autogenerating amounts.))</pre></td></tr><tr><td class="docs"><p>Creates a new unit at the base of a new dimension. This function allows dimensional analysis to be extended by the user.</p>
 
 <p>  If the dimensionname is given as a namespaced keyword, a <code>clojure.spec</code> spec for the dimension is generated.</p>
 </td><td class="codes"><pre class="brush: clojure">(defmacro defbaseunit
@@ -3278,11 +3219,7 @@ and protocol dispatch (nice, fast) rather than java interop and reflection (ugly
   `(do
     (defunit ~unitname (-&gt;IFnUnit (BaseUnit. (name ~dimensionname))))
     ~(if (and (keyword? dimensionname) (not (nil? (namespace dimensionname)))) ; namespaced keyword
-    `(do
-       (spec/def ~dimensionname (spec/with-gen
-         (spec/and amount? #(compatible? (getUnit %) ~unitname))
-         (fn [] (gen/fmap ~unitname (gen/gen-for-pred number?)))))
-       (derive ~dimensionname :units2.core/amount))) ; useful for autogenerating amounts.
+      `(make-dimensional-spec ~dimensionname ~unitname))
     #'~unitname))</pre></td></tr><tr><td class="docs"><p>A <code>defunit</code> that also defines all SI-prefixed units.</p>
 
 <p>This is implementation-independent, please reuse!!!</p>
@@ -3307,6 +3244,7 @@ and protocol dispatch (nice, fast) rather than java interop and reflection (ugly
                            da 10
                            h 100
                            k 1000
+                           my 1e4 ; myria, obsolete
                            M 1e6
                            G 1e9
                            T 1e12
@@ -3837,9 +3775,8 @@ with the comment "If you're willing to do that, you should be prepared for users
 </td><td class="codes"><pre class="brush: clojure">(ns units2.spice
   (:require [units2.core :refer :all]
             [units2.ops :as ops]
-            [units2.IFnUnit :refer :all])
-  (:import (javax.measure.unit SI)))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes g (-&gt;IFnUnit SI/GRAM))</pre></td></tr><tr><td class="docs"><p>The spiciness of food is determined (amongst other things) by the amount of capsaisinoids they contain.
+            [units2.IFnUnit :refer :all]
+            [units2.stdlib :refer [mug g kg]]))</pre></td></tr><tr><td class="docs"><p>The spiciness of food is determined (amongst other things) by the amount of capsaisinoids they contain.
 capsaisinoid concentrations can be determined to parts per million with liquid chromatography</p>
 </td><td class="codes"><pre class="brush: clojure">(defunit ppm (divide mug g))</pre></td></tr><tr><td class="docs"><p>The Scoville is a historical unit for spice of roughly 15 or 16 ppm pure capsaisin</p>
 </td><td class="codes"><pre class="brush: clojure">(def history (/ 15))
@@ -3894,27 +3831,98 @@ determine these amounts empirically: keep mouthwashing with milk until it's not 
        ]
   (ops/with-unit-arithmetic
     (/ (- (* cmix wmix) (* cj wj)) (- wmix wj)))))</pre></td></tr><tr><td class="docs"><p>how far from the true value is our empirical estimation?</p>
-</td><td class="codes"><pre class="brush: clojure">(Math/abs (ops/divide-into-double (ops/- estimated-milk milk) milk))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#units2.trig" name="units2.trig"><h1 class="project-name">units2.trig</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Trigonometry</p>
-</td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(ns units2.trig
+</td><td class="codes"><pre class="brush: clojure">(Math/abs (ops/divide-into-double (ops/- estimated-milk milk) milk))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#units2.stdlib" name="units2.stdlib"><h1 class="project-name">units2.stdlib</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(ns units2.stdlib
   (:require [units2.core :refer :all]
-            [units2.IFnUnit :refer [defunit defbaseunit]]))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defbaseunit rad ::angle)
-(defunit deg (rescale rad (/ Math/PI 180)))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defmacro radians-in [trig javatrig]
-  (let [a (gensym)]
-  `(defn ~trig [~a]
-     (if (amount? ~a)
-       (~javatrig (getValue ~a rad))
-       (throw (Exception. &quot;Trigonometry requires input units of angle&quot;))))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(radians-in sin Math/sin)
-(radians-in cos Math/cos)
-(radians-in tan Math/tan)</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defmacro radians-out [trig javatrig]
-  `(def ~trig (comp rad #(~javatrig %))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(radians-out asin Math/asin)
-(radians-out acos Math/acos)
-(radians-out atan Math/atan)</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/gdeer81/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_units2.astro">units2.astro</li><li class="floating-toc-li" id="floating-toc_units2.calc">units2.calc</li><li class="floating-toc-li" id="floating-toc_units2.core">units2.core</li><li class="floating-toc-li" id="floating-toc_units2.IFnUnit">units2.IFnUnit</li><li class="floating-toc-li" id="floating-toc_units2.ops">units2.ops</li><li class="floating-toc-li" id="floating-toc_units2.spice">units2.spice</li><li class="floating-toc-li" id="floating-toc_units2.trig">units2.trig</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
+            [units2.IFnUnit :refer :all]
+            [clojure.spec :as spec]
+            [clojure.spec.gen :as gen]))</pre></td></tr><tr><td class="docs"><h1>Commonly Used Units</h1>
+</td><td class="codes"></td></tr><tr><td class="docs"><h2>Length [L]</h2>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defbaseunit m ::length)
+(defunit-with-SI-prefixes m m) ; redefining the base is not a problem</pre></td></tr><tr><td class="docs"><p>Imperial units...</p>
+</td><td class="codes"><pre class="brush: clojure">(defunit inch (rescale cm 2.54))
+(defunit foot (rescale inch 12))
+(defunit yard (rescale foot 3))
+(defunit mile (rescale yard 1760))</pre></td></tr><tr><td class="docs"><h2>Time [T]</h2>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Seconds are not shortened to <code>s</code> as in the SI because
+<code>ns</code> (nanosecond)  is already the Clojure namspace macro.
+(The astrophysical unit of angle sec is <code>arcsec</code>)</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defbaseunit sec ::time)
+(defunit-with-SI-prefixes sec sec)</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defunit minute (rescale sec 60))
+(defunit hour   (rescale minute 60))
+(defunit day    (rescale hour 24))
+(defunit week   (rescale day 7))</pre></td></tr><tr><td class="docs"><h2>Velocity [L/T]</h2>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defunit mph (divide mile hour))
+(make-dimensional-spec ::speed mph)
+(spec/def ::velocity ::speed)</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(make-dimensional-spec ::acceleration (divide mph sec))</pre></td></tr><tr><td class="docs"><h2>Area [L^2]</h2>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defunit barn (rescale (times m m) 1e-28))</pre></td></tr><tr><td class="docs"><h2>Mass [M]</h2>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defbaseunit g ::mass)
+(defunit-with-SI-prefixes g g)</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defunit solarmass (rescale kg 2e30))</pre></td></tr><tr><td class="docs"><h2>Charge [Q]</h2>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defbaseunit coulomb ::charge)</pre></td></tr><tr><td class="docs"><p>fundamental unit of charge in Quantum Electrodynamics.</p>
+</td><td class="codes"><pre class="brush: clojure">(defunit positroncharge (AsUnit (coulomb 1.6022e-19)))</pre></td></tr><tr><td class="docs"><h2>Temperature [K]</h2>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defbaseunit K ::temperature)
+(defunit-with-SI-prefixes K K)</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defunit celsius (offset K (K 273.15)))
+(defunit fahrenheit (rescale (offset celsius (celsius -17.777)) (/ 5 9))) ; for pedagogical purposes only.</pre></td></tr><tr><td class="docs"><h2>(Solid) Angle [a]</h2>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Solid angle of a unit sphere in D dimensions. The full formula involves fractional powers of Pi and Gamma functions, the first few are precomuted and tabulated here for convenience.</p>
+</td><td class="codes"><pre class="brush: clojure">(def solidangle 
+  {1 2
+   2 (* 2 Math/PI)
+   3 (* 4 Math/PI)
+   4 (* 2 Math/PI Math/PI)
+   5 (* (/ 8 3) Math/PI Math/PI)
+   6 (* Math/PI Math/PI Math/PI)})</pre></td></tr><tr><td class="docs"><h3>Angles</h3>
+</td><td class="codes"><pre class="brush: clojure">(defbaseunit rad ::angle)</pre></td></tr><tr><td class="docs"><p>full circle</p>
+</td><td class="codes"><pre class="brush: clojure">(defunit rot (rescale rad (solidangle 2))) ; aka revolution/turn</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defunit deg (rescale rot (/ 1 360))) ; 360 degrees in a circle</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defunit arcsec (rescale deg (/ 1 60))); 60 arcsec in a degree</pre></td></tr><tr><td class="docs"><h3>Solid Angles</h3>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defunit sr (power rad 2))
+(make-dimensional-spec ::solidangle sr)</pre></td></tr><tr><td class="docs"><p>full 2-sphere</p>
+</td><td class="codes"><pre class="brush: clojure">(defunit sky (rescale sr (solidangle 3))) ; aka spat</pre></td></tr><tr><td class="docs"><p>full 3-sphere (physically unnecessary but enlightening)</p>
+</td><td class="codes"><pre class="brush: clojure">(defunit glome (rescale (power rad 3) (solidangle 4)))</pre></td></tr><tr><td class="docs"><h2>Data Amount</h2>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defbaseunit b ::data-amount)
+(defunit-with-IEC-prefixes b b)
+(defunit-with-IEC-prefixes o (rescale b 8)) ; octet, not byte.</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defunit-with-IEC-prefixes bps (divide b sec))
+(make-dimensional-spec ::data-rate bps)</pre></td></tr><tr><td class="docs"><h2>Typography</h2>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defunit point (rescale inch (/ 1 72)))
+(defunit pica (rescale inch (/ 1 6)))</pre></td></tr><tr><td class="docs"><h2>Famous people names</h2>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes hertz (inverse sec))
+(make-dimensional-spec ::frequency hertz)
+(defunit-with-SI-prefixes newton (divide (times m kg) sec sec))
+(make-dimensional-spec ::force newton)
+(defunit-with-SI-prefixes pascal (divide newton m m))
+(make-dimensional-spec ::pressure pascal)
+(defunit-with-SI-prefixes joule (times newton m))
+(make-dimensional-spec ::energy joule)
+(defunit-with-SI-prefixes watt (divide joule sec))
+(make-dimensional-spec ::power watt)
+(defunit-with-SI-prefixes ampere (divide coulomb sec))
+(make-dimensional-spec ::electric-current ampere)</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defunit-with-SI-prefixes jansky (rescale (divide watt (times m m) sec) 1e-26))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defunit batman (rescale kg 7.68)) ; a traditional unit of weight used in the Ottoman Empire</pre></td></tr><tr><td class="docs"><h2>Index</h2>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defbaseunit zerobased ::index) ; foremost element is &quot;zero&quot; (C/LISP convention)</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defunit onebased (offset zerobased (zerobased -1))) ; foremost element is &quot;one&quot; (Fortran/naive convention)</pre></td></tr><tr><td class="docs"><h2>Redshifts</h2>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>These can be given as z or as 1+z, both are useful in cosmology. Unitizing the <code>+1</code> is probably overkill, but not having to worry about which convention is used in function args is totally worth it.</p>
+</td><td class="codes"><pre class="brush: clojure">(defbaseunit zee ::redshift)
+(defunit onepluszee (offset zee (zee -1)))</pre></td></tr><tr><td class="docs"><h2>No units</h2>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>define this last, just in case</p>
+</td><td class="codes"><pre class="brush: clojure">(defunit dimensionless (unit-from-powers {m 0}))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/gdeer81/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_units2.calc">units2.calc</li><li class="floating-toc-li" id="floating-toc_units2.core">units2.core</li><li class="floating-toc-li" id="floating-toc_units2.IFnUnit">units2.IFnUnit</li><li class="floating-toc-li" id="floating-toc_units2.ops">units2.ops</li><li class="floating-toc-li" id="floating-toc_units2.spice">units2.spice</li><li class="floating-toc-li" id="floating-toc_units2.stdlib">units2.stdlib</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
 SyntaxHighlighter.all();
 
 // hackity hack

@@ -3,7 +3,7 @@
             [clojure.spec :refer [exercise-fn]]
             [units2.core :refer :all]
             [units2.IFnUnit :refer :all]
-            [units2.astro :refer :all]
+            [units2.stdlib :refer :all]
             [units2.ops :as ops]))
 
 (deftest gen-ops

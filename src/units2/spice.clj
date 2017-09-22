@@ -2,16 +2,11 @@
 ;; # Molecular Gastronomy in Clojure
 ;;
 
-
 (ns units2.spice
   (:require [units2.core :refer :all]
             [units2.ops :as ops]
-            [units2.IFnUnit :refer :all])
-  (:import (javax.measure.unit SI))
-)
-
-
-(defunit-with-SI-prefixes g (->IFnUnit SI/GRAM))
+            [units2.IFnUnit :refer :all]
+            [units2.stdlib :refer [mug g kg]]))
 
 ;; The spiciness of food is determined (amongst other things) by the amount of capsaisinoids they contain.
 ;; capsaisinoid concentrations can be determined to parts per million with liquid chromatography

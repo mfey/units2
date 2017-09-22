@@ -86,6 +86,39 @@
    (root [this N] (power this (/ N)))
   )
 
+;; (def d (.compound (implementation-hook km) (.compound (implementation-hook m) (implementation-hook mm)))
+;; The `.compound` method is basically a `cons` for compatible units.
+
+;; (.getHigher d) ; Basically `(first compound-unit)`
+;; #object[javax.measure.unit.TransformedUnit 0x7586ad77 "km"]
+
+;; (.getLower d) ; Basically `(rest compound-unit)`
+;; #object[javax.measure.unit.CompoundUnit 0x47077afc "m:mm"]
+
+;; Units in the .compound do not need to be `distinct` or sorted in any way.
+;; Basically, Compound units are `seq`able collections of (compatible) units.
+;; It's probably better to implement this in clojure... that way we can drop
+;; the requirement that units be compatible and make the move to cljs easier.
+
+;; What would compound units look like in a LISP? More importantly,
+;; what are the advantages of having compound IFnUnits in amounts?
+
+;; (def amnt (m:mm [1 57])) ???
+;; (apply vector amnt) --> [amnt], not ([m 1] [mm 57])!
+;; (km:m (m:m [100 10])) --> (km:m [0.1 10]) ???
+;;   vs (map apply [km m] (map vector [(m 100) (m 10)])) --> ((km 0.1) (m 10))
+;; ((cons cm cm) amnt) --> (cm:cm [100 5.7]) ???
+;;   vs (map apply [cm cm] (map vector [(m 1) (mm 57)])) --> ((cm 100) (cm 5.7))
+
+;; So this behaviour could just be subsumed into a regular function
+;; (defn mapply [fns args] (map apply fns (map vector args)))
+;; (mapply [inc dec] [7 7]); --> (8 6)
+;; which feels like it's hidden in the stdlib somewhere...
+
+;; Overall, the best thing to do is to keep the data structures
+;; separate from the data being structured: no compound units.
+
+
 (defmethod print-method IFnUnit [U ^java.io.Writer w]
   (.write w (str U))) ; human and (almost) computer readable.
 
@@ -103,6 +136,15 @@
   [^String newdimension]
    (->IFnUnit (BaseUnit. newdimension)))
 
+
+(defmacro make-dimensional-spec [kw unit]
+  `(do
+    (spec/def ~kw (spec/with-gen
+      (spec/and :units2.core/amount #(compatible? (getUnit %) ~unit))
+      (fn [] (gen/fmap ~unit (gen/gen-for-pred number?)))))
+     (derive ~kw :units2.core/amount) ; useful for autogenerating amounts.
+     ))
+
 (defmacro defbaseunit
   "Creates a new unit at the base of a new dimension. This function allows dimensional analysis to be extended by the user.
 
@@ -111,11 +153,7 @@
   `(do
     (defunit ~unitname (->IFnUnit (BaseUnit. (name ~dimensionname))))
     ~(if (and (keyword? dimensionname) (not (nil? (namespace dimensionname)))) ; namespaced keyword
-    `(do
-       (spec/def ~dimensionname (spec/with-gen
-         (spec/and amount? #(compatible? (getUnit %) ~unitname))
-         (fn [] (gen/fmap ~unitname (gen/gen-for-pred number?)))))
-       (derive ~dimensionname :units2.core/amount))) ; useful for autogenerating amounts.
+      `(make-dimensional-spec ~dimensionname ~unitname))
     #'~unitname))
 
 
@@ -142,6 +180,7 @@
                            da 10
                            h 100
                            k 1000
+                           my 1e4 ; myria, obsolete
                            M 1e6
                            G 1e9
                            T 1e12

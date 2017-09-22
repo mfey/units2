@@ -3,11 +3,11 @@
 Start by loading the core of the library and some commonly used units.
 
     (require '[units2.core :refer :all])
-    (require '[units2.astro :refer :all])
+    (require '[units2.stdlib :refer :all])
 
 ## Creating Amounts
 
-The unit for meters in the astro library is `m`, and amounts representing 7 meters and 2 kilometers are created by
+The unit for meters in the standard library is `m`, and amounts representing 7 meters and 2 kilometers are created by
 
     (m 7)
     (km 2)
@@ -16,7 +16,7 @@ which admittedly may not look like much at the REPL because of how amounts are p
 
     (class (celsius 16))
 
-Both units and amounts are first-class citizens of the language. You can check that units from the astro library are of type `units2.IFnUnit.IFnUnit`, which we'll discuss in more detail later. For now, remember only that they are named as such since they implement `clojure.lang.IFn`. Therefore, to convert an amount to another unit, just `apply` that unit on the given amount:
+Both units and amounts are first-class citizens of the language. You can check that units from the standard library are of type `units2.IFnUnit.IFnUnit`, which we'll discuss in more detail later. For now, remember only that they are named as such since they implement `clojure.lang.IFn`. Therefore, to convert an amount to another unit, just `apply` that unit on the given amount:
 
     (fahrenheit (celsius 0))
 
@@ -104,7 +104,7 @@ TODO: Discuss decorators
 
 # Defining Custom IFnUnits
 
-`units2.astro` obviously doesn't contain each and every unit you might encounter when working with Clojure. Fortunately, it's easy to create your own IFnUnits (either at the top level of a namespace if you need them often, or just within a `let` scope if you don't).
+`units2.stdlib` obviously doesn't contain each and every unit you might encounter when working with Clojure. Fortunately, it's easy to create your own IFnUnits (either at the top level of a namespace if you need them often, or just within a `let` scope if you don't).
 
 ## core
 
@@ -119,17 +119,6 @@ IFnUnits are also `Multiplicative`, so you can combine existing units with `time
     (let [dimension 3] (parse-unit [m dimension sec 1])) ; a spacetime 4-volume
 
 Note that these new units are first-class and anonymous. For work at the REPL, or for units you'll want to use throughout your entire code, units can also be conveniently bound to symbols with the `defunit` macro, so that the printed representation of a unit matches the symbol it's bound to.
-
-
-## `SI` and `NonSI`
-
-If the unit you want to define is a commonly used unit, then it might be a member of the `SI` or `NonSI` classes of `javax.measure.unit`. In that case, you can simply `import` these and call the `deftype`-constructor for `IFnUnit`:
-
-    (require '[units2.IFnUnit :refer :all])
-    (import '[javax.measure.unit SI NonSI])
-
-    (->IFnUnit SI/WATT)
-    ;; or (new units2.IFnUnit.IFnUnit SI/METER)
 
 ## `makebaseunit`
 
@@ -194,18 +183,18 @@ The `IFnUnit` implementation of the `Unitlike` protocol is meant to cover most u
 
 ## Spec Interop
 
-The `units2.astro` library also defines a variety of specs such as `::length`, `::time`, etc., to do dimensional analysis with specs:
+In `units2.stdlib` are also defined a variety of specs such as `::length`, `::time`, etc., to do dimensional analysis with specs:
 
     (require '[clojure.spec :as spec])
-    (spec/valid? :units2.astro/length (m 7)) ; --> true
-    (spec/valid? :units2.astro/energy (celsius 7)) ; --> false
+    (spec/valid? :units2.stdlib/length (m 7)) ; --> true
+    (spec/valid? :units2.stdlib/energy (celsius 7)) ; --> false
 
 These can also be used to generate amounts of the given dimension(s):
 
     (require '[clojure.spec.gen :as gen])
-    (repeatedly 5 #(gen/generate (spec/gen :units2.astro/time)))
-    (gen/generate (spec/gen (spec/or :l :units2.astro/length
-                                     :t :units2.astro/time)))
+    (repeatedly 5 #(gen/generate (spec/gen :units2.stdlib/time)))
+    (gen/generate (spec/gen (spec/or :l :units2.stdlib/length
+                                     :t :units2.stdlib/time)))
 
 Note that the generated amounts are (for the moment?) all in the base unit of the given dimension.
 

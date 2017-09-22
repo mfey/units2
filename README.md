@@ -31,7 +31,7 @@ There's a [tutorial](https://github.com/mfey/units2/blob/master/tutorial.md) to 
 ;; core utilities, a collection of units (for astronomy) and math ops
 
 (require '[units2.core :refer :all])
-(require '[units2.astro :refer :all])
+(require '[units2.stdlib :refer :all])
 (require '[units2.ops :as ops])
 
 ;; a function that computes an average, no matter what the units are

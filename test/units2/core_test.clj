@@ -1,7 +1,7 @@
 (ns units2.core-test
   (:require [clojure.test :refer :all]
             [units2.core :refer :all]
-            [units2.astro :refer [m sec]]))
+            [units2.stdlib :refer [m sec]]))
 
 (deftest amount-p
   (testing "amount?"
@@ -30,8 +30,8 @@
     (is (instance? units2.core.Unitlike (parse-unit [m 1])))
     (is (instance? units2.core.Unitlike (parse-unit {m 1 sec -2})))
     (is (instance? units2.core.Unitlike (parse-unit [m 1 sec -2])))
-    (is (instance? units2.core.Unitlike (parse-unit "{units2.astro/m 1}"))) ;; these work unqualified
-    (is (instance? units2.core.Unitlike (parse-unit "[units2.astro/m 1]"))) ;; at the REPL... why not here?
+    (is (instance? units2.core.Unitlike (parse-unit "{units2.stdlib/m 1}"))) ;; these work unqualified
+    (is (instance? units2.core.Unitlike (parse-unit "[units2.stdlib/m 1]"))) ;; at the REPL... why not here?
     (is (thrown? IllegalArgumentException (parse-unit true)))
   )
   (testing "parse-unit (exceptions)"

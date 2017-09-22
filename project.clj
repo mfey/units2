@@ -1,5 +1,5 @@
 (defproject units2 "2.6"
-  :description "A Clojure library units of measurement."
+  :description "A Clojure library for units of measurement."
   :url "https://github.com/mfey/units2"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
@@ -12,5 +12,5 @@
   :plugins [[lein-marginalia "0.9.0"]
           ; [lein-cloverage "1.0.9"]
             ]
-  :global-vars {*warn-on-reflection* true} ; I'm too forgetful for regular `lein check`
+  ; :global-vars {*warn-on-reflection* true} ; I'm too forgetful for regular `lein check`
 )
