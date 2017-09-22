@@ -28,7 +28,7 @@ This library also respects the distinction between the algebra on quantities wit
 There's a [tutorial](https://github.com/mfey/units2/blob/master/tutorial.md) to help get started with the library, and some example code in `spice.clj`. There's also a summary of the API (more of a cheatsheet really). Some effort was put into writing readable, well-commented code, but if you're impatient, here's the executive summary:
 
 ```clojure
-;; core utilities, a collection of units (for astronomy) and math ops
+;; core utilities, a collection of units and math ops
 
 (require '[units2.core :refer :all])
 (require '[units2.stdlib :refer :all])
@@ -40,7 +40,7 @@ There's a [tutorial](https://github.com/mfey/units2/blob/master/tutorial.md) to 
     (defn average [numlist]
         (/ (apply + numlist) (count numlist))))
 
-;; sec (second), minute, hour are units in the astro namespace.
+;; sec (second), minute, hour are units from the stdlib.
 
 (def self-reported-half-marathon-times
     {:Bob        (hour 3.5)

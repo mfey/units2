@@ -1,6 +1,6 @@
 # units2 API -- Overview
 
-This is not a full specification of the edge cases, the thrown errors, etc. Think of it as the API-lite or the Getting-Started-API or the Cheatsheet.
+This is not a full specification of the edge cases, the thrown errors, etc. Think of it as the API-lite or the Getting-Started-API.
 
 # Namespaces
 

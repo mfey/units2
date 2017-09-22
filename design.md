@@ -48,6 +48,8 @@ Once we've decided we need a non-map data structure to represent units and dimen
 
 These data structures are not domain-specific because units are -- or should be -- *everywhere*. Just a it's not obvious whether the value `{:name "Alice", :age 14}` describes a child days or years ago, it's also not obvious that the context will clarify this, especially if the value is something only slightly more involved like `{:channel-owner "Leo", :rate 14}`. Is that bit-per-second, Gigabyte-per-minute, or invalid-queries-per-thousand? It's better to have this information as part of the value itself (the Clojure way) than to leave it in a comment or docstring or (goodness forbid!) add another separate pair `:rate-unit "video-per-week"`.
 
+Long story short: quantities with units aren't data, they're the building blocks of data.
+
 #### Not metadata
 
 We want to create anonymous objects, so being tied to vars is no good. Also, the unit is somehow part of the value we're trying to capture, not a description of the value.

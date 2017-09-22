@@ -1,4 +1,4 @@
-(defproject units2 "2.6"
+(defproject units2 "2.7"
   :description "A Clojure library for units of measurement."
   :url "https://github.com/mfey/units2"
   :license {:name "Eclipse Public License"

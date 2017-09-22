@@ -1,9 +1,9 @@
 # Changelog
 All notable changes to this project should be documented in this file. They probably won't be, but they should.
 
-As of v.2.7, the API of `units2` should be stable enough to adopt a ["no-breaking-changes" policy](https://www.youtube.com/watch?v=oyLBGkS5ICk). You should *never* have any reason *not* to use the most recent version of `units2`.
+As of v.2.8, the API of `units2` should be stable enough to adopt a ["no-breaking-changes" policy](https://www.youtube.com/watch?v=oyLBGkS5ICk). You should *never* have any reason *not* to use the most recent version of `units2`.
 
-## [2.7 unreleased] - some date in the (near) future
+## 2.7 - 22nd Sept 2017
 ### Added
 - This changelog. This and previous log entries will be disappointing.
 - IEC binary prefixes and bit/octet units.
