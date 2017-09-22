@@ -1,7 +1,8 @@
+[![Clojars Project](https://img.shields.io/clojars/v/units2.svg)](https://clojars.org/units2)
+
 # units2
 
 A Clojure library for units of measurement.
-
 
 ## Rationale
 
