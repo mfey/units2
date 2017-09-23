@@ -1,6 +1,6 @@
 (ns units2.generative-test
   (:require [clojure.test :refer :all]
-            [clojure.spec :refer [exercise-fn]]
+            [clojure.spec.alpha :refer [exercise-fn]]
             [units2.core :refer :all]
             [units2.IFnUnit :refer :all]
             [units2.stdlib :refer :all]

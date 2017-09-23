@@ -12,6 +12,8 @@
   (testing "=="
     (is (ops/== 0 0))
     (is (ops/== (kg 1) (g 1000)))
+    (is (thrown? java.lang.UnsupportedOperationException (ops/== (g 0) (m 0))))
+    (is (thrown? java.lang.UnsupportedOperationException (ops/== 0 (m 0))))
   )
   (testing "min"
     (is (== 5 (ops/min 5 6 7)))
@@ -84,7 +86,7 @@
   (testing "/ (functionality)"
     (is (== 1 (ops// 1) (ops// 1 1) (ops// 1 1 1)))
     (is (== 0.5 (ops// 1 2) (ops// 1 1 2) (ops// 1 1 1 2)))
-    (is (ops/== ((inverse sec) 0.5) (ops// (sec 2)) (ops// 1 (sec 2)) (ops// 2 2 (sec 2))))
+    (is (ops/== ((inverse sec) 0.5) (ops// (sec 2)) (ops// 1 (sec 2)) (ops// 2 2 (sec 2)) (ops// 2 (sec 2) 2)))
     )
   (testing "/ (exceptions)"
     (is (try (ops//) (catch clojure.lang.ArityException e true)))
@@ -108,7 +110,10 @@
     (is (try (ops/divide-into-double (m 1) (m 0)) (catch java.lang.Exception e true)))
     )
   (testing "rem"
+    (is (== 1 (ops/rem 7 3)))
     (is (ops/== (minute 30) (ops/rem (hour 1.5) (hour 1) (hour 1))))
+    (is (thrown? java.lang.UnsupportedOperationException (ops/rem (hour 1) 60)))
+    (is (thrown? java.lang.UnsupportedOperationException (ops/rem 60 (hour 1))))
   )
   ;(testing "quot")
   (testing "arithmetic-macro"
@@ -121,14 +126,17 @@
 (deftest exponentiation
   (testing "exp"
     (is (= Math/E (ops/exp 1)))
-    (is (= 1.0 (ops/exp 0))))
+    (is (= 1.0 (ops/exp 0)))
     (is (= Math/E (ops/exp (m 1) (m 1))))
-    (is (try (ops/exp (m 1) 7) (catch java.lang.IllegalArgumentException e true)))
+    (is (thrown? java.lang.IllegalArgumentException (ops/exp (m 1) 7)))
+    (is (thrown? java.lang.UnsupportedOperationException (ops/exp (m 1))))
+  )
   (testing "logarithms"
     (is (= 0.0 (ops/log 1) (ops/log10 1)))
     (is (= 1.0 (ops/log10 10)))
-    (is (= 3.0 (ops/log10 (km 1) (m 1)))))
+    (is (= 3.0 (ops/log10 (km 1) (m 1))))
     (is (try (ops/log (m 1) 7) (catch java.lang.IllegalArgumentException e true)))
+  )
   (testing "expt"
     (is (ops/== (ops/expt (m 2) 3) ((power m 3) 8))))
   (testing "pow"
@@ -174,13 +182,14 @@
     (is (ops/== (m 100) (ops/round (m 124) (m 100)))) ; round to the nearest 100
     (is (ops/== (m 8.0) (ops/round (m 8.1) (m 2)))))  ; round to the nearest "2"
   (testing "abs"
-    (is (integer? (ops/abs 1)))   ; checking
+    (is (int? (ops/abs 1)))   ; checking
     (is (double? (ops/abs 1.0)))  ; types...
     (is (== 2 (ops/abs 2) (ops/abs -2)))
     (let [a (rand)
           b (rand)]
       (is (almost-equal (m a) (ops/abs (m a) (m b))))
       (is (almost-equal (m a) (ops/abs (m (- a)) (m b)))))
+    (is (thrown? java.lang.UnsupportedOperationException (ops/abs (m 4))))
     )
   (testing "macro"
     (is (ops/== (m 8.0) (ops/with-unit-magnitudes (round (m 8.1) (m 2)))))

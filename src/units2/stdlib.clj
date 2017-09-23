@@ -1,8 +1,8 @@
 (ns units2.stdlib
   (:require [units2.core :refer :all]
             [units2.IFnUnit :refer :all]
-            [clojure.spec :as spec]
-            [clojure.spec.gen :as gen]))
+            [clojure.spec.alpha :as spec]
+            [clojure.spec.gen.alpha :as gen]))
 
 
 ;; # Commonly Used Units
@@ -38,7 +38,10 @@
 (make-dimensional-spec ::speed mph)
 (spec/def ::velocity ::speed)
 
-(make-dimensional-spec ::acceleration (divide mph sec))
+;; ## Acceleration [L/T^2]
+
+(defunit standardgravity (rescale (divide m sec sec) 9.80665))
+(make-dimensional-spec ::acceleration standardgravity)
 
 ;; ## Area [L^2]
 
@@ -52,6 +55,9 @@
 (defunit solarmass (rescale kg 2e30))
 
 ;; ## Charge [Q]
+
+;; I know the SI is defined in terms of currents rather than charges,
+;; but this is the way physicists do dimensional analysis.
 
 (defbaseunit coulomb ::charge)
 

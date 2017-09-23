@@ -6,7 +6,7 @@
 
 (defunit m (->IFnUnit SI/METER)) ;; as long as the tests pass, this should be OK.
 
-(deftest helper
+(deftest helper ;; this is an implementation detail test, not an API test.
   (is (.equals (to-javax units2.IFnUnit.IFnUnit (->IFnUnit SI/METER)) SI/METER))
   (is (.equals (to-javax units2.IFnUnit.IFnUnit SI/METER) SI/METER))
   (is (try (to-javax units2.IFnUnit.IFnUnit 42) (catch Exception e true)))

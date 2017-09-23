@@ -1,5 +1,5 @@
 (ns units2.core
-  (:require [clojure.spec :as spec]))
+  (:require [clojure.spec.alpha :as spec]))
 
 (defprotocol Dimensionful
   "`Dimensionful` values are values that 'have a unit'. Their unit can be inspected (`getUnit`) and they can be converted into other units (`to`)."

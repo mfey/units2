@@ -27,8 +27,8 @@
   ;redefinitions imminent! `:exclude` turns off some WARNINGS.
   (:refer-clojure :exclude [+ - * / rem quot == > >= < <= zero? pos? neg? min max])
   (:require [units2.core :refer :all]
-            [clojure.spec :as spec]
-            [clojure.spec.gen :as gen])
+            [clojure.spec.alpha :as spec]
+            [clojure.spec.gen.alpha :as gen])
 )
 
 ;; ## Specs

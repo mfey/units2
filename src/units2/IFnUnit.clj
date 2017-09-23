@@ -1,7 +1,7 @@
 (ns units2.IFnUnit
   (:require [units2.core :refer :all]
-            [clojure.spec :as spec]
-            [clojure.spec.gen :as gen])
+            [clojure.spec.alpha :as spec]
+            [clojure.spec.gen.alpha :as gen])
   (:import (javax.measure.unit BaseUnit Unit UnitFormat)
            (javax.measure.converter UnitConverter ConversionException)))
 
@@ -64,7 +64,7 @@
                             (number? x) (new units2.core.amount x this)))
   (invoke [this x] (apply this [x]))
   ; higher arity invoke/apply should NOT be defined. Use `map' to avoid silly nonsense.
-  ; this is independent of the IFnUnit implementation, but does depend on units2.core.amount.
+  ;(invoke [this x y] (throw (ArityException.)))
 
   Object
   (toString [this] (.toString javax-unit))
@@ -151,7 +151,7 @@
   If the dimensionname is given as a namespaced keyword, a `clojure.spec` spec for the dimension is generated."
   [unitname dimensionname] ; dimensionname as a namespaced keyword
   `(do
-    (defunit ~unitname (->IFnUnit (BaseUnit. (name ~dimensionname))))
+    (defunit ~unitname (makebaseunit (name ~dimensionname)))
     ~(if (and (keyword? dimensionname) (not (nil? (namespace dimensionname)))) ; namespaced keyword
       `(make-dimensional-spec ~dimensionname ~unitname))
     #'~unitname))

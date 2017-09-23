@@ -16,7 +16,11 @@ which admittedly may not look like much at the REPL because of how amounts are p
 
     (class (celsius 16))
 
-Both units and amounts are first-class citizens of the language. You can check that units from the standard library are of type `units2.IFnUnit.IFnUnit`, which we'll discuss in more detail later. For now, remember only that they are named as such since they implement `clojure.lang.IFn`. Therefore, to convert an amount to another unit, just `apply` that unit on the given amount:
+Both units and amounts are first-class citizens of the language. You can check that units from the standard library are of type `units2.IFnUnit.IFnUnit`, which we'll discuss in more detail later. For now, remember only that they appear in the first position of prefix notation since they implement `clojure.lang.IFn`:
+
+    (map ifn? [celsius km]) ; --> [true true]
+
+Therefore, to convert an amount to another unit, just `apply` that unit on the given amount:
 
     (fahrenheit (celsius 0))
 
@@ -31,6 +35,7 @@ When the conversion does not exist, the library throws an exception, telling you
 Sometimes you may want to extract the value of an amount as a regular clojure number. In that case you'll have to fall back on the `units2.core.Dimensionful` protocol and write
 
     (getValue (km 6) cm)
+    (-> (fahrenheit 76) (getValue celsius))
 
 That said, the only reason to extract a value from an amount is to interact with pre-existing clojure functions. To promote functional code, we recommend the following `comp`-based wrap/unwrap idioms:
 
@@ -51,13 +56,13 @@ The usual operations (`+`,`-`,`*`,`/`,`<`,`>`,`==`,`exp`,`log`, etc.) are define
           y (km 0.1)]
       (op/+ x y))
 
-    (op/== (kg 1) (g 1000)) ; true
+    (op/== (kg 1) (g 1000)) ; --> true
 
 It's recommended to namespace-qualify these operations; however they fall back to the usual ops from `clojure.core` when acting on regular numbers, so `[units2.ops :refer :all]` is safe too.
 
 ## Macros
 
-Constantly working out of the `ops` namespace can be a bit tedious, especially for very mathy code, so there's a couple of macros that locally define `+`, `-`, `*`, etc to be the units2.ops/... versions to make writing math easier:
+Constantly working out of the `ops` namespace can be a bit tedious, especially for very mathy code, so there's a couple of macros that locally define `+`, `-`, `*`, etc. to be the `units2.ops/` versions, to make writing math easier:
 
     (op/with-unit-arithmetic
       (+ (m 7) (* (m 8) 4))
@@ -78,8 +83,9 @@ These are joined together into the super-macro `(with-unit- [keywords] body)`, w
 
     (average (m 7) (m 6) (cm 60))     ; units work automatically
     (average (celsius 7) (celsius 6)) ; no matter their dimension
+    (average 300 400 500)   ; and the no-units equivalent is free
 
-Of course, you'd reach the same level of abstraction with `[units2.ops :refer [...]]`, but limiting redefinitions of the core language operations and explicitly mentioning them where they are necessary is probably a good idea.
+Of course, you'd reach the same level of abstraction with `[units2.ops :refer [...]]`, but syntactically limiting redefinitions of the core language operations and explicitly mentioning them where they are necessary is probably a good idea.
 
 ## Exponentiation
 
@@ -176,11 +182,6 @@ The extra `[]` are for sending extra arguments to the underlying algorithms.
 
 If you want to use a different algorithm for differentiation or integration, it's easy to wrap the algebra of units around existing implementations using the functions `decorate-differentiator` and `decorate-integrator`. Examples are provided in the source of `units2.calc`.
 
-
-## Extending the protocols
-
-The `IFnUnit` implementation of the `Unitlike` protocol is meant to cover most use cases; however some users may require higher numerical precision or speed than offered by the underlying `javax.measure` implementation. The functions in `ops` and `calc` were written with such user extensions in mind, and should work with other implementations of `Unitlike` with little to no changes. For instance, it's possible to wrap the algebra of units around your own definitions of `+`, `*`, `==`, `>`, using the many `decorate-` functions in the source of `units2.ops`.
-
 ## Spec Interop
 
 In `units2.stdlib` are also defined a variety of specs such as `::length`, `::time`, etc., to do dimensional analysis with specs:
@@ -213,6 +214,10 @@ There's also support for a more advanced `defbaseunit`, which automatically conn
     (spec/exercise ::dim)
 
 However, these features are still relatively incomplete and unsafe.
+
+## Extending the protocols
+
+The `IFnUnit` implementation of the `Unitlike` protocol is meant to cover most use cases; however some users may require higher numerical precision or speed than offered by the underlying `javax.measure` implementation. The functions in `ops` and `calc` were written with such user extensions in mind, and should work with other implementations of `Unitlike` with little to no changes. For instance, it's possible to wrap the algebra of units around your own definitions of `+`, `*`, `==`, `>`, using the many `decorate-` functions in the source of `units2.ops`.
 
 # Closing Thoughts
 

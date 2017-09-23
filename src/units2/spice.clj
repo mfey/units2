@@ -59,7 +59,7 @@
 (let [recipe1 (add-ingredients [(:jalapeno pepper) (g 5)] [(:chicken meat) (kg 0.5)])
       recipe2 (add-ingredients [(:lamb meat) (g 50)] [rice (kg 1)])
      ]
-  (map #(getValue % scoville) [(first recipe1) (first recipe2)])
+  (map (from scoville) [(first recipe1) (first recipe2)])
 )
 
 ;; a bit of everything... imagine managing units by hand!!!

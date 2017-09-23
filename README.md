@@ -1,4 +1,5 @@
 [![Clojars Project](https://img.shields.io/clojars/v/units2.svg)](https://clojars.org/units2)
+[![codecov](https://codecov.io/gh/mfey/units2/branch/master/graph/badge.svg)](https://codecov.io/gh/mfey/units2)
 
 # units2
 
