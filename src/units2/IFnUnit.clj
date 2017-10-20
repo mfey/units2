@@ -13,7 +13,7 @@
 ;; Hiding away the javaworld implementation also encourages idiomatic clojure
 ;; and protocol dispatch (nice, fast) rather than java interop and reflection (ugly, slow).
 
-(defn to-javax ^Unit [thisclass obj] ; a helper function for a recurring pattern in IFnUnit
+(defn ^:private to-javax ^Unit [thisclass obj] ; a helper function for a recurring pattern in IFnUnit
   (cond
       (instance? thisclass obj) (implementation-hook obj)
       (instance? Unit obj) obj
@@ -27,14 +27,14 @@
   Unitlike
   (getDimension [this] (.getDimension ^Unit javax-unit))
   (compatible? [this that]
-    (.isCompatible javax-unit (to-javax IFnUnit that)))
+    (= (getDimension this) (getDimension that)))
   (getConverter [this that]
     (if (compatible? this that)
       (fn [x] (try (.convert ^UnitConverter (.getConverterTo javax-unit (to-javax IFnUnit that)) (double x))
                 (catch ConversionException e
                   ;; let's try to divide the two units and work dimensionlessly...
                   ;; maybe the offsets/nonlinearities of our two units cancel exactly?
-                  (if (not (compatible? this Unit/ONE)) ;; getValue calls getConverter, without this we might loop until the stack overflows!
+                  (if-not (compatible? this Unit/ONE) ;; getValue calls getConverter, without this we might loop until the stack overflows!
                     (let [dimensionless-rescale (.divide javax-unit (to-javax IFnUnit that))]
                       (.convert ^UnitConverter (.getConverterTo dimensionless-rescale Unit/ONE) (double x)))
                     (throw e))))) ;; give up!
@@ -131,12 +131,18 @@
       #'~varname) ; return like the regular `def`/`defn`/`defmacro`
 )
 
+
+
 (defn makebaseunit
   "Returns a new (anonymous) unit at the base of a new dimension. See also `defbaseunit`."
   [^String newdimension]
+  ;; If we try to use a *unit* already defined in JScience's Unit/SI as the name of a *dimension*, we get a
+  ;; "java.lang.IllegalArgumentException: Symbol W is associated to a different unit"
+  ;; However, using units from Unit/NonSI is just fine.
+  ;; This is clearly a bug.
    (->IFnUnit (BaseUnit. newdimension)))
 
-
+;; testme!
 (defmacro make-dimensional-spec [kw unit]
   `(do
     (spec/def ~kw (spec/with-gen
@@ -145,6 +151,7 @@
      (derive ~kw :units2.core/amount) ; useful for autogenerating amounts.
      ))
 
+;; testme!
 (defmacro defbaseunit
   "Creates a new unit at the base of a new dimension. This function allows dimensional analysis to be extended by the user.
 

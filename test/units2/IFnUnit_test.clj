@@ -6,11 +6,12 @@
 
 (defunit m (->IFnUnit SI/METER)) ;; as long as the tests pass, this should be OK.
 
-(deftest helper ;; this is an implementation detail test, not an API test.
-  (is (.equals (to-javax units2.IFnUnit.IFnUnit (->IFnUnit SI/METER)) SI/METER))
-  (is (.equals (to-javax units2.IFnUnit.IFnUnit SI/METER) SI/METER))
-  (is (try (to-javax units2.IFnUnit.IFnUnit 42) (catch Exception e true)))
-  )
+;(deftest helper ;; this is an implementation detail test, not an API test.
+                 ;; Remove the ^:private meta if you want to test this...
+;  (is (.equals (to-javax units2.IFnUnit.IFnUnit (->IFnUnit SI/METER)) SI/METER))
+;  (is (.equals (to-javax units2.IFnUnit.IFnUnit SI/METER) SI/METER))
+;  (is (try (to-javax units2.IFnUnit.IFnUnit 42) (catch Exception e true)))
+;  )
 
 (deftest printing
   (testing "printing"
@@ -41,3 +42,14 @@
     (is (= (m (offset (offset m (m 7)) (m -7)))))
   )
 )
+
+
+
+(deftest makespec
+  (testing "expansion"
+    (let [expansion (macroexpand `(make-dimensional-spec ::kw U))]
+      (is (seq? expansion))
+      (is (= 'do (first expansion)))
+      ;(is (= `spec/def (first (second expansion))))
+      (is (= `derive (first (nth expansion 2))))
+      )))

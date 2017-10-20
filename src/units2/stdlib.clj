@@ -10,7 +10,7 @@
 ;; ## Length [L]
 
 (defbaseunit m ::length)
-(defunit-with-SI-prefixes m m) ; redefining the base is not a problem
+(defunit-with-SI-prefixes m m) ; redefining the base is not a problem here
 
 ;; Imperial units...
 (defunit inch (rescale cm 2.54))
@@ -46,6 +46,14 @@
 ;; ## Area [L^2]
 
 (defunit barn (rescale (times m m) 1e-28))
+(make-dimensional-spec ::area barn)
+
+;(defunit-with-SI-prefixes are (AsUnit ((times m m) 100))) ; conflicts with clojure.test's `are`
+
+;; ## Volume [L^3]
+
+(defunit-with-SI-prefixes L (times dm dm dm))
+(make-dimensional-spec ::volume L)
 
 ;; ## Mass [M]
 
@@ -116,17 +124,8 @@
 
 
 
-
-; # Other Units
-
-
-;; ## Typography
-
-(defunit point (rescale inch (/ 1 72)))
-(defunit pica (rescale inch (/ 1 6)))
-
-
 ;; ## Famous people names
+;; Conventionally, units are not capitalised even when they are names.
 
 (defunit-with-SI-prefixes hertz (inverse sec))
 (make-dimensional-spec ::frequency hertz)
@@ -142,8 +141,19 @@
 (make-dimensional-spec ::electric-current ampere)
 
 (defunit-with-SI-prefixes jansky (rescale (divide watt (times m m) sec) 1e-26))
+(defunit angstrom (rescale nm 0.1))
 
 (defunit batman (rescale kg 7.68)) ; a traditional unit of weight used in the Ottoman Empire
+
+
+
+
+; # Other Units
+
+;; ## Typography
+
+(defunit point (rescale inch (/ 1 72)))
+(defunit pica (rescale inch (/ 1 6)))
 
 ;; ## Index
 
@@ -154,7 +164,6 @@
 (defunit onebased (offset zerobased (zerobased -1))) ; foremost element is "one" (Fortran/naive convention)
 
 ; TODO: (define nth [ls i] (clojure-nth ls (if (amount? i) (getValue i zerobased) i))) ; default to LISP convention
-
 
 ;; ## Redshifts
 

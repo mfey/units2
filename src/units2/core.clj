@@ -65,12 +65,23 @@
 )
 
 
+(spec/def ::multiplicative-unitlike
+  (spec/and #(satisfies? Multiplicative %)
+            #(satisfies? Unitlike %)))
+
+(spec/fdef parse-unit
+  :args (spec/or :map (spec/map-of ::multiplicative-unitlike integer? :min-count 1)
+                 :sequence (spec/+ (spec/cat :unit ::multiplicative-unitlike
+                                             :power integer?)))
+  :ret  ::multiplicative-unitlike
+)
+
 (defn parse-unit
 "Returns a composite unit from a map or association-list of `Multiplicative` units and integer powers.
 
     `(this {kg 1 m -3})` -> a unit for density
-    `(this [cm 2])` -> a small area unit
-    `(this \"{m 1 sec -2}\")` -> an acceleration
+    `(this [m 2])` -> an area unit
+    `(this [m 3 m -1])` -> same as above
   "
 [pfs]
   (letfn [(parse [input]
@@ -78,27 +89,30 @@
                (map? input)
                   (if (empty? (keys input))
                     (throw (IllegalArgumentException. "Can't generate a unit from an empty map!"))
-                    (into [] (map list (keys input) (vals input))))
+                    (vec (map list (keys input) (vals input))))
                (sequential? input)
                   (cond
                     (empty? input)       (throw (IllegalArgumentException. "Can't generate a unit from an empty association-list!"))
                     (odd? (count input)) (throw (IllegalArgumentException. (str "Odd number of elements in the association-list! (" input " provided)")))
-                    true               (into [] (partition 2 input)))
-               (string? input)
-                  (parse (eval (read-string input)))
-               true (throw (IllegalArgumentException. (str "Mis-specified map, EDN string, or association-list! (" input " provided)")))))
+                    true               (vec (partition 2 input)))
+              ; TODO: think long and hard about whether parsing from a string is worth it...
+              ; (string? input)
+              ;   (if (empty? input)
+              ;     (throw (IllegalArgumentException. "Can't generate a unit from an empty string!"))
+              ;     (parse (eval (binding [*read-eval* false] (read-string input)))))
+               true (throw (IllegalArgumentException. (str "Mis-specified map or association-list! (" input " provided)")))))
            (validate [parsed-input]
               (cond
                 (not (every? (comp integer? second) parsed-input))
-                  (throw (IllegalArgumentException. (str "All exponents must be integers! (" (into [] (map second parsed-input)) " provided)"))) ; I could generalise this to `rational?` exponents, but the restriction to integers here seems justifiable.
+                  (throw (IllegalArgumentException. (str "All exponents must be integers! (" (vec (map second parsed-input)) " provided)"))) ; I could generalise this to `rational?` exponents, but the restriction to integers here seems justifiable.
                 (not (every? (comp #(instance? units2.core.Unitlike %) first) parsed-input))
-                  (throw (IllegalArgumentException. (str "All units must be `Unitlike`! (" (into [] (map first parsed-input)) " provided)")))
+                  (throw (IllegalArgumentException. (str "All units must be `Unitlike`! (" (vec (map first parsed-input)) " provided)")))
                 (not (every? (comp #(instance? units2.core.Multiplicative %) first) parsed-input))
-                  (throw (IllegalArgumentException. (str "All units must be `Multiplicative`! (" (into [] (map first parsed-input)) " provided)")))
+                  (throw (IllegalArgumentException. (str "All units must be `Multiplicative`! (" (vec (map first parsed-input)) " provided)")))
                 :else
                   parsed-input))
           ]
-	  (let [pairs (validate (parse pfs))]
+	  (let [pairs (-> pfs parse validate)]
         ;; do the work
         (let [mapped (map (fn [[a b]] (power a b)) pairs)]; generate ((power unit exponent) ... (power unit exponent))
           (reduce (fn [x y] (times x y)) mapped)))))
@@ -113,7 +127,7 @@
     (fn [] (let [children (descendants ::amount)]
               (if (nil? children)
                 (throw (IllegalStateException. "`(descendants :units2.core/amount)` is empty! Uninstantiable generator."))
-                (spec/gen  (rand-nth (into [] children))))))))
+                (spec/gen  (rand-nth (vec children))))))))
 
 ;; A generic type for an amount with a unit, that doesn't care about the implementation of `unit` or of `value` (as long as these are consistent).
 (deftype amount [value unit]

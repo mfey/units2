@@ -91,10 +91,10 @@
   (testing "/ (exceptions)"
     (is (try (ops//) (catch clojure.lang.ArityException e true)))
     ;; never divide by zero!!!
-    (is (try (ops// 1 0) (catch java.lang.ArithmeticException e true)))
-    (is (try (ops// (sec 1) 0) (catch java.lang.ArithmeticException e true)))
-    (is (try (ops// 1 (m 0)) (catch java.lang.ArithmeticException e true)))
-    (is (try (ops// (sec 1) (m 0)) (catch java.lang.ArithmeticException e true)))
+    (is (thrown? java.lang.ArithmeticException (ops// 1 0)))
+    (is (thrown? java.lang.ArithmeticException (ops// (sec 1) 0)))
+    (is (thrown? java.lang.ArithmeticException (ops// 1 (m 0))))
+    (is (thrown? java.lang.ArithmeticException (ops// (sec 1) (m 0))))
   )
   (testing "div-into-double (functionality)"
     (is (number? (ops/divide-into-double (m 1) (m 1)))) ; does it do what's advertised and produce a double?
@@ -149,6 +149,7 @@
     (is (thrown? java.lang.IllegalArgumentException (ops/pow 1 (m 1))))
     (is (thrown? java.lang.IllegalArgumentException (ops/pow 1 (m 1) 1)))
     (is (thrown? java.lang.IllegalArgumentException (ops/pow (m 1) 1 1)))
+    (is (thrown? java.lang.IllegalArgumentException (ops/pow (m 1) (sec 1) 1)))
     (is (thrown? java.lang.IllegalArgumentException (ops/pow (m 1) (m 1) (m 1))))
   )
   (testing "sqrt"
@@ -197,4 +198,9 @@
     (is (ops/== (m 10.0) (ops/with-unit-magnitudes (ceil (m 8.1) (m 2))))))
 )
 
-;(deftest everything-together)
+(deftest everything-together
+  (testing "macro"
+    (is (== 4 (ops/with-unit- [:math] (+ 2 2))))
+    (is (ops/== (m 4) (ops/with-unit- [:math] (+ (m 2) (m 2)))))
+    )
+  )

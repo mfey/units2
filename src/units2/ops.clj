@@ -76,14 +76,14 @@
 ;;; ### Dispatch helper macros (possible code smell... use multimethods instead?)
 
 ;; dispatch for + and -
-(defmacro threecond [[a b] both one neither]
+(defmacro ^:private threecond [[a b] both one neither]
   `(cond
     (and (amount? ~a) (amount? ~b))  ~both
     (or  (amount? ~a) (amount? ~b))  ~one
     true                             ~neither))
 
 ;; dispatch for + and - with a check that the conversion is linear
-(defmacro lincond [[a b] lin nonlin one neither]
+(defmacro ^:private lincond [[a b] lin nonlin one neither]
   `(threecond [~a ~b]
       (if (linear? (getConverter (getUnit ~a) (getUnit ~b)))
         ~lin
@@ -92,7 +92,7 @@
       ~neither))
 
 ;; dispatch for * and /
-(defmacro fourcond [[a b] one two three four]
+(defmacro ^:private fourcond [[a b] one two three four]
   `(cond
     (and (amount? ~a) (amount? ~b))       ~one
     (and (amount? ~a) (not (amount? ~b))) ~two
@@ -114,7 +114,7 @@
         (throw (UnsupportedOperationException. (str "Nonlinear conversion between `" (getUnit a) "' and `" (getUnit b)"'!")))
         (throw (UnsupportedOperationException. (str "It's meaningless to apply" (str adder) " to numbers with and without units! (`" a "' and `" b "' provided)")))
         (adder a b)))
-    ([a b & rest] (reduce decorated-adder a (conj rest b)))
+    ([a b & rest] (reduce decorated-adder a (conj rest b))) ; speed of reduce vs recur?
   )
 )
 
@@ -129,7 +129,7 @@
       (->amount (productor (getValue a (getUnit a)) (double b)) (getUnit a))
       (->amount (productor (getValue b (getUnit b)) (double a)) (getUnit b))
       (productor a b)))
-    ([a b & rest] (reduce decorated-productor a (conj rest b)))
+    ([a b & rest] (reduce decorated-productor a (conj rest b))) ; speed of reduce vs recur?
   )
 )
 
@@ -144,7 +144,7 @@
       (->amount (divider (getValue a (getUnit a)) (double b)) (getUnit a))
       (->amount (divider (double a) (getValue b (getUnit b))) (inverse (getUnit b)))
       (divider a b)))
-    ([a b & rest] (reduce decorated-divider a (conj rest b)))
+    ([a b & rest] (reduce decorated-divider a (conj rest b))) ; speed of reduce vs recur?
   )
 )
 
@@ -480,7 +480,7 @@
 
 ;; ## EVERYTHING TOGETHER
 
-(defmacro defmacro-without-hygiene
+(defmacro ^:private defmacro-without-hygiene
   "Expands into a `defmacro` with a `(let [bindings] body)` that gets
   around Clojure's automatic namespacing in syntax-quote by building
   the `let` form explicitly. Macros can be dangerous. Have fun!!!!"
@@ -552,6 +552,6 @@
                      }
            ; figure out which set of environments to use given the keywords
            ; we assume all envs are commutative, i.e. the set need not be ordered.
-           envs (remove nil? (into #{} (flatten (map keywords labels))))]
+           envs (remove nil? (set (flatten (map keywords labels))))]
         ; then right-fold the environment macros over the body, and give that as the form to evaluate
         (reduce #(list %2 %1) `(do ~@body) envs)))
