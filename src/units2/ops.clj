@@ -537,7 +537,7 @@
    ])
 
 (defmacro with-unit-
-  [labels & body]
+  [labels & body] ; each of these expressions is used only once
      (let [keywords {:arithmetic '[units2.ops/with-unit-arithmetic]
                      :expt '[units2.ops/with-unit-expts]
                      :magn '[units2.ops/with-unit-magnitudes]

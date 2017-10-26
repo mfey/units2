@@ -16,5 +16,7 @@
             [lein-cloverage "1.0.9"] ; bash <(curl -s https://codecov.io/bash) -f target/coverage/codecov.json -t token -C commitSHA
             [lein-kibit "0.1.5"]
             ]
+  ;:repl-options {:init (do (require '[units2.core :refer :all])
+  ;                         (require '[units2.stdlib :refer :all]))}
   ; :global-vars {*warn-on-reflection* true} ; I'm too forgetful for regular `lein check`
 )

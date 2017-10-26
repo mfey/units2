@@ -125,11 +125,11 @@
 (defmacro defunit
 "`def` a var to hold a unit, and change that unit's printed representation to that var."
 [varname value]
+  (let [vname varname]
     `(do
-      (def ~varname ~value)
-      (.. UnitFormat getInstance (label (implementation-hook ~varname) (str '~varname)))
-      #'~varname) ; return like the regular `def`/`defn`/`defmacro`
-)
+      (def ~vname ~value)
+      (.. UnitFormat getInstance (label (implementation-hook ~vname) (str '~vname)))
+      #'~vname))) ; return like the regular `def`/`defn`/`defmacro`
 
 
 
@@ -143,31 +143,37 @@
    (->IFnUnit (BaseUnit. newdimension)))
 
 ;; testme!
-(defmacro make-dimensional-spec [kw unit]
+(defmacro make-dimensional-spec [keyword-expr unit-expr]
+  (let [kw keyword-expr
+        unit unit-expr]
   `(do
     (spec/def ~kw (spec/with-gen
       (spec/and :units2.core/amount #(compatible? (getUnit %) ~unit))
       (fn [] (gen/fmap ~unit (gen/gen-for-pred number?)))))
      (derive ~kw :units2.core/amount) ; useful for autogenerating amounts.
-     ))
+     )))
 
 ;; testme!
 (defmacro defbaseunit
   "Creates a new unit at the base of a new dimension. This function allows dimensional analysis to be extended by the user.
 
   If the dimensionname is given as a namespaced keyword, a `clojure.spec` spec for the dimension is generated."
-  [unitname dimensionname] ; dimensionname as a namespaced keyword
+  [unit-name dimension-name] ; dimensionname as a namespaced keyword
+  (let [u unit-name
+        d dimension-name]
   `(do
-    (defunit ~unitname (makebaseunit (name ~dimensionname)))
-    ~(if (and (keyword? dimensionname) (not (nil? (namespace dimensionname)))) ; namespaced keyword
-      `(make-dimensional-spec ~dimensionname ~unitname))
-    #'~unitname))
+    (defunit ~u (makebaseunit (name ~d)))
+    ~(if (and (keyword? d) (not (nil? (namespace d)))) ; namespaced keyword
+      `(make-dimensional-spec ~d ~u))
+    #'~u)))
 
 
 ;; This is implementation-independent, please reuse!!!
 (defmacro defunit-with-SI-prefixes
   "A `defunit` that also defines all SI-prefixed units."
-  [varname value]
+  [name-expr value-expr]
+  (let [varname name-expr
+        value   value-expr]
   `(do
      (defunit ~varname ~value) ;; Don't forget the base unit!!
      ~@(map (fn [pre] `(defunit
@@ -196,11 +202,13 @@
                            Z 1e21
                            Y 1e24
                            ]))
-     #'~varname))
+     #'~varname)))
 
 (defmacro defunit-with-IEC-prefixes
   "A `defunit` that also defines all IEC-prefixed units."
-  [varname value]
+  [name-expr value-expr]
+  (let [varname name-expr
+        value   value-expr]
   `(do
      (defunit ~varname ~value) ;; Don't forget the base unit!!
      ~@(map (fn [pre] `(defunit
@@ -215,7 +223,7 @@
                            Zi (Math/pow 1024 7)
                            Yi (Math/pow 1024 8)
                            ]))
-     #'~varname))
+     #'~varname)))
 
 ;; FUTURE:
 ;; ; Define U = (* a (- U0 b)) so that rescalings are trivial.
